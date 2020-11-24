@@ -42,25 +42,25 @@ def create_app(test_config=None):
                 return float(obj)#####FLOAT? DECIMAL
             return json.JSONEncoder.default(self, obj)
 
-    if test_config is None:
-        app.config.from_pyfile('config.py')
-    else:
-        app.config.update(test_config)
+    # if test_config is None:
+    #     app.config.from_pyfile('config.py')
+    # else:
+    #     app.config.update(test_config)
 
     ### Model/Persistence Layer ###
     account_dao = AccountDao()
-    order_dao   = OrderDao()
-    product_dao  = ProductDao()
+    #order_dao   = OrderDao()
+    #product_dao  = ProductDao()
 
     ### Service/Business Layer ###
     account_service = AccountService(account_dao, app.config)
-    order_service   = OrderService(order_dao, app.config)
-    product_service = ProductService(product_dao, app.config)
+    #order_service   = OrderService(order_dao, app.config)
+    #product_service = ProductService(product_dao, app.config)
 
     ### View/Presentation Layer ###
     app.register_blueprint(route_account(account_service))
-    app.register_blueprint(route_order(order_service))
-    app.register_blueprint(route_product(product_service))
+    #app.register_blueprint(route_order(order_service))
+    #app.register_blueprint(route_product(product_service))
 
 
     return app

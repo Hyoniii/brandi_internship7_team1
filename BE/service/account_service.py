@@ -4,6 +4,7 @@
 from config import SECRET_KEY
 
 class AccountService():
+
     def __init__(self, account_dao, config):
         self.account_dao = account_dao
         self.config      = config
@@ -11,4 +12,5 @@ class AccountService():
     def art():
         print('2')
     def thou():
-        print('3')
+        print('a')
+        return account_dao.find_user()
