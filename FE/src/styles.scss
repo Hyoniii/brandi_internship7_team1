@@ -1,0 +1,66 @@
+$default-white: rgb(255,255,255);
+$default-background: rgba(250, 250, 250, 1);
+$default-black: rgb(34,34,34);
+$default-border: 1px solid rgb(224, 223, 223);
+$default-grey: rgb(223,223,223);
+$default-blue: rgb(30, 144, 255);
+
+* {
+  outline: none;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background-color: rgb(255, 255, 255);
+  box-sizing: border-box;
+  text-decoration: none;
+  font-family: 'Spoqa Han Sans', 'Spoqa Han Sans KR', 'Sans-serif';  
+  font-size: 13px;
+  line-height: 1.42857143;
+}
+
+blockquote,
+q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+a {
+  text-decoration: none;
+}
+
+.sectionTitle {
+font-size: 18px;
+margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.signupSection {
+  margin-bottom: 15px;
+
+}
+
+.inputDefault {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.inputDefaultLastChild {
+  margin-bottom: 0px;
+}
+
+.managerInputs, .infoInputs, .sellerInputs {
+display: flex;
+flex-direction: column;
+justify-content: space-around;
+border: 3px solid yellow;
+}
