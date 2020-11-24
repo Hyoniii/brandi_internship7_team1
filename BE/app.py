@@ -12,6 +12,9 @@ from flask_request_validator.exceptions import InvalidRequest
 from flask.json                         import JSONEncoder
 from contextlib                         import suppress
 ### USER ###
+from model   import AccountDao, OrderDao, ProductDao
+from service import AccountService, OrderService, ProductService
+from view    import route_account, route_order, route_product
 
 app = Flask(__name__)
 def create_app(test_config=None):
@@ -47,7 +50,7 @@ def create_app(test_config=None):
     ### Model/Persistence Layer ###
     account_dao = AccountDao()
     order_dao   = OrderDao()
-    productDao  = ProductDao()
+    product_dao  = ProductDao()
 
     ### Service/Business Layer ###
     account_service = AccountService(account_dao, app.config)
@@ -55,9 +58,9 @@ def create_app(test_config=None):
     product_service = ProductService(product_dao, app.config)
 
     ### View/Presentation Layer ###
-    app.register_blueprint(route_account) #app.register_blueprint(route_account(account_service)) 이거 써야될지도!
-    app.register_blueprint(route_order) #app.register_blueprint(route_order(order_service)) 이거 써야될지도!
-    app.register_blueprint(route_product) #app.register_blueprint(route_product(product_service)) 이거 써야될지도!
+    app.register_blueprint(route_account(account_service))
+    app.register_blueprint(route_order(order_service))
+    app.register_blueprint(route_product(product_service))
 
 
     return app
