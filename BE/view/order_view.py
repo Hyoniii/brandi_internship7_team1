@@ -4,7 +4,11 @@ from flask import request, Blueprint
 ### USER ###
 
 def route_order(order_service) :
-    order_bp = Blueprint('order_bp', __name__, url_prefix='/order')
+    order_bp = Blueprint('order', __name__, url_prefix='/order')
+
+    @order_bp.route('/info', methods=['get'])
+    def get_order():
+        return 'account'
 
 """
 TO CREATE A ROUTE

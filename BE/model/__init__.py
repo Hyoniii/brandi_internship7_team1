@@ -1,9 +1,9 @@
-from .seller_dao  import SellerDao
+from .account_dao import AccountDao
 from .product_dao import ProductDao 
 from .order_dao   import OrderDao 
 
 __all__ = [
-            'SellerDao',
+            'AccountDao',
             'ProductDao'
             'OrderDao'
 ]
