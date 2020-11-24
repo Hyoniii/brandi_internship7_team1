@@ -4,7 +4,7 @@
 
 ### User created ###
 .idea
-
+config.py
 
 ### Flask ###
 instance/*
