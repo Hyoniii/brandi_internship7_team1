@@ -1,9 +1,8 @@
 ### OS ####
-import pymysql
 ### FLASK ###
 ### USER ###
 
-class OrderDao:
+class AccountService:
     def what():
         print('1')
     def art():
