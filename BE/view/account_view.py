@@ -1,11 +1,28 @@
 ### OS ####
+import requests
 ### FLASK ###
-from flask import request, Blueprint
+from flask import request, Blueprint, jsonify
+from flask_request_validator import Param, PATH, GET, JSON
 ### USER ###
+from db_connector import connect_db
 
 def route_account(account_service):
-    account_bp = Blueprint('account', __name__, url_prefix='/account')
+    print('2')
+    account_app = Blueprint('account_app', __name__, url_prefix='/account')
+    print('3')
+    @account_app.route('/signin', methods=['POST'])
+    def signin():
+        print('4')
+        try:
+            brandiDB = connect_db()
+            print(brandiDB)
+            data = request.json
+            return brandiDB
+        except Exception as e:
+            return jsonify ({'message' : f'{e}'}, 400)
 
-    @account_bp.route('/login', methods=['GET'])
-    def get_account():
-        return 'account'
+        finally:
+            if brandiDB:
+                brandiDB.close()
+
+

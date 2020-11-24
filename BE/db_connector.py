@@ -1,5 +1,6 @@
 import pymysql
-from config.py import database
+
+from config import database
 
 def connect_db():
     db = pymysql.connect(
@@ -14,4 +15,6 @@ def connect_db():
                             read_timeout = 20,
                             db = 'brandi-admin',
                             )
+    db.cursor().execute("""SET time_zone='Asia/Seoul'""")
+    
     return db

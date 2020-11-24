@@ -10,3 +10,4 @@ class OrderDao:
         print('2')
     def thou():
         print('3')
+
