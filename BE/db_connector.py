@@ -12,6 +12,6 @@ def connect_db():
                             cursor   = pymysql.cursors.DictCursor,
                             autocommit = False,
                             read_timeout = 20,
-                            db = 'brandi-admin',
+                            db = 'brandi',
                             )
     return db
