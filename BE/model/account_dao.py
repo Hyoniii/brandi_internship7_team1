@@ -1,8 +1,3 @@
-### OS ####
-import pymysql
-### FLASK ###
-### USER ###
-
 class AccountDao:
     def what():
         print('1')
