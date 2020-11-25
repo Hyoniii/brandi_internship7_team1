@@ -6,7 +6,7 @@ from flask import request, Blueprint
 def route_product(product_service) :
     product_bp = Blueprint('product', __name__, url_prefix='/product')
 
-    @product_bp.route('/info', methods=['get'])
+    @product_bp.route('/product_info', methods=['get'])
     def get_product():
         return 'account'
 

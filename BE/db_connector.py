@@ -1,5 +1,5 @@
 import pymysql
-from config.py import database
+from config import database
 
 def connect_db():
     db = pymysql.connect(

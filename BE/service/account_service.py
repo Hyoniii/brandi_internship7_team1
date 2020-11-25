@@ -8,8 +8,8 @@ class AccountService():
     def __init__(self, account_dao, config):
         self.account_dao = account_dao
         self.config      = config
-        print('1')
-    def art():
+
+    def signin(self, user_info, ):
         print('2')
     def thou():
         print('a')

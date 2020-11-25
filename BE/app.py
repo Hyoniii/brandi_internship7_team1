@@ -14,22 +14,13 @@ from contextlib                         import suppress
 ### USER ###
 from model   import AccountDao, OrderDao, ProductDao
 from service import AccountService, OrderService, ProductService
-from view    import route_account, route_order, route_product
+from view    import route_account_endpoints, route_seller_endpoints, route_order, route_product
 
 app = Flask(__name__)
 def create_app(test_config=None):
-
+    app = Flask(__name__)
+    
     CORS(app, resources={r'*': {'origins':'*'}})
-
-    @app.errorhandler(Exception)
-    def identify_invalid_usage(error):
-        if isinstance(error, InvalidRequest) :
-            return {'message': str(error)}, 400
-        else:
-            response             = jsonify(error)
-            response.status_code = error.status_code
-            return response
-
 
     class JSONEncoder(json.JSONEncoder):
         """
@@ -39,7 +30,7 @@ def create_app(test_config=None):
             if isinstance(obj, datetime):
                 return arrow.get(obj).local.format('YYYY-MM-DD HH:mm:ss ZZ')
             elif isinstance(obj, decimal.Decimal):
-                return float(obj)#####FLOAT? DECIMAL
+                return float(obj) #####FLOAT? DECIMAL
             return json.JSONEncoder.default(self, obj)
 
     # if test_config is None:
@@ -53,12 +44,12 @@ def create_app(test_config=None):
     #product_dao  = ProductDao()
 
     ### Service/Business Layer ###
-    account_service = AccountService(account_dao, app.config)
+    account_service = AccountService(account_dao)
     #order_service   = OrderService(order_dao, app.config)
     #product_service = ProductService(product_dao, app.config)
 
     ### View/Presentation Layer ###
-    app.register_blueprint(route_account(account_service))
+    app.register_blueprint(route_account_endpoints(account_service))
     #app.register_blueprint(route_order(order_service))
     #app.register_blueprint(route_product(product_service))
 
