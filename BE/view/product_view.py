@@ -1,14 +1,20 @@
-### OS ####
-### FLASK ###
-from flask import request, Blueprint
-### USER ###
+from flask import request, Blueprint,jsonify
+from service.product_service import ProductService
+from db_connector import connect_db
 
-def route_product(product_service) :
-    product_bp = Blueprint('product', __name__, url_prefix='/product')
-
-    @product_bp.route('/product_info', methods=['get'])
+class ProductView:
+    product_app = Blueprint('product_app', __name__, url_prefix='/product')
+    
+    @product_app.route('/info', methods=['GET'])
     def get_product():
-        return 'account'
+        conn = None
+        try:
+            products = product_service.get_product(conn)
+        except Exception as e:
+            return jsonify({'message' : 'error' }), 400
+        else:
+            return jsonify(products), 200
+            # return jsonify({'access_token' : 'success'}), 200
 
 """
 TO CREATE A ROUTE

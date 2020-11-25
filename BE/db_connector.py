@@ -1,17 +1,16 @@
 import pymysql
-from config import database
+from config import DATABASE
 
 def connect_db():
     db = pymysql.connect(
-                            host     = database['host'],
-                            port     = database['port'],
-                            user     = database['user'],
-                            password = database['password'],
-                            database = database['database'],
-                            charset  = database['charset'],
-                            cursor   = pymysql.cursors.DictCursor,
-                            autocommit = False,
+                            host     = DATABASE['host'],
+                            port     = DATABASE['port'],
+                            user     = DATABASE['user'],
+                            password = DATABASE['password'],
+                            database = DATABASE['database'],
+                            charset  = DATABASE['charset'],
+                            #cursor   = pymysql.cursors.DictCursor,
+                            autocommit = 'False',
                             read_timeout = 20,
-                            db = 'brandi-admin',
                             )
     return db

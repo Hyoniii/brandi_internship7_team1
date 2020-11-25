@@ -11,8 +11,6 @@ import pymysql
 5. A function's output will always be it's past participle
 """
 
-
-
 class AccountDao:
     def find_account(self, account_filter, brandiDB):
         with brandiDB.cursor() as cursor:

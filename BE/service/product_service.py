@@ -1,13 +1,9 @@
-### OS ####
-### FLASK ###
-### USER ###
-from config import SECRET_KEY
-
 class ProductService:
-    def __init__(self, product_dao, config):
+    def __init__(self, product_dao):
         self.product_dao = product_dao
-        self.config      = config
-    def art():
-        print('2')
-    def thou():
-        print('3')
+
+
+    def get_product(self, conn):
+        product_list = self.product_dao.what(conn)
+
+
