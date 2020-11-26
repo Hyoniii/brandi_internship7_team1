@@ -61,7 +61,7 @@ def create_app(test_config=None):
     #account_service = AccountService(account_dao, app.config)
     services = Services
     services.product_service = ProductService(product_dao)
-    services.order_service   = OrderService(order_dao)
+    services.order_service   = OrderService(order_dao, seller_dao)
 
     ### View/Presentation Layer ###
     #app.register_blueprint(route_account(account_service))
