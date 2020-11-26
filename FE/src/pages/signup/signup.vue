@@ -31,13 +31,14 @@
             <a-input
               class="{ hasError ? inputError : inputDefault }"
               placeholder="아이디"
-              id="idValue"
-              v-model="formValidation.id.value"
+              id="formInputs.id.value"
+              v-model="formInputs.id.value"
+              allowClear
               @change="
                 () =>
                   validateInput(
                     RegExp(/^([A-Za-z0-9])([A-Za-z0-9_-]){4,19}$/),
-                    this.formValidation.id
+                    this.formInputs.id
                   )
               "
             >
@@ -45,22 +46,22 @@
             </a-input>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ idErrorMessage }}
+                {{ formInputs.id.errorMessage }}
               </p>
             </div>
 
             <a-input-password
               class="{ hasError ? inputError : inputDefault }"
               placeholder="비밀번호"
-              id="pwValue"
-              v-model="formValidation.pw.value"
+              id="formInputs.pw.value"
+              v-model="formInputs.pw.value"
               @change="
                 () =>
                   validateInput(
                     RegExp(
                       /(?=.*[A-Za-z])(?=.*[0-9])(?=.*[~!@#$%^&*()\-_=+,.<>/?;:'[{}\]\\|]).{8,20}$/
                     ),
-                    this.formValidation.pw
+                    this.formInputs.pw
                   )
               "
             >
@@ -68,22 +69,22 @@
             </a-input-password>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ pwErrorMessage }}
+                {{ formInputs.pw.errorMessage }}
               </p>
             </div>
 
             <a-input-password
               class="{ hasError ? inputError : inputDefault}"
               placeholder="비밀번호 재입력"
-              id="pwConfirmValue"
-              v-model="formValidation.pwConfirm.value"
+              id="formInputs.pwConfirm.value"
+              v-model="formInputs.pwConfirm.value"
               @change="clearErrorMsg"
             >
               <a-icon slot="prefix" type="check" />
             </a-input-password>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ pwConfirmErrorMessage }}
+                {{ formInputs.pwConfirm.errorMessage }}
               </p>
             </div>
             <div class="inputHelper"></div>
@@ -98,13 +99,13 @@
             <a-input
               class="{ hasError ? inputError : inputDefault}"
               placeholder="핸드폰번호"
-              id="managerNumberValue"
-              v-model="formValidation.managerNumber.value"
+              id="formInputs.managerNumber.value"
+              v-model="formInputs.managerNumber.value"
               @change="
                 () =>
                   validateInput(
                     RegExp(/^([\d-]+)$/),
-                    this.formValidation.managerNumber
+                    this.formInputs.managerNumber
                   )
               "
             >
@@ -112,7 +113,7 @@
             </a-input>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ phoneErrorMessage }}
+                {{ formInputs.managerNumber.errorMessage }}
               </p>
               <p class="managerInstructions inputDefaultLastChild">
                 입점 신청 후 브랜디 담당자가 연락을 드릴 수 있으니 정확한 정보를
@@ -127,33 +128,30 @@
             <a-input
               class="inputDefault"
               placeholder="성명"
-              id="fullName"
-              v-model="formValidation.fullName.value"
+              id="formInputs.fullName.value"
+              v-model="formInputs.fullName.value"
               @change="
                 () =>
-                  validateInput(
-                    RegExp(/^[가-힣]+$/),
-                    this.formValidation.fullName
-                  )
+                  validateInput(RegExp(/^[가-힣]+$/), this.formInputs.fullName)
               "
             >
               <a-icon slot="prefix" type="bold" />
             </a-input>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ secretcodeErrorMessage }}
+                {{ formInputs.fullName.errorMessage }}
               </p>
             </div>
             <a-input-password
               class="inputDefault"
               placeholder="마스터 시크릿코드"
-              id="masterSecretCode"
-              v-model="formValidation.masterSecretCode.value"
+              id="formInputs.masterSecretCode.value"
+              v-model="formInputs.masterSecretCode.value"
               @change="
                 () =>
                   validateInput(
                     RegExp(/^[0-9a-z]+$/),
-                    this.formValidation.masterSecretCode
+                    this.formInputs.masterSecretCode
                   )
               "
             >
@@ -161,7 +159,7 @@
             </a-input-password>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ secretcodeErrorMessage }}
+                {{ formInputs.masterSecretCode.errorMessage }}
               </p>
             </div>
           </div>
@@ -183,13 +181,13 @@
             <a-input
               class="inputDefault"
               placeholder="셀러명 (상호)"
-              id="sellerNameValue"
-              v-model="formValidation.sellerName.value"
+              id="formInputs.sellerName.value"
+              v-model="formInputs.sellerName.value"
               @change="
                 () =>
                   validateInput(
                     RegExp(/^([A-Za-z0-9\uac00-\ud7af])+(\1?)$/),
-                    this.formValidation.sellerName
+                    this.formInputs.sellerName
                   )
               "
             >
@@ -197,20 +195,20 @@
             </a-input>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ sellerNameErrorMessage }}
+                {{ formInputs.sellerName.errorMessage }}
               </p>
             </div>
 
             <a-input
               class="inputDefault"
               placeholder="영문 셀러명 (영문상호)"
-              id="sellerEnglishNameValue"
-              v-model="formValidation.sellerEnglishName.value"
+              id="formInputs.sellerEnglishName.value"
+              v-model="formInputs.sellerEnglishName.value"
               @change="
                 () =>
                   validateInput(
                     RegExp(/^[a-zA-Z]+$/),
-                    this.formValidation.sellerEnglishName
+                    this.formInputs.sellerEnglishName
                   )
               "
             >
@@ -218,20 +216,20 @@
             </a-input>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ sellerEnglishNameErrorMessage }}
+                {{ formInputs.sellerEnglishName.errorMessage }}
               </p>
             </div>
 
             <a-input
               class="inputDefault inputDefaultLastChild"
               placeholder="고객센터 전화번호"
-              id="customerServiceNumber"
-              v-model="formValidation.customerServiceNumber.value"
+              id="formInputs.customerServiceNumber.value"
+              v-model="formInputs.customerServiceNumber.value"
               @change="
                 () =>
                   validateInput(
                     RegExp(/^([\d-]+)$/),
-                    this.formValidation.customerServiceNumber
+                    this.formInputs.customerServiceNumber
                   )
               "
             >
@@ -239,7 +237,7 @@
             </a-input>
             <div class="inputHelper">
               <p v-if="hasError" class="errorMessage">
-                {{ customerServiceNumberErrorMessage }}
+                {{ formInputs.customerServiceNumber.errorMessage }}
               </p>
             </div>
           </div>
@@ -274,35 +272,27 @@ export default {
     return {
       accountType: 1,
       isSellerAccountType: true,
-      formValidation: {
-        id: { value: "", state: false },
-        pw: { value: "", state: false },
-        pwConfirm: { value: "", state: false },
-        managerNumber: { value: "", state: false },
-        sellerName: { value: "", state: false },
-        sellerEnglishName: { value: "", state: false },
-        customerServiceNumber: { value: "", state: false },
-        masterSecretCode: { value: "", state: false },
-        fullName: { value: "", state: false },
+      formInputs: {
+        id: { value: "", state: false, errorMessage: "" },
+        pw: { value: "", state: false, errorMessage: "" },
+        pwConfirm: { value: "", state: false, errorMessage: "" },
+        managerNumber: { value: "", state: false, errorMessage: "" },
+        sellerName: { value: "", state: false, errorMessage: "" },
+        sellerEnglishName: { value: "", state: false, errorMessage: "" },
+        customerServiceNumber: { value: "", state: false, errorMessage: "" },
+        masterSecretCode: { value: "", state: false, errorMessage: "" },
+        fullName: { value: "", state: false, errorMessage: "" },
       },
-      // idValue: "",
-      // pwValue: "",
-      // pwConfirmValue: "",
-      // managerNumberValue: "",
-      // sellerNameValue: "",
-      // sellerEnglishNameValue: "",
-      // customerServiceNumber: "",
+      idValue: "",
+      pwValue: "",
+      pwConfirmValue: "",
+      managerNumberValue: "",
+      sellerNameValue: "",
+      sellerEnglishNameValue: "",
+      customerServiceNumber: "",
       sellerType: "쇼핑몰",
       masterSecretCode: "",
       hasError: false,
-      idErrorMessage: "",
-      pwErrorMessage: "",
-      pwConfirmErrorMessage: "",
-      phoneErrorMessage: "",
-      secretcodeErrorMessage: "",
-      sellerNameErrorMessage: "",
-      sellerEnglishNameErrorMessage: "",
-      customerServiceNumberErrorMessage: "",
       sellerTypeOptions: [
         { id: 1, value: "쇼핑몰" },
         { id: 2, value: "마켓" },
@@ -321,111 +311,74 @@ export default {
 
   methods: {
     validateInput(reg, target) {
-      target.state = reg.test(target.value);
+      const isValid = (target.state = reg.test(target.value));
+
+      if (isValid === false) {
+        return (hasError = true);
+        target.errorMessage = "l;sjkdfl;skjdf;kds";
+      }
     },
     handleCancelBtn() {
       alert("브랜디 가입을 취소하시겠습니까?");
     },
-    clearErrorMsg(e) {
-      console.log(e.target.id);
-      if (e.target.id === "idValue") return (this.idErrorMessage = "");
-      if (e.target.id === "pwValue") return (this.pwErrorMessage = "");
-      if (e.target.id === "pwConfirmValue")
-        return (this.pwConfirmErrorMessage = "");
-      if (e.target.id === "managerNumberValue")
-        return (this.phoneErrorMessage = "");
-      if (e.target.id === "masterSecretCode")
-        return (this.secretcodeErrorMessage = "");
-      if (e.target.id === "sellerNameValue")
-        return (this.sellerNameErrorMessage = "");
-      if (e.target.id === "sellerEnglishNameValue")
-        return (this.sellerEnglishNameErrorMessage = "");
-      if (e.target.id === "customerServiceNumber")
-        return (this.customerServiceNumberErrorMessage = "");
-    },
+    // clearErrorMsg(e) {
+    //   console.log(e.target.id);
+    //   if (e.target.id === "idValue") return (this.idErrorMessage = "");
+    //   if (e.target.id === "pwValue") return (this.pwErrorMessage = "");
+    //   if (e.target.id === "pwConfirmValue")
+    //     return (this.pwConfirmErrorMessage = "");
+    //   if (e.target.id === "managerNumberValue")
+    //     return (this.phoneErrorMessage = "");
+    //   if (e.target.id === "masterSecretCode")
+    //     return (this.secretcodeErrorMessage = "");
+    //   if (e.target.id === "sellerNameValue")
+    //     return (this.sellerNameErrorMessage = "");
+    //   if (e.target.id === "sellerEnglishNameValue")
+    //     return (this.sellerEnglishNameErrorMessage = "");
+    //   if (e.target.id === "customerServiceNumber")
+    //     return (this.customerServiceNumberErrorMessage = "");
 
     handleRegisterBtn() {
-      // const validatePw = RegExp(
-      //   /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[~!@#$%^&*()\-_=+,.<>/?;:'"[{}\]\\|]).{8,20}$/
-      // );
-      // if (validatePw.test(this.pwValue) === false)
-      //   return (this.pwErrorMessage = "");
-
-      // console.log(validatePw.test(this.pwValue), this.pwValue);
-
-      // const validateId = RegExp(/^([A-Za-z0-9])([A-Za-z0-9_-]){4,19}$/);
-      // let isValidId = validateId.test(this.idValue);
-
-      // const validateCustomerService = RegExp(/^([\d-]+)$/);
-      // let isValidCustomerServiceNumber = validateCustomerServiceNumber.test(
-      //   this.customerServiceNumber
-      // );
-
-      // const validateSellerName = RegExp(/^([A-Za-z0-9\uac00-\ud7af])+(\1?)$/);
-      // let isValidSellerName = validateSellerName.test(
-      //   this.sellerEnglishNameValue
-      // );
-
-      // str = "012-201"
-      // regx = RegExp(/^([\d-]+)$/)
-      // regx.test(str);
-
-      let isValidId = validateId.test(this.idValue);
-      const validateId = RegExp(/^([A-Za-z0-9])([A-Za-z0-9_-]){4,19}$/);
-      if (this.idValue.length < 1) {
+      if (this.formInputs.id.value.length < 1) {
         this.hasError = true;
-        this.idErrorMessage = "필수 입력항목입니다.";
-        if (validateId.test(this.idValue)) {
-        }
+        this.formInputs.id.errorMessage = "필수 입력항목입니다.";
       }
-
-      if (this.pwValue.length < 1) {
+      if (this.formInputs.pw.value.length < 1) {
         this.hasError = true;
-        this.pwErrorMessage = "필수 입력항목입니다.";
+        this.formInputs.pw.errorMessage = "필수 입력항목입니다.";
       }
-      if (this.managerNumberValue.length < 1) {
+      if (this.formInputs.pwConfirm.value.length < 1) {
         this.hasError = true;
-        this.phoneErrorMessage = "필수 입력항목입니다.";
+        this.formInputs.pwConfirm.errorMessage = "필수 입력항목입니다.";
       }
-      if (this.sellerNameValue.length < 1) {
+      if (this.formInputs.managerNumber.value.length < 1) {
         this.hasError = true;
-
-        this.sellerNameErrorMessage = "필수 입력항목입니다.";
+        this.formInputs.managerNumber.errorMessage = "필수 입력항목입니다.";
       }
-      if (this.sellerEnglishNameValue.length < 1) {
+      if (this.formInputs.sellerName.value.length < 1) {
         this.hasError = true;
-
-        this.sellerEnglishNameErrorMessage = "필수 입력항목입니다.";
+        this.formInputs.sellerName.errorMessage = "필수 입력항목입니다.";
       }
-      if (this.customerServiceNumber.length < 1) {
+      if (this.formInputs.sellerEnglishName.value.length < 1) {
         this.hasError = true;
-
-        this.customerServiceNumberErrorMessage = "필수 입력항목입니다.";
+        this.formInputs.sellerEnglishName.errorMessage = "필수 입력항목입니다.";
       }
-      if (this.customerServiceNumber.length < 1) {
+      if (this.formInputs.customerServiceNumber.value.length < 1) {
         this.hasError = true;
-        this.customerServiceNumberErrorMessage = "필수 입력항목입니다.";
+        this.formInputs.customerServiceNumber.errorMessage =
+          "필수 입력항목입니다.";
       }
-
-      // this.idValue="";
-      // this.pwValue="";
-      // this.pwConfirmValue="";
-      // this.managerNumberValue="";
-      // this.sellerNameValue="";
-      // this.sellerEnglishNameValue="";
-      // this.customerServiceNumber="";
-      // this.sellerType="쇼핑몰";
-      // this.masterSecretCode="";
-      // this.accountType="1";
-      // this.hasError=false;
+      if (this.formInputs.masterSecretCode.value.length < 1) {
+        this.hasError = true;
+        this.formInputs.masterSecretCode.errorMessage = "필수 입력항목입니다.";
+      }
+      if (this.formInputs.masterSecretCode.value.length < 1) {
+        this.hasError = true;
+        this.formInputs.masterSecretCode.error = "필수 입력항목입니다.";
+      }
     },
   },
-
-  computed: {
-    // buttonCaption() {
-    //   return this.taskListIsVisible ? 'Hide List' : 'Show List';
-    // },
-  },
+  computed: {},
   watch: {
     accountType(val) {
       return val === 1
