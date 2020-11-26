@@ -6,9 +6,9 @@ from decimal    import Decimal
 from datetime   import timedelta, datetime, time
 
 ### USER ###
-from model import ProductDao
-from service import ProductService
-from view import ProductView
+from model   import ProductDao, OrderDao
+from service import ProductService, OrderService
+from view    import ProductView, OrderView
 
 class Services:
     pass
@@ -54,18 +54,18 @@ def create_app(test_config=None):
 
     ### Model/Persistence Layer ###
     #account_dao = AccountDao()
-    #order_dao   = OrderDao()
+    order_dao    = OrderDao()
     product_dao  = ProductDao()
 
     ### Service/Business Layer ###
     #account_service = AccountService(account_dao, app.config)
-    #order_service   = OrderService(order_dao, app.config)
     services = Services
     services.product_service = ProductService(product_dao)
+    services.order_service   = OrderService(order_dao)
 
     ### View/Presentation Layer ###
     #app.register_blueprint(route_account(account_service))
-    #app.register_blueprint(route_order(order_service))
+    app.register_blueprint(OrderView.orders)
     #ProductView.create_endpoint(app, services)
     app.register_blueprint(ProductView.product_app)
 
