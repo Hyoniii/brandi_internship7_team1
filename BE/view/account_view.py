@@ -6,6 +6,10 @@ from flask_request_validator import Param, PATH, GET, JSON
 ### USER ###
 from db_connector import connect_db
 
+"""
+WIP 앤드포인트 리스트했어요
+"""
+
 def route_account_endpoints(account_service):
 
     account_app = Blueprint('account_app', __name__, url_prefix='/account')
