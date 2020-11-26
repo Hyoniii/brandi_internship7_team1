@@ -2,76 +2,171 @@
   <div id="signup">
     <div class="signupContainer">
       <div class="brandiLogo">
-        <img alt="로고이미지" src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png" />
+        <img
+          alt="로고이미지"
+          src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
+        />
       </div>
       <div class="signupHeader">
         <div class="signupHeading">회원가입</div>
         <div class="divider"></div>
-        <a-radio-group class="signupAccountTypes" v-model="accountType" button-style="solid">
+        <a-radio-group
+          class="signupAccountTypes"
+          v-model="accountType"
+          button-style="solid"
+        >
           <a-radio-button
             :value="signupAccountType.id"
             :key="signupAccountType.id"
             v-for="signupAccountType in signupAccountTypes"
             class="signupAccountType"
-          >{{ signupAccountType.value }}</a-radio-button>
+            >{{ signupAccountType.value }}</a-radio-button
+          >
         </a-radio-group>
       </div>
       <div class="signupInfo">
         <section class="basicSellerInfo signupSection">
           <div class="sectionTitle">가입정보</div>
           <div class="infoInputs">
-            <a-input class="inputDefault" placeholder="아이디" v-model="idValue">
+            <a-input
+              class="{ hasError ? inputError : inputDefault }"
+              placeholder="아이디"
+              id="idValue"
+              v-model="formValidation.id.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(/^([A-Za-z0-9])([A-Za-z0-9_-]){4,19}$/),
+                    this.formValidation.id
+                  )
+              "
+            >
               <a-icon slot="prefix" type="user" />
             </a-input>
-            <p v-if="errorMessage" class="[errorMessage ? errorMessage : '']">{{ idErrorMessage }}</p>
-            <a-input-password class="inputDefault" placeholder="비밀번호" v-model="pwValue">
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ idErrorMessage }}
+              </p>
+            </div>
+
+            <a-input-password
+              class="{ hasError ? inputError : inputDefault }"
+              placeholder="비밀번호"
+              id="pwValue"
+              v-model="formValidation.pw.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(
+                      /(?=.*[A-Za-z])(?=.*[0-9])(?=.*[~!@#$%^&*()\-_=+,.<>/?;:'[{}\]\\|]).{8,20}$/
+                    ),
+                    this.formValidation.pw
+                  )
+              "
+            >
               <a-icon slot="prefix" type="lock" theme="filled" />
             </a-input-password>
-            <p v-if="errorMessage" class="[errorMessage ? errorMessage : '']">{{ pwErrorMessage }}</p>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ pwErrorMessage }}
+              </p>
+            </div>
+
             <a-input-password
-              class="inputDefault inputDefaultLastChild"
+              class="{ hasError ? inputError : inputDefault}"
               placeholder="비밀번호 재입력"
-              v-model="pwConfirmValue"
+              id="pwConfirmValue"
+              v-model="formValidation.pwConfirm.value"
+              @change="clearErrorMsg"
             >
               <a-icon slot="prefix" type="check" />
             </a-input-password>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ pwConfirmErrorMessage }}
+              </p>
+            </div>
+            <div class="inputHelper"></div>
           </div>
         </section>
-        <section v-show="sellerAccountType" class="managerInfo signupSection">
+        <section v-show="isSellerAccountType" class="managerInfo signupSection">
           <div class="sectionTitle">
             담당자 정보
             <span class="titleHelper">(*실제 샵을 운영하시는 분)</span>
           </div>
           <div class="managerInputs">
             <a-input
-              class="inputDefault inputDefaultLastChild"
+              class="{ hasError ? inputError : inputDefault}"
               placeholder="핸드폰번호"
-              v-model="managerNumberValue"
+              id="managerNumberValue"
+              v-model="formValidation.managerNumber.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(/^([\d-]+)$/),
+                    this.formValidation.managerNumber
+                  )
+              "
             >
               <a-icon slot="prefix" type="phone" theme="filled" />
             </a-input>
-            <p
-              v-if="errorMessage"
-              class="[errorMessage ? errorMessage : '']"
-            >{{ phoneErrorMessage }}</p>
-            <p
-              class="managerInstructions inputDefaultLastChild"
-            >입점 신청 후 브랜디 담당자가 연락을 드릴 수 있으니 정확한 정보를 기입해주세요.</p>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ phoneErrorMessage }}
+              </p>
+              <p class="managerInstructions inputDefaultLastChild">
+                입점 신청 후 브랜디 담당자가 연락을 드릴 수 있으니 정확한 정보를
+                기입해주세요.
+              </p>
+            </div>
           </div>
         </section>
-        <section v-show="!sellerAccountType" class="signupSection sellerInfo">
+        <section v-show="!isSellerAccountType" class="signupSection sellerInfo">
           <div class="sectionTitle">마스터 정보</div>
           <div class="sellerInputs">
-            <a-input class="inputDefault" placeholder="마스터 시크릿코드" v-model="masterSecretCode">
-              <a-icon slot="prefix" type="question" />
+            <a-input
+              class="inputDefault"
+              placeholder="성명"
+              id="fullName"
+              v-model="formValidation.fullName.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(/^[가-힣]+$/),
+                    this.formValidation.fullName
+                  )
+              "
+            >
+              <a-icon slot="prefix" type="bold" />
             </a-input>
-            <p
-              v-if="errorMessage"
-              class="[errorMessage ? errorMessage : '']"
-            >{{ secretcodeErrorMessage }}</p>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ secretcodeErrorMessage }}
+              </p>
+            </div>
+            <a-input-password
+              class="inputDefault"
+              placeholder="마스터 시크릿코드"
+              id="masterSecretCode"
+              v-model="formValidation.masterSecretCode.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(/^[0-9a-z]+$/),
+                    this.formValidation.masterSecretCode
+                  )
+              "
+            >
+              <a-icon slot="prefix" type="question" />
+            </a-input-password>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ secretcodeErrorMessage }}
+              </p>
+            </div>
           </div>
         </section>
-        <section v-show="sellerAccountType" class="signupSection sellerInfo">
+        <section v-show="isSellerAccountType" class="signupSection sellerInfo">
           <div class="sectionTitle">셀러 정보</div>
           <div class="sellerTypes">
             <a-radio-group v-model="sellerType">
@@ -80,47 +175,91 @@
                 :key="sellerTypeOption.id"
                 v-for="sellerTypeOption in sellerTypeOptions"
                 class="sellerTypesOptions"
-              >{{ sellerTypeOption.value }}</a-radio>
+                >{{ sellerTypeOption.value }}</a-radio
+              >
             </a-radio-group>
           </div>
           <div class="sellerInputs">
-            <a-input class="inputDefault" placeholder="셀러명 (상호)" v-model="sellerNameValue">
+            <a-input
+              class="inputDefault"
+              placeholder="셀러명 (상호)"
+              id="sellerNameValue"
+              v-model="formValidation.sellerName.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(/^([A-Za-z0-9\uac00-\ud7af])+(\1?)$/),
+                    this.formValidation.sellerName
+                  )
+              "
+            >
               <a-icon slot="prefix" type="smile" />
             </a-input>
-            <p
-              v-if="errorMessage"
-              class="[errorMessage ? errorMessage : '']"
-            >{{ sellerNameErrorMessage }}</p>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ sellerNameErrorMessage }}
+              </p>
+            </div>
+
             <a-input
               class="inputDefault"
               placeholder="영문 셀러명 (영문상호)"
-              v-model="sellerEnglishNameValue"
+              id="sellerEnglishNameValue"
+              v-model="formValidation.sellerEnglishName.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(/^[a-zA-Z]+$/),
+                    this.formValidation.sellerEnglishName
+                  )
+              "
             >
               <a-icon slot="prefix" type="star" theme="filled" />
             </a-input>
-            <p
-              v-if="errorMessage"
-              class="[errorMessage ? errorMessage : '']"
-            >{{ sellerEnglishNameErrorMessage }}</p>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ sellerEnglishNameErrorMessage }}
+              </p>
+            </div>
 
             <a-input
               class="inputDefault inputDefaultLastChild"
               placeholder="고객센터 전화번호"
-              v-model="customerServiceNumber"
+              id="customerServiceNumber"
+              v-model="formValidation.customerServiceNumber.value"
+              @change="
+                () =>
+                  validateInput(
+                    RegExp(/^([\d-]+)$/),
+                    this.formValidation.customerServiceNumber
+                  )
+              "
             >
               <a-icon slot="prefix" type="phone" theme="filled" />
             </a-input>
-            <p
-              v-if="errorMessage"
-              class="[errorMessage ? errorMessage : '']"
-            >{{ customerServiceNumberErrorMessage }}</p>
+            <div class="inputHelper">
+              <p v-if="hasError" class="errorMessage">
+                {{ customerServiceNumberErrorMessage }}
+              </p>
+            </div>
           </div>
         </section>
+
         <div class="signupBtnsContainer">
           <div class="signupBtns">
             <a-button-group class="signupBtnsGroup">
-              <a-button class="btnGrouped" type="danger" v-on:click="handleCancelBtn">취소</a-button>
-              <a-button class="btnGrouped" type="primary">신청</a-button>
+              <a-button
+                class="btnGrouped"
+                type="danger"
+                v-on:click="handleCancelBtn"
+                >취소</a-button
+              >
+              <a-button
+                class="btnGrouped"
+                type="primary"
+                @click="handleRegisterBtn"
+                >신청</a-button
+              >
             </a-button-group>
           </div>
         </div>
@@ -133,78 +272,166 @@
 export default {
   data() {
     return {
-      sellerAccountType: true,
-      idValue: "",
-      pwValue: "",
-      pwConfirmValue: "",
-      managerNumberValue: "",
-      sellerNameValue: "",
-      sellerEnglishNameValue: "",
-      customerServiceNumber: "",
-      sellerType: "쇼핑몰",
       accountType: 1,
+      isSellerAccountType: true,
+      formValidation: {
+        id: { value: "", state: false },
+        pw: { value: "", state: false },
+        pwConfirm: { value: "", state: false },
+        managerNumber: { value: "", state: false },
+        sellerName: { value: "", state: false },
+        sellerEnglishName: { value: "", state: false },
+        customerServiceNumber: { value: "", state: false },
+        masterSecretCode: { value: "", state: false },
+        fullName: { value: "", state: false },
+      },
+      // idValue: "",
+      // pwValue: "",
+      // pwConfirmValue: "",
+      // managerNumberValue: "",
+      // sellerNameValue: "",
+      // sellerEnglishNameValue: "",
+      // customerServiceNumber: "",
+      sellerType: "쇼핑몰",
       masterSecretCode: "",
       hasError: false,
       idErrorMessage: "",
       pwErrorMessage: "",
+      pwConfirmErrorMessage: "",
       phoneErrorMessage: "",
       secretcodeErrorMessage: "",
       sellerNameErrorMessage: "",
       sellerEnglishNameErrorMessage: "",
       customerServiceNumberErrorMessage: "",
       sellerTypeOptions: [
-        { id: 1, value: "쇼핑몰"},
-        { id: 2, value: "마켓"},
-        { id: 3, value: "로드샵"},
-        { id: 4, value: "디자이너 브랜드"},
-        { id: 5, value: "제너럴 브랜드"},
-        { id: 6, value: "내셔널 브랜드"},
-        { id: 7, value: "뷰티"},
-        ],
+        { id: 1, value: "쇼핑몰" },
+        { id: 2, value: "마켓" },
+        { id: 3, value: "로드샵" },
+        { id: 4, value: "디자이너 브랜드" },
+        { id: 5, value: "제너럴 브랜드" },
+        { id: 6, value: "내셔널 브랜드" },
+        { id: 7, value: "뷰티" },
+      ],
       signupAccountTypes: [
-        { id: 1, value: "셀러 가입"},
-        { id: 2, value: "마스터 가입"},
-        ],
+        { id: 1, value: "셀러 가입" },
+        { id: 2, value: "마스터 가입" },
+      ],
     };
   },
 
   methods: {
-  handleCancelBtn() {
-    alert("브랜디 가입을 취소하시겠습니까?")
+    validateInput(reg, target) {
+      target.state = reg.test(target.value);
+    },
+    handleCancelBtn() {
+      alert("브랜디 가입을 취소하시겠습니까?");
+    },
+    clearErrorMsg(e) {
+      console.log(e.target.id);
+      if (e.target.id === "idValue") return (this.idErrorMessage = "");
+      if (e.target.id === "pwValue") return (this.pwErrorMessage = "");
+      if (e.target.id === "pwConfirmValue")
+        return (this.pwConfirmErrorMessage = "");
+      if (e.target.id === "managerNumberValue")
+        return (this.phoneErrorMessage = "");
+      if (e.target.id === "masterSecretCode")
+        return (this.secretcodeErrorMessage = "");
+      if (e.target.id === "sellerNameValue")
+        return (this.sellerNameErrorMessage = "");
+      if (e.target.id === "sellerEnglishNameValue")
+        return (this.sellerEnglishNameErrorMessage = "");
+      if (e.target.id === "customerServiceNumber")
+        return (this.customerServiceNumberErrorMessage = "");
+    },
+
+    handleRegisterBtn() {
+      // const validatePw = RegExp(
+      //   /^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[~!@#$%^&*()\-_=+,.<>/?;:'"[{}\]\\|]).{8,20}$/
+      // );
+      // if (validatePw.test(this.pwValue) === false)
+      //   return (this.pwErrorMessage = "");
+
+      // console.log(validatePw.test(this.pwValue), this.pwValue);
+
+      // const validateId = RegExp(/^([A-Za-z0-9])([A-Za-z0-9_-]){4,19}$/);
+      // let isValidId = validateId.test(this.idValue);
+
+      // const validateCustomerService = RegExp(/^([\d-]+)$/);
+      // let isValidCustomerServiceNumber = validateCustomerServiceNumber.test(
+      //   this.customerServiceNumber
+      // );
+
+      // const validateSellerName = RegExp(/^([A-Za-z0-9\uac00-\ud7af])+(\1?)$/);
+      // let isValidSellerName = validateSellerName.test(
+      //   this.sellerEnglishNameValue
+      // );
+
+      // str = "012-201"
+      // regx = RegExp(/^([\d-]+)$/)
+      // regx.test(str);
+
+      let isValidId = validateId.test(this.idValue);
+      const validateId = RegExp(/^([A-Za-z0-9])([A-Za-z0-9_-]){4,19}$/);
+      if (this.idValue.length < 1) {
+        this.hasError = true;
+        this.idErrorMessage = "필수 입력항목입니다.";
+        if (validateId.test(this.idValue)) {
+        }
+      }
+
+      if (this.pwValue.length < 1) {
+        this.hasError = true;
+        this.pwErrorMessage = "필수 입력항목입니다.";
+      }
+      if (this.managerNumberValue.length < 1) {
+        this.hasError = true;
+        this.phoneErrorMessage = "필수 입력항목입니다.";
+      }
+      if (this.sellerNameValue.length < 1) {
+        this.hasError = true;
+
+        this.sellerNameErrorMessage = "필수 입력항목입니다.";
+      }
+      if (this.sellerEnglishNameValue.length < 1) {
+        this.hasError = true;
+
+        this.sellerEnglishNameErrorMessage = "필수 입력항목입니다.";
+      }
+      if (this.customerServiceNumber.length < 1) {
+        this.hasError = true;
+
+        this.customerServiceNumberErrorMessage = "필수 입력항목입니다.";
+      }
+      if (this.customerServiceNumber.length < 1) {
+        this.hasError = true;
+        this.customerServiceNumberErrorMessage = "필수 입력항목입니다.";
+      }
+
+      // this.idValue="";
+      // this.pwValue="";
+      // this.pwConfirmValue="";
+      // this.managerNumberValue="";
+      // this.sellerNameValue="";
+      // this.sellerEnglishNameValue="";
+      // this.customerServiceNumber="";
+      // this.sellerType="쇼핑몰";
+      // this.masterSecretCode="";
+      // this.accountType="1";
+      // this.hasError=false;
+    },
   },
-  handleRegisterBtn() {
-const validatePw = RegExp(/^(?=.*[A-Za-z])(?=.*[0-9])(?=.*[~!@#$%^&*()\-_=+,.<>/?;:'"[{}\]\\|]).{8,20}$/);
-let isValidPw = validatePw.test(this.pwValue);
 
-const validateId = RegExp(/^([A-Za-z0-9\uac00-\ud7af])+(\1?)$/);
-let isValidId = validateId.test(this.idValue);
-
-const validateCustomerService = RegExp(/^([\d-]+)$/);
-let isValidCustomerServiceNumber = validateCustomerServiceNumber.test(this.customerServiceNumber);
-
-if (this.idValue.length < 1){
-  idErrorMessage=""
-}
-
-  },
-
-  //   if (idValue.length < 2  )
-    
-  //   } else if (idValue === /^([A-Za-z0-9])+([A-Za-z0-9_-]){4,19}$/){
-  //     return errorMessage="아이디는 5-~20글자의 영문, 숫자, 언더바, 하이픈만 사용 가능하며 시작 문자는 영문 또는 숫자입니다."
-  //   }
-  //   if ()
-  // },
-
-  },
-  
   computed: {
-
+    // buttonCaption() {
+    //   return this.taskListIsVisible ? 'Hide List' : 'Show List';
+    // },
   },
-  watch:{
-    accountType(val){
-      return val===1 ? this.sellerAccountType=true : this.sellerAccountType=false;
-    }
+  watch: {
+    accountType(val) {
+      return val === 1
+        ? (this.isSellerAccountType = true)
+        : (this.isSellerAccountType = false);
+    },
   },
 };
 </script>
@@ -266,18 +493,10 @@ if (this.idValue.length < 1){
     .signupInfo {
       display: flex;
       flex-direction: column;
-      // justify-content: space-between;
       padding: 20px 15px;
 
       .basicSellerInfo {
         display: block;
-
-        // .infoInputs {
-        .inputContainer {
-        }
-        //   .inputDefault {
-        //   }
-        // }
       }
       .managerInfo {
         .sectionTitle {
@@ -286,11 +505,11 @@ if (this.idValue.length < 1){
           }
         }
         .managerInputs {
-          .inputDefault {
-          }
-          .managerInstructions {
-            color: $default-blue;
-            font-size: 12px;
+          .inputHelper {
+            .managerInstructions {
+              color: $default-blue;
+              font-size: 12px;
+            }
           }
         }
       }
@@ -301,12 +520,6 @@ if (this.idValue.length < 1){
 
           .sellerTypesOptions {
             margin-right: 10px;
-            input {
-            }
-          }
-        }
-        .sellerInputs {
-          .inputDefault {
           }
         }
       }
