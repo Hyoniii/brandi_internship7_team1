@@ -1,3 +1,4 @@
+
 from flask      import Flask, jsonify
 from flask_cors import CORS
 from flask.json import JSONEncoder
@@ -46,11 +47,10 @@ def create_app(test_config=None):
     app = Flask(__name__)
     app.json_encoder = CustomJSONEncoder
     CORS(app, resources={r'*': {'origins':'*'}})
-
-    if test_config is None:
-        app.config.from_pyfile('config.py')
-    else:
-        app.config.update(test_config)
+    # if test_config is None:
+    #     app.config.from_pyfile('config.py')
+    # else:
+    #     app.config.update(test_config)
 
     ### Model/Persistence Layer ###
     #account_dao = AccountDao()
@@ -68,6 +68,5 @@ def create_app(test_config=None):
     app.register_blueprint(OrderView.orders)
     #ProductView.create_endpoint(app, services)
     app.register_blueprint(ProductView.product_app)
-
 
     return app

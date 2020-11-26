@@ -79,9 +79,3 @@ class OrderView:
 
             finally:
                 connection.close()
-
-
-
-
-
-

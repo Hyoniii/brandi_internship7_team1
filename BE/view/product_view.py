@@ -3,16 +3,8 @@ from service.product_service import ProductService
 from db_connector import connect_db
 
 class ProductView:
-
-    #def create_endpoint(app, services):
-    #    product_service = services.product_service
-
     product_app = Blueprint('product_app', __name__, url_prefix='/product')
-    #
-    # def __init__(self,app, product_service):
-    #     self.app = app
-    #     self.product_service = product_service
-
+    
     @product_app.route('/info', methods=['GET'])
     def get_product():
         conn = None
