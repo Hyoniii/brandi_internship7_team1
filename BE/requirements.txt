@@ -1,4 +1,5 @@
 alembic==1.4.3
+arrow==0.17.0
 bcrypt==3.2.0
 blinker==1.4
 cachetools==4.1.1
@@ -15,6 +16,8 @@ Flask-Cors==3.0.9
 Flask-Mail==0.9.1
 flask-marshmallow==0.14.0
 Flask-Migrate==2.5.3
+Flask-MySQLdb==0.2.0
+flask-request-validator==2.1.2
 Flask-Script==2.0.6
 Flask-SQLAlchemy==2.4.4
 Flask-WTF==0.14.3
