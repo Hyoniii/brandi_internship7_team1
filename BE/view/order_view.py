@@ -13,13 +13,11 @@ from flask_request_validator import (
 
 from db_connector import connect_db
 from service.order_service import OrderService
-
-
 # from utils import login_required
 # from exceptions import errors
 
 class OrderView:
-    order_app = Blueprint('orders', __name__, url_prefix='/orders')
+    order_app = Blueprint('order_app', __name__, url_prefix='/orders')
 
     @order_app.route('/<detailed_order_number>', methods=['GET'])
     @validate_params(
@@ -27,23 +25,22 @@ class OrderView:
     )
     # @login_required
     def get_order_detail(detailed_order_number):
+        order_service = OrderService()
+
         order_filter = {
             'seller_id': g.seller_id if g.seller_id else None,
             'detailed_order_number': detailed_order_number
         }
-
         connection = None
         try:
             connection = connect_db()
-            order_detail = OrderService.get_order_detail(connection, order_filter)
-
+            order_detail = order_service.get_order_detail(connection, order_filter)
             return jsonify({'order_detail': order_detail}), 200
 
         # 예외처리 추가
         # except 데이터 없으면:
         #    connection.rollback()
         #    return 데이터없음
-
         finally:
             if connection:
                 connection.close()
@@ -60,6 +57,7 @@ class OrderView:
     )
     # @login_required
     def update_order_detail(*args):
+        order_service = OrderService()
         order_status = {
             'detailed_order_number': args[0],
             'editor_id': g.account_id,
@@ -77,16 +75,14 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            OrderService.update_order_detail(connection, order_filter, order_status)
-            updated_order_detail = OrderService.get_order_detail(connection, delivery_info)
-
+            order_service.update_order_detail(connection, order_status)
+            updated_order_detail = order_service.get_order_detail(connection, delivery_info)
             connection.commit()
             return jsonify({"updated_order_detail": updated_order_detail}), 201
-
         # except 에러 발생시:
         #    connection.rollback()
         #    return 에러메세지
-
         finally:
             if connection:
                 connection.close()
+
