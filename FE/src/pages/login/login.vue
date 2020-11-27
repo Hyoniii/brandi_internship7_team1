@@ -7,39 +7,123 @@
       />
     </div>
     <div class="loginContainer">
-      <section class="loginForm">
-        <div class="loginHeader">브랜디 어드민 로그인</div>
-        <div class="loginInputWrapper">
-          <a-input class="loginInfoInput" placeholder="아이디" />
-          <a-input
-            type="password"
-            class="loginInfoInput"
-            placeholder="비밀번호"
-          ></a-input>
-        </div>
-      </section>
+      <div class="loginHeader">브랜디 어드민 로그인</div>
 
-      <section class="loginSubmit">
-        <div class="loginBtnWrapper">
-          <a-button style="height: 100%" class="loginBtn">로그인</a-button>
-        </div>
-        <div class="registerOptions">
-          아직 셀러가 아니신가요?
-          <a class="registerStartBtn">회원가입하기</a>
-        </div>
-      </section>
-      <!-- <SellerList /> -->
+      <a-form :form="form" @submit="handleSubmit" class="loginForm">
+        <section class="loginInputs">
+          <a-form-item
+            :validate-status="userNameError() ? 'error' : ''"
+            :help="userNameError() || ''"
+            class="loginInfoInput"
+          >
+            <a-input
+              v-decorator="[
+                'userName',
+                {
+                  rules: [{ required: true, message: '아이디를 입력해주세요' }],
+                },
+              ]"
+              placeholder="아이디"
+            >
+              <a-icon
+                slot="prefix"
+                type="user"
+                style="color: rgba(0, 0, 0, 0.25)"
+              />
+            </a-input>
+          </a-form-item>
+          <a-form-item
+            :validate-status="passwordError() ? 'error' : ''"
+            :help="passwordError() || ''"
+            class="loginInfoInput"
+          >
+            <a-input
+              v-decorator="[
+                'password',
+                {
+                  rules: [
+                    { required: true, message: '비밀번호를 입력해주세요' },
+                  ],
+                },
+              ]"
+              type="password"
+              placeholder="비밀번호"
+            >
+              <a-icon
+                slot="prefix"
+                type="lock"
+                style="color: rgba(0, 0, 0, 0.25)"
+              />
+            </a-input>
+          </a-form-item>
+        </section>
+        <section class="loginSubmit">
+          <a-form-item class="loginBtnWrapper">
+            <a-button
+              type="primary"
+              html-type="submit"
+              :disabled="hasErrors(form.getFieldsError())"
+              class="loginBtn"
+            >
+              로그인
+            </a-button>
+          </a-form-item>
+
+          <div class="registerOptions">
+            아직 셀러가 아니신가요?
+            <a class="registerStartBtn">회원가입하기</a>
+          </div>
+        </section>
+      </a-form>
     </div>
   </div>
 </template>
 
 <script>
+const formItemLayout = {
+  labelCol: { span: 20 },
+  wrapperCol: { span: 20 },
+};
+const formTailLayout = {
+  labelCol: { span: 20 },
+  wrapperCol: { span: 20 },
+};
+function hasErrors(fieldsError) {
+  return Object.keys(fieldsError).some((field) => fieldsError[field]);
+}
+
 export default {
   data() {
     return {
-      idValue: "",
-      pwValue: "",
+      hasErrors,
+      form: this.$form.createForm(this, { name: "horizontal_login" }),
     };
+  },
+  mounted() {
+    this.$nextTick(() => {
+      // To disabled submit button at the beginning.
+      this.form.validateFields();
+    });
+  },
+  methods: {
+    // Only show error after a field is touched.
+    userNameError() {
+      const { getFieldError, isFieldTouched } = this.form;
+      return isFieldTouched("userName") && getFieldError("userName");
+    },
+    // Only show error after a field is touched.
+    passwordError() {
+      const { getFieldError, isFieldTouched } = this.form;
+      return isFieldTouched("password") && getFieldError("password");
+    },
+    handleSubmit(e) {
+      e.preventDefault();
+      this.form.validateFields((err, values) => {
+        if (!err) {
+          console.log("Received values of form: ", values);
+        }
+      });
+    },
   },
 };
 </script>
@@ -68,7 +152,6 @@ export default {
   .loginContainer {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
     width: 380px;
     height: 450px;
     padding: 64px 35px 64px 35px;
@@ -77,52 +160,59 @@ export default {
     border-radius: 20px;
     box-shadow: 0 4px 31px 0 rgba(0, 0, 0, 0.1);
 
+    .loginHeader {
+      margin: 0 0 25px 0;
+      font-size: 24px;
+      font-weight: 700;
+      text-align: left;
+      line-height: 1.5;
+      letter-spacing: -1.5px;
+      text-indent: 2px;
+      color: $black;
+    }
+
     .loginForm {
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      width: 100%;
+      height: 100%;
 
-      .loginHeader {
-        margin: 0 0 25px 0;
-        font-size: 24px;
-        font-weight: 700;
-        text-align: left;
-        line-height: 1.5;
-        letter-spacing: -1.5px;
-        text-indent: 2px;
-        color: $black;
+      .loginInputs {
+        .loginInfoInput {
+          margin: 0 auto;
+          width: 100%;
+        }
       }
 
-      .loginInputWrapper {
-        margin-bottom: 15px;
-        height: 120%;
+      .loginSubmit {
         display: flex;
         flex-direction: column;
-        justify-content: space-between;
+        margin: 0 auto;
+        width: 100%;
 
-        .loginInfoInput {
-          margin-bottom: 10px;
-          height: 40px;
-        }
-      }
-    }
-    .loginSubmit {
-      .loginBtnWrapper {
-        height: 100%;
-        .loginBtn {
-          background-color: $black;
-          color: $default-white;
+        .loginBtnWrapper {
+          height: 100%;
           width: 100%;
-          font-size: 12px;
-          border-radius: 8px;
-        }
-      }
-      .registerOptions {
-        padding-top: 10px;
-        font-size: 12px;
-        text-align: center;
+          justify-content: flex-end;
+          margin-bottom: 0;
 
-        .registerStartBtn {
+          .loginBtn {
+            background-color: $black;
+            color: $default-white;
+            width: 100%;
+            font-size: 12px;
+            border-radius: 8px;
+            margin-bottom: 0;
+          }
+        }
+        .registerOptions {
           font-size: 12px;
+          text-align: center;
+
+          .registerStartBtn {
+            font-size: 12px;
+          }
         }
       }
     }

@@ -47,10 +47,12 @@ a {
 
 .signupSection {
   margin-bottom: 15px;
+  width: 100%;
 }
 
 .inputDefault {
-  width: 100%;
+  width: 100% !important;
+  margin-bottom: 0 !important;
 }
 
 .inputDefaultLastChild {
@@ -58,11 +60,11 @@ a {
 }
 
 .inputError {
-  margin-bottom: 2px;
+  width: 100%;
 }
 
 .inputHelper {
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .errorMessage {
@@ -75,5 +77,5 @@ a {
 .sellerInputs {
   display: flex;
   flex-direction: column;
-  // justify-content: space-around;
+  justify-content: space-between;
 }
