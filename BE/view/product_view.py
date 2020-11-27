@@ -1,24 +1,29 @@
-from flask import request, Blueprint,jsonify
+from flask                   import request, Blueprint,jsonify
+from flask.views             import MethodView
 from service.product_service import ProductService
-from db_connector import connect_db
+from db_connector            import connect_db
 
 class ProductView:
     product_app = Blueprint('product_app', __name__, url_prefix='/product')
-    
-    @product_app.route('/info', methods=['GET'])
-    def get_product():
-        conn = None
+
+    @product_app.route('', methods=['GET'])
+    #@decorator(mastrer or seller)
+    def get_product_list(*args):
+        connection = None
+        data = None
+
         try:
-            products = product_service.get_product(conn)
+            connection = connect_db()
+            data = dict(request.args)
+            print(data)
+            print(1)
+            product_service = ProductService()
+            products = product_service.get_product_list( data, connection )
         except Exception as e:
-            return jsonify({'message' : 'error' }), 400
+            return jsonify({'message' : f'{e}'}), 400
         else:
             return jsonify(products), 200
-            # return jsonify({'access_token' : 'success'}), 200
+            #return jsonify({'access_token' : 'success'}), 200
+        finally:
+            connection.close()
 
-"""
-TO CREATE A ROUTE
-@product_bp.route('/info', methods=['POST'] >>>> localhost:5000/product/order will be your route)
-def get_info():
-    try:
-"""

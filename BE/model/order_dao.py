@@ -6,7 +6,6 @@ class OrderDao:
             query = """
             SELECT
                 order_number,
-                seller_id,
                 purchase_date,
                 order_tickets.total_price,
                 detailed_order_number,
@@ -40,10 +39,8 @@ class OrderDao:
             """
 
             order_detail = cursor.execute(query, order_filter)
-
             #if not order_detail:
             #    raise error
-
             return cursor.fetchone()
 
     def get_order_logs(self, connection, order_filter):
@@ -62,7 +59,6 @@ class OrderDao:
 
             #if not order_logs:
             #    raise error
-
             return cursor.fetchall()
 
     def get_order_status_list(self, connection):
@@ -91,7 +87,6 @@ class OrderDao:
             """
 
             cursor.execute(query, delivery_info)
-
             return 업뎃성공
 
     def update_order_status(self, connection, order_status):
