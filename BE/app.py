@@ -1,17 +1,10 @@
-
 from flask      import Flask, jsonify
 from flask_cors import CORS
 from flask.json import JSONEncoder
 from decimal    import Decimal
-from datetime   import timedelta, datetime, time
+from datetime   import datetime
 
-### USER ###
-from model   import ProductDao, OrderDao
-from service import ProductService, OrderService
 from view    import ProductView, OrderView
-
-class Services:
-    pass
 
 class CustomJSONEncoder(JSONEncoder):
     """
@@ -31,7 +24,7 @@ class CustomJSONEncoder(JSONEncoder):
             return float(obj)
         if isinstance(obj, bytes):
             return obj.decode("utf-8")
-        if isinstance(obj, datetime.datetime):  #datetime.datetime -> str
+        if isinstance(obj, datetime):  #datetime.datetime -> str
             return obj.strftime('%Y-%m-%d %H:%M:%S')
         return JSONEncoder.default(self, obj)
 
@@ -47,26 +40,12 @@ def create_app(test_config=None):
     app = Flask(__name__)
     app.json_encoder = CustomJSONEncoder
     CORS(app, resources={r'*': {'origins':'*'}})
-    # if test_config is None:
-    #     app.config.from_pyfile('config.py')
-    # else:
-    #     app.config.update(test_config)
+    if test_config is None:
+        app.config.from_pyfile('config.py')
+    else:
+        app.config.update(test_config)
 
-    ### Model/Persistence Layer ###
-    #account_dao = AccountDao()
-    order_dao    = OrderDao()
-    product_dao  = ProductDao()
-
-    ### Service/Business Layer ###
-    #account_service = AccountService(account_dao, app.config)
-    services = Services
-    services.product_service = ProductService(product_dao)
-    services.order_service   = OrderService(order_dao)
-
-    ### View/Presentation Layer ###
-    #app.register_blueprint(route_account(account_service))
-    app.register_blueprint(OrderView.orders)
-    #ProductView.create_endpoint(app, services)
     app.register_blueprint(ProductView.product_app)
+    app.register_blueprint(OrderView.order_app)
 
     return app

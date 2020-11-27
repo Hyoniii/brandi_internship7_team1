@@ -1,19 +1,21 @@
 import pymysql
+from flask import jsonify
+from mysql.connector.errors import Error
 
 class ProductDao:
-    def what(self, conn):
-        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
-            # query = """
-            # SELECT ...
-            # """
-            #
-            # products = cursor.execute(query)
-            #
-            # return cursor.fetchall()
+    """
+    상품 모델
+    """
+    def product_list(self,data,connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+            SELECT * 
+            FROM products
+            WHERE id 
+            """
 
-            print('1')
-            return '1'
-    def art():
-        print('2')
-    def thou():
-        print('3')
+            cursor.execute(query,data)
+            products = cursor.fetchall()
+
+            return products
+
