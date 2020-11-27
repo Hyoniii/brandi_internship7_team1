@@ -22,7 +22,7 @@ class AccountDao:
                     accounts
                 WHERE
                 """
-                for keys, values in account_filter.items():
+            for keys, values in account_filter.items():
                     if keys == 'email': 
                         query += """
                         email = %(email)s
@@ -49,7 +49,7 @@ class AccountDao:
                 WHERE
                     id = %(id)s
                 """
-        cursory.execute(query, account_filter)
+        cursor.execute(query, account_filter)
         got_account_password = cursor.fetchone
         return got_account_password
 
@@ -75,7 +75,7 @@ class AccountDao:
             created_account = cursor.lastrowid
             return created_account
 
-    def update_account_info(self, account_filter, brandiDB)
+    def update_account_info(self, account_filter, brandiDB):
 
         with brandiDB.cursor() as cursor:
 
@@ -86,26 +86,24 @@ class AccountDao:
                     password = %(password)s
                 WHERE
                 """
-                for keys, values in account_filter.items():
-                    if keys == 'email': 
-                        query += """
-                        email = %(email)s
-                        """
-                    elif keys == 'id':
-                        query += """
-                        id = %(id)s
-                        """
-                    elif keys == 'account_type_id':
-                        query += """
-                        id = %(id)s
-                        """
-            cursor.execute(query, account_filter)
-            updated_account_info = cursor.lastrowid
-            return updated_account_info
+            for keys, values in account_filter.items():
+                if keys == 'email':
+                    query += """
+                    email = %(email)s
+                    """
+                elif keys == 'id':
+                    query += """
+                    id = %(id)s
+                    """
+                elif keys == 'account_type_id':
+                    query += """
+                    id = %(id)s
+                    """
+        cursor.execute(query, account_filter)
+        updated_account_info = cursor.lastrowid
+        return updated_account_info
 
-        with brandiDB.cursor() as cursor:
-
-            query = """
+            log_query = """
                 INSERT INTO account_logs(
                     account_id,
                     account_type_id,
@@ -125,9 +123,9 @@ class AccountDao:
                     %(is_active)s
                     )
                 """
-            cursor.execute(query, account_filter)
-            updated_account_info_log = cursor.lastrowid
-            return updated_account_info_log
+        cursor.execute(log_query, account_filter)
+        updated_account_info_log = cursor.lastrowid
+        return updated_account_info_log
 
     def create_seller(self, seller_info, brandiDB):
 
@@ -256,8 +254,8 @@ class AccountDao:
                     address_1 = %(address_1)s,
                     address_2 = %(address_2)s,
                     is_open_weekend = %(is_open_weekend)s,
-                    WHERE
-                        id = %(id)s
+                WHERE
+                    id = %(id)s
 
                     """
             cursor.execute(query, seller_info)
@@ -288,8 +286,8 @@ class AccountDao:
                     address_2 = %(address_2)s,
                     is_open_weekend = %(is_open_weekend)s,
                     editor_id = %(editor_id)s
-                    WHERE
-                        id = %(id)s
+                WHERE
+                    id = %(id)s
 
                     """
             cursor.execute(query, account_filter)
@@ -307,12 +305,54 @@ class AccountDao:
                     accounts.email,
                     sellers.id,
                     sellers.seller_name_kr
-                FROM sellers
-                    INNER JOIN accounts
-                        ON accounts.id = sellers.account_id
+                FROM 
+                    sellers
+                INNER JOIN 
+                    accounts
+                ON 
+                    accounts.id = sellers.account_id
                 WHERE
                     id = %(id)s
                 """
             cursor.execute(query, account_filter, brandiDB)
             found_seller = cursor.fetchone()
             return found_seller
+
+    
+    def list_seller(self, account_filter, brandiDB):
+
+        with brandiDB.cursor() as cursor:
+            query = """
+                SELECT
+                    accounts.id,
+                    sellers.id,
+                    sellers.subcategory_id,
+                    sellers.seller_status_id,
+                    sellers.seller_name_kr,
+                    sellers.seller_name_en,
+                    sellers.service_number,
+                    sellers.open_time,
+                    sellers.close_time,
+                    sellers.delivery_policy,
+                    sellers.return_policy,
+                    sellers.zip_code,
+                    sellers.address_1,
+                    sellers.address_2,
+                    sellers.is_open_weekend,
+                    sellers.created_at,
+                    managers.name AS manager_name,
+                    managers.phone_number AS manager_phone_number,
+                    managers.email AS manager_email
+                FROM 
+                    accounts
+                LEFT JOIN
+                    managers
+                ON account.id =
+
+
+
+
+
+
+
+            """
