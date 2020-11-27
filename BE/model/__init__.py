@@ -4,6 +4,6 @@ from .order_dao   import OrderDao
 
 __all__ = [
             #'AccountDao',
-            'ProductDao'
+            'ProductDao',
             'OrderDao'
 ]
