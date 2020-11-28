@@ -21,21 +21,32 @@ def login_validator:
                         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
                             query = """
                                 SELECT
-                                    account_type_id,
-                                    is_active
+                                    accounts.account_type_id,
+                                    accounts.is_active,
+                                    accounts.id,
+                                    sellers.account_id
+                                    sellers.id as seller_id
                                 FROM
                                     accounts
+                                INNER JOIN
+                                    sellers ON sellers.account_id = account.id
                                 WHERE
                                     accounts.id = %(account_id)s
                             """
                         cursor.execute(query, {'account_id': account_id})
                         account = connection.fetchone()
                         if account:
-                            if account['is_active'] == 1:
+                            if account['is_active'] == 1 and account['account_type_id'] == 1:
                                 g.account_info = {
                                     'account_id': account_id,
-                                    'account_type_id' : account['account_type_id']
-                                }
+                                    'account_type_id' : account['account_type_id'],
+                                    'seller_id' : None}
+                            if account['is_active'] == 1 and account['account_type_id'] == 2:
+                                g.account_info = {
+                                    'account_id': account_id,
+                                    'account_type_id' : account['account_type_id'],
+                                    'seller_id' : account['seller_id']
+                                    }
                                 return func(*args, **kwargs)
                             return jsonify({'MESSAGE' : 'account_not_active'}), 400
                         return jsonify({'MESSAGE' : 'account_nonexistant'}), 404
