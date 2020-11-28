@@ -12,8 +12,8 @@ import pymysql
 """
 
 class AccountDao:
-    def find_account(self, account_filter, brandiDB):
-        with brandiDB.cursor() as cursor:
+    def find_account(self, account_filter, connection):
+        with connection.cursor() as cursor:
             query = """
                 SELECT
                     id,
@@ -37,8 +37,8 @@ class AccountDao:
             found_account = cursor.fetchone()
             return found_account
 
-    def get_account_password(self, account_filter, brandiDB):
-        with brandiDB.cursor() as cursor:
+    def get_account_password(self, account_filter, connection):
+        with connection.cursor() as cursor:
             query = """
                 SELECT
                     id,
@@ -53,8 +53,8 @@ class AccountDao:
         got_account_password = cursor.fetchone
         return got_account_password
 
-    def create_account(self, account_info, brandiDB):
-        with brandiDB.cursor() as cursor:
+    def create_account(self, account_info, connection):
+        with connection.cursor() as cursor:
             query = """
                 INSERT INTO accounts(
                     email,
@@ -75,9 +75,9 @@ class AccountDao:
             created_account = cursor.lastrowid
             return created_account
 
-    def update_account_info(self, account_filter, brandiDB):
+    def update_account_info(self, account_filter, connection):
 
-        with brandiDB.cursor() as cursor:
+        with connection.cursor() as cursor:
 
             query = """
                 UPDATE
@@ -127,9 +127,9 @@ class AccountDao:
         updated_account_info_log = cursor.lastrowid
         return updated_account_info_log
 
-    def create_seller(self, seller_info, brandiDB):
+    def create_seller(self, seller_info, connection):
 
-        with brandiDB.cursor() as cursor:
+        with connection.cursor() as cursor:
             query = """
                 INSERT INTO seller(
                     account_id,
@@ -178,7 +178,7 @@ class AccountDao:
 
             return created_seller
 
-        with brandiDB.cursor() as cursor:
+        with connection.cursor() as cursor:
             query = """
                 INSERT INTO seller_logs(
                     account_id,
@@ -229,9 +229,9 @@ class AccountDao:
             return created_seller_log
 
 
-    def update_seller(self, seller_info, brandiDB):
+    def update_seller(self, seller_info, connection):
 
-        with brandiDB.cursor() as cursor:
+        with connection.cursor() as cursor:
             query = """
                 UPDATE
                     seller
@@ -262,7 +262,7 @@ class AccountDao:
             updated_seller_info = cursor.lastrowid
             return updated_seller_info
 
-        with brandiDB.cursor() as cursor:
+        with connection.cursor() as cursor:
             query = """
                 UPDATE
                     seller
@@ -295,9 +295,9 @@ class AccountDao:
             return updated_seller_info_log
 
 
-    def find_seller(self, account_filter, brandiDB):
+    def find_seller(self, account_filter, connection):
 
-        with brandiDB.cursor() as cursor:
+        with connection.cursor() as cursor:
             query = """
                 SELECT
                     accounts.id,
@@ -314,20 +314,23 @@ class AccountDao:
                 WHERE
                     id = %(id)s
                 """
-            cursor.execute(query, account_filter, brandiDB)
+            cursor.execute(query, account_filter, connection)
             found_seller = cursor.fetchone()
             return found_seller
 
     
-    def list_seller(self, account_filter, brandiDB):
+    def list_seller(self, account_filter, connection):
 
-        with brandiDB.cursor() as cursor:
+        with connection.cursor() as cursor:
             query = """
                 SELECT
                     accounts.id,
                     sellers.id,
+                    sellers.account_id,
                     sellers.subcategory_id,
+                    subcategories.name
                     sellers.seller_status_id,
+                    seller_statuses.status
                     sellers.seller_name_kr,
                     sellers.seller_name_en,
                     sellers.service_number,
@@ -340,19 +343,94 @@ class AccountDao:
                     sellers.address_2,
                     sellers.is_open_weekend,
                     sellers.created_at,
-                    managers.name AS manager_name,
-                    managers.phone_number AS manager_phone_number,
-                    managers.email AS manager_email
+                    managers.name,
+                    managers.phone_number,
+                    managers.email,
+                    count(*)
                 FROM 
+                    sellers
+                LEFT JOIN
                     accounts
+                ON 
+                    sellers.account_id = account.id
                 LEFT JOIN
                     managers
-                ON account.id =
+                ON
+                    sellers.manager_id = managers.id WHERE managers.prority = 1
+                LEFT JOIN 
+                    subcategories
+                ON
+                    sellers.subcategory_id = subcategories.name
+                LEFT JOIN
+                    seller_statuses
+                ON
+                    sellers.seller_status_id = seller_statuses.status
+                """
 
+                query += """
+                WHERE 
+                    account.is_active = 1
+                """
 
+                if account_filter['account_id']:
+                    query += """
+                        AND 
+                            sellers.account_id = %(account_is)s
+                    """
+                if account_filter['seller_id']:
+                    query += """
+                        AND
+                            seller.id = %(account_is)s
+                    """
+                if account_filter['subcategory_id']:
+                    query += """
+                        AND
+                            subcategories.name = %(subcategory_name)s
+                    """
+                if account_filter['seller_name_kr']:
+                    query += """
+                        AND
+                            seller.seller_name_kr = %(seller_name_kr)s
+                    """
+                if account_filter['seller_name_en']:
+                    query += """
+                        AND 
+                            seller.seller_name_en = %(seller_name_en)s
+                    """
+                if account_filter['seller_name_en']:
+                    query += """
+                        AND 
+                            seller.seller_name_en = %(seller_name_en)s
+                    """
+                if account_filter['created_lower']:
+                    query += """
+                        AND
+                            sellers.created_at <= %(created_lower)s
+                    """
+                if account_filter['created_upper']:
+                    query += """
+                        AND
+                            sellers.created_at <= %(created_upper)s
+                    """
+                if account_filter['manager_name']:
+                    query += """
+                        AND
+                            manager.name <= %(manager_name)s
+                    """
+                if account_filter['seller_status']:
+                    query += """
+                        AND
+                            seller_statuses.status <= %(seller_status)s
+                    """
+                if account_filter['phone_number']:
+                    query += """
+                        AND
+                            managers.phone_number <= %(phone_number)s
+                    """
+                if account_filter['email']:
+                    query += """
+                        AND
+                            managers.email <= %(email)s
+                    """
 
-
-
-
-
-            """
+                    
