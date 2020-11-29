@@ -1,25 +1,31 @@
-import Vue from 'vue'
-import Router from 'vue-router'
-import Login from '../pages/login/login.vue'
-import Signup from '../pages/signup/signup.vue'
-import SellerList from '../pages/sellerList/sellerList.vue'
+import Vue from "vue";
+import Router from "vue-router";
+import Login from "../Pages/Login/Login.vue";
+import Signup from "../Pages/Signup/Signup.vue";
+import Main from "../Pages/Main/Main.vue";
+import SellerList from "../Pages/SellerList/SellerList.vue";
 
-Vue.use(Router)
+Vue.use(Router);
 export default new Router({
-    mode: 'history',
-    routes: [
+  mode: "history",
+  routes: [
+    {
+      path: "/",
+      component: Login,
+    },
+    {
+      path: "/signup",
+      component: Signup,
+    },
+    {
+      path: "/:menu",
+      component: Main,
+      children: [
         {
-            path: '/',
-            component: Login,
+          path: "sellerlist",
+          component: SellerList,
         },
-        {
-            path: '/signup',
-            component: Signup,
-        },
-        {
-            path: '/sellerList',
-            component: SellerList,
-        }
-
-    ]
-})
+      ],
+    },
+  ],
+});

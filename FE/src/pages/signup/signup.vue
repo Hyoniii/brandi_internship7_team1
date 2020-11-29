@@ -27,16 +27,13 @@
       <a-form :form="form" @submit="handleSubmit" class="signupInfo">
         <section class="basicSellerInfo signupSection">
           <div class="sectionTitle">가입정보</div>
-          <a-form-item
-            v-bind="formItemLayout"
-            class="{ hasError ? inputError : inputDefault }"
-          >
+          <a-form-item v-bind="formItemLayout" class="inputDefault">
             <a-input
-              placeholder="아이디"
-              id="formInputs.id.value"
-              v-model="formInputs.id.value"
+              placeholder="이메일"
+              id="formInputs.email.value"
+              v-model="formInputs.email.value"
               v-decorator="[
-                'id',
+                'email',
                 {
                   rules: [
                     {
@@ -44,9 +41,8 @@
                       message: '필수 입력항목입니다.',
                     },
                     {
-                      pattern: /^([A-Za-z0-9])([A-Za-z0-9_-]){4,19}$/,
-                      message:
-                        '아이디는 5~20글자의 영문, 숫자, 언더바, 하이픈만 사용 가능하며 시작 문자는 영문 또는 숫자입니다.',
+                      pattern: /^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$/i,
+                      message: '올바른 이메일을 입력해주세요.',
                     },
                   ],
                 },
@@ -54,16 +50,11 @@
             >
               <a-icon slot="prefix" type="user" />
             </a-input>
-            <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.id.errorMessage }}
-              </p>
-            </div>
           </a-form-item>
           <a-form-item
             v-bind="formItemLayout"
             has-feedback
-            class="{ hasError ? inputError : inputDefault }"
+            class="inputDefault"
           >
             <a-input-password
               placeholder="비밀번호"
@@ -92,16 +83,11 @@
             >
               <a-icon slot="prefix" type="lock" theme="filled" />
             </a-input-password>
-            <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.pw.errorMessage }}
-              </p>
-            </div>
           </a-form-item>
           <a-form-item
             v-bind="formItemLayout"
             has-feedback
-            class="{ hasError ? inputError : inputDefault}"
+            class="inputDefault"
           >
             <a-input-password
               placeholder="비밀번호 재입력"
@@ -126,11 +112,6 @@
             >
               <a-icon slot="prefix" type="lock" theme="filled" />
             </a-input-password>
-            <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.pwConfirm.errorMessage }}
-              </p>
-            </div>
           </a-form-item>
         </section>
         <section v-show="isSellerAccountType" class="managerInfo signupSection">
@@ -156,7 +137,7 @@
                     },
                     {
                       pattern: /^([\d-]+)$/,
-                      message: '전화번호를 정확히 입력해ㅐ주세요.',
+                      message: '전화번호를 정확히 입력해주세요.',
                     },
                   ],
                 },
@@ -165,9 +146,6 @@
               <a-icon slot="prefix" type="phone" theme="filled" />
             </a-input>
             <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.managerNumber.errorMessage }}
-              </p>
               <p class="managerInstructions inputDefaultLastChild">
                 입점 신청 후 브랜디 담당자가 연락을 드릴 수 있으니 정확한 정보를
                 기입해주세요.
@@ -177,10 +155,7 @@
         </section>
         <section v-show="!isSellerAccountType" class="signupSection sellerInfo">
           <div class="sectionTitle">마스터 정보</div>
-          <a-form-item
-            v-bind="formItemLayout"
-            class="{ hasError ? inputError : inputDefault }"
-          >
+          <a-form-item v-bind="formItemLayout" class="inputDefault">
             <a-input
               placeholder="성명"
               id="formInputs.fullName.value"
@@ -199,16 +174,11 @@
             >
               <a-icon slot="prefix" type="bold" />
             </a-input>
-            <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.fullName.errorMessage }}
-              </p>
-            </div>
           </a-form-item>
           <a-form-item
             v-bind="formItemLayout"
             has-feedback
-            class="{ hasError ? inputError : inputDefault }"
+            class="inputDefault"
           >
             <a-input-password
               placeholder="마스터 시크릿코드"
@@ -222,10 +192,42 @@
                       required: true,
                       message: '필수 입력항목입니다.',
                     },
+                    {
+                      validator: validateToNextMasterCode,
+                    },
                   ],
                 },
               ]"
               type="password"
+            >
+              <a-icon slot="prefix" type="question" />
+            </a-input-password>
+          </a-form-item>
+          <a-form-item
+            v-bind="formItemLayout"
+            has-feedback
+            class="{ hasError ? inputError : inputDefault }"
+          >
+            <a-input-password
+              placeholder="마스터 시크릿코드 재입력"
+              id="formInputs.masterSecretCodeConfirm.value"
+              v-model="formInputs.masterSecretCodeConfirm.value"
+              v-decorator="[
+                'masterSecretCodeConfirm',
+                {
+                  rules: [
+                    {
+                      required: true,
+                      message: '필수 입력항목입니다.',
+                    },
+                    {
+                      validator: compareToFirstMasterCode,
+                    },
+                  ],
+                },
+              ]"
+              type="password"
+              @blur="handleConfirmBlur"
             >
               <a-icon slot="prefix" type="question" />
             </a-input-password>
@@ -249,10 +251,7 @@
               >
             </a-radio-group>
           </div>
-          <a-form-item
-            v-bind="formItemLayout"
-            class="{ hasError ? inputError : inputDefault }"
-          >
+          <a-form-item v-bind="formItemLayout" class="inputDefault">
             <a-input
               placeholder="셀러명 (상호)"
               id="formInputs.sellerName.value"
@@ -271,16 +270,8 @@
             >
               <a-icon slot="prefix" type="smile" />
             </a-input>
-            <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.sellerName.errorMessage }}
-              </p>
-            </div>
           </a-form-item>
-          <a-form-item
-            v-bind="formItemLayout"
-            class="{ hasError ? inputError : inputDefault }"
-          >
+          <a-form-item v-bind="formItemLayout" class="inputDefault">
             <a-input
               placeholder="영문 셀러명 (영문상호)"
               id="formInputs.sellerEnglishName.value"
@@ -299,16 +290,8 @@
             >
               <a-icon slot="prefix" type="star" theme="filled" />
             </a-input>
-            <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.sellerEnglishName.errorMessage }}
-              </p>
-            </div>
           </a-form-item>
-          <a-form-item
-            v-bind="formItemLayout"
-            class="{ hasError ? inputError : inputDefault }"
-          >
+          <a-form-item v-bind="formItemLayout" class="inputDefault">
             <a-input
               placeholder="고객센터 전화번호"
               id="formInputs.customerServiceNumber.value"
@@ -365,6 +348,8 @@
 
 <script>
 export default {
+  name: "MainTopNav",
+
   data() {
     return {
       signupAccountTypes: [
@@ -374,7 +359,7 @@ export default {
       accountType: 1,
       isSellerAccountType: true,
       formInputs: {
-        id: { value: "", state: false, errorMessage: "" },
+        email: { value: "", state: false, errorMessage: "" },
         pw: { value: "", state: false, errorMessage: "" },
         pwConfirm: { value: "", state: false, errorMessage: "" },
         managerNumber: { value: "", state: false, errorMessage: "" },
@@ -383,6 +368,7 @@ export default {
         sellerEnglishName: { value: "", state: false, errorMessage: "" },
         customerServiceNumber: { value: "", state: false, errorMessage: "" },
         masterSecretCode: { value: "", state: false, errorMessage: "" },
+        masterSecretCodeConfirm: { value: "", state: false, errorMessage: "" },
       },
       sellerTypeOptions: [
         { id: 1, value: "쇼핑몰" },
@@ -393,6 +379,7 @@ export default {
         { id: 6, value: "내셔널 브랜드" },
         { id: 7, value: "뷰티" },
       ],
+      //폴더 따로 생성
       sellerType: "쇼핑몰",
       hasError: false,
       autoCompleteResult: [],
@@ -408,6 +395,7 @@ export default {
     handleCancelBtn() {
       alert("브랜디 가입을 취소하시겠습니까?");
     },
+    //antdesign 사용하기
     handleSubmit(e) {
       e.preventDefault();
       this.form.validateFieldsAndScroll((err, values) => {
@@ -429,6 +417,21 @@ export default {
       }
     },
     validateToNextPassword(rule, value, callback) {
+      const form = this.form;
+      if (value && this.confirmDirty) {
+        form.validateFields(["confirm"], { force: true });
+      }
+      callback();
+    },
+    compareToFirstMasterCode(rule, value, callback) {
+      const form = this.form;
+      if (value && value !== form.getFieldValue("masterSecretCode")) {
+        callback("마스터 코드가 일치하지 않습니다.");
+      } else {
+        callback();
+      }
+    },
+    validateToNextMasterCode(rule, value, callback) {
       const form = this.form;
       if (value && this.confirmDirty) {
         form.validateFields(["confirm"], { force: true });
