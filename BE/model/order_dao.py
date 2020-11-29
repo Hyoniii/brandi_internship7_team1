@@ -172,29 +172,29 @@ class OrderDao:
 
     def update_order_status(self, connection, order_status):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+
             query = """
             UPDATE order_items
             SET 
                 order_status_id = %(new_order_status)s
-            WHERE order_item_id IN %(order_item_id)s
+            WHERE id IN %(order_item_id)s
             """
             cursor.execute(query, order_status)
 
-            for item_id in order_status['order_item_id']:
 
-                query = """
-                INSERT INTO order_logs (
-                    order_item_id,
-                    editor_id,
-                    order_status_id
-                )
-                VALUES (
-                    %s,
-                    %(editor_id)s,
-                    %(new_order_status)s
-                )
-                """
-                cursor.execute(query, item_id, order_status)
+            query = """
+            INSERT INTO order_logs (
+                order_item_id,
+                editor_id,
+                order_status_id
+            )
+            VALUES (
+                %(order_item_id)s,
+                %(editor_id)s,
+                %(new_order_status)s
+            )
+            """
+            cursor.executemany(query, order_status)
 
             return True
 
