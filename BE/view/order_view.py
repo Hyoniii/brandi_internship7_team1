@@ -28,15 +28,16 @@ class OrderView:
 
     @order_app.route('', methods=['GET'])
     @validate_params(
+        # pattern 검사 추가하기
         Param('order_status_id', GET, int, required=True),
-        Param('order_number', GET, str, required=False),
-        Param('detailed_order_number', GET, str, required=False),
+        Param('order_number', GET, str, rules=[Pattern('^[0-9]{16,}')], required=False),
+        Param('detailed_order_number', GET, str, rules=[Pattern('^[0-9]{17,}')], required=False),
         Param('buyer_name', GET, str, required=False),
-        Param('phone_number', GET, str, required=False),
+        Param('phone_number', GET, str, rules=[Pattern('^[0-9]{11}')], required=False),
         Param('seller_name', GET, str, required=False),
         Param('product_name', GET, str, required=False),
-        Param('start_date', GET, str, required=False),
-        Param('end_date', GET, str, required=False),
+        Param('start_date', GET, str, rules=[Pattern('')], required=False),
+        Param('end_date', GET, str, rules=[Pattern('')], required=False),
         # 셀러속성 다중선택 가능
         Param('seller_type_id', GET, list, required=False),
         Param('limit', GET, int, required=False),
@@ -65,7 +66,6 @@ class OrderView:
             'order_by': args[11] if args[11] else 'desc',
             'page': args[12] if args[12] else 1
         }
-        #page limt 마이너스일 경우?
 
         #셀러일 경우 필터에 seller_id 추가
         #if g.account_type_id == 2:
@@ -89,10 +89,10 @@ class OrderView:
 
     @order_app.route('', methods=['POST'])
     @validate_params(
-        Param('order_item_id', JSON, list),
-        Param('order_status_id', JSON, int),
-        Param('order_action_id', JSON, int)
-    )
+         Param('order_item_id', JSON, list, required=True),
+         Param('order_status_id', JSON, int, required=True),
+         Param('order_action_id', JSON, int, required=True)
+     )
     # @login_required
     def update_order_status(*args):
         # 주문 아이템의 주문 상태를 변경하는 엔드포인트
@@ -115,13 +115,14 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            order_service.update_order_status(connection, update_order)
-
-            return jsonify({"message": "status successfully updated"})
+            number_of_orders_upated = order_service.update_order_status(connection, update_order)
+            connection.commit()
+            return jsonify({"message": f"{number_of_orders_upated} orders successfully updated"}), 201
 
         except Exception as e:
             connection.rollback()
             return jsonify({"message": f"{e}"})
+
 
         finally:
             try:
@@ -169,10 +170,10 @@ class OrderView:
     @validate_params(
         Param('order_item_id', PATH, int, required=True),
         Param('order_status_id', JSON, int, required=False),
-        Param('phone_number', JSON, str, required=False),
+        Param('phone_number', JSON, str, rules=[Pattern('^[0-9]{11}')], required=False),
         Param('address_1', JSON, str, required=False),
         Param('address_2', JSON, str, required=False),
-        Param('zip_code', JSON, str, required=False),
+        Param('zip_code', JSON, str, rules=[Pattern('^[0-9]{5}')], required=False),
         Param('delivery_instruction', JSON, str, required=False)
     )
     # @login_required

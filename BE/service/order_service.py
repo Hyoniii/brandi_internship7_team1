@@ -29,11 +29,23 @@ class OrderService():
 
         order_dao = OrderDao()
 
-        # 중간테이블에서 order_action_id에 해당하는 order_status_id 가져오기.
-        # new_order_status = order_dao.get_order_status_by_action(connection, order_action_id)
-        # update_order['new_order_status'] = new_order_status
+        new_order_status_id = order_dao.get_order_status_by_action(connection, update_order)
+        update_order['new_order_status_id'] = new_order_status_id['change_to']
 
-        order_dao.update_order_status(connection, update_order)
+        #주문상세 테이블 상태 업데이트
+        number_of_orders_updated = order_dao.update_order_status(connection, update_order)
+
+        #주문상태 로그 생성
+        log_list = [{
+            "order_item_id": i,
+            "editor_id": update_order['editor_id'],
+            "order_status_id": update_order['new_order_status_id']
+        } for i in update_order['order_item_id']]
+
+        order_dao.create_order_log(connection, log_list)
+
+        return number_of_orders_updated
+
 
     def get_order_detail(self, connection, order_filter):
         # 주문 상세정보를 가져오는 엔드포인트
@@ -61,18 +73,18 @@ class OrderService():
 
         return order_detail
 
-    # def update_order_detail(self, connection, order_status, delivery_info):
-    #     order_dao = OrderDao()
-    #
-    #     if order_status['order_status_id']:
-    #         order_dao.update_order_status(connection, order_status)
-    #
-    #     if delivery_info['phone_number'] \
-    #             or delivery_info['address_1'] \
-    #             or delivery_info['address_2'] \
-    #             or delivery_info['zip_code'] \
-    #             or delivery_info['delivery_instruction']:
-    #
-    #         order_dao.update_delivery_info(connection, delivery_info)
-    #
-    #     return True
+    def update_order_detail(self, connection, order_status, delivery_info):
+        order_dao = OrderDao()
+
+        if order_status['order_status_id']:
+            order_dao.update_order_status(connection, order_status)
+
+        if delivery_info['phone_number'] \
+                or delivery_info['address_1'] \
+                or delivery_info['address_2'] \
+                or delivery_info['zip_code'] \
+                or delivery_info['delivery_instruction']:
+
+            order_dao.update_delivery_info(connection, delivery_info)
+
+        return True

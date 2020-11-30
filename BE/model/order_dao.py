@@ -12,12 +12,12 @@ class OrderDao:
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             count = """
             SELECT 
-                count(item.detailed_order_number) as cnt
+                count(item.detailed_order_number) AS cnt
             """
 
             data = """
             SELECT
-                item.id,
+                item.id AS id,
                 item.detailed_order_number,
                 item.quantity,
                 item.product_price,
@@ -29,10 +29,10 @@ class OrderDao:
                 ticket.purchase_date,
                 ticket.total_price,
                 status.status,
-                Max(log.created_at) as updated_at,
+                log.created_at AS updated_at,
                 seller_name_kr,
-                products.name,
-                products.number,
+                products.name AS product_name,
+                products.number AS product_number,
                 color,
                 size, 
                 buyer.buyer_name,
@@ -46,16 +46,15 @@ class OrderDao:
             condition = """
             FROM order_items AS item
             INNER JOIN order_tickets AS ticket ON item.order_ticket_id = ticket.id
-            INNER JOIN order_logs AS log ON log.order_item_id = item.id
+            INNER JOIN order_logs AS log ON (log.order_item_id = item.id AND log.order_status_id = item.order_status_id)
             INNER JOIN order_statuses AS status ON item.order_status_id = status.id
             INNER JOIN sellers ON item.seller_id = sellers.id
             INNER JOIN products ON item.product_id = products.id
-            INNER JOIN product_options ON item.product_option_id = product_options.id
-            INNER JOIN product_colors ON product_options.color_id = product_colors.id
-            INNER JOIN product_sizes ON product_options.size_id = product_sizes.id
             INNER JOIN delivery_info AS buyer ON ticket.delivery_info_id = buyer.id
+            INNER JOIN product_options ON item.product_option_id = product_options.id
+            LEFT JOIN product_colors ON product_options.color_id = product_colors.id
+            LEFT JOIN product_sizes ON product_options.size_id = product_sizes.id
             """
-
 
             # 주문 리스트에서 보낸 요청일 경우(주문 "상태" id가 있을때)
             if 'order_status_id' in order_filter:
@@ -92,7 +91,7 @@ class OrderDao:
 
                 if order_filter['seller_name']:
                     condition += """
-                    AND (seller_name_kr = %(seller_name)s or seller_name_en = %(seller_name)s
+                    AND (seller_name_kr LIKE %(seller_name)s or seller_name_en Like %(seller_name)s)
                     """
 
                 if order_filter['product_name']:
@@ -151,9 +150,6 @@ class OrderDao:
             cursor.execute(query, order_filter)
             total_number = cursor.fetchone()
 
-            #if total_number == 0:
-            #    데이터 없음 에러
-
             return {"order_list": order_list, "total_number": total_number["cnt"]}
 
     def get_order_logs(self, connection, order_filter):
@@ -171,6 +167,18 @@ class OrderDao:
             cursor.execute(query, order_filter)
 
             return cursor.fetchall()
+
+    def get_order_status_by_action(self, connection, update_order):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+            SELECT change_to
+            FROM order_status_actions
+            WHERE order_action_id = %(order_action_id)s
+            AND order_status_id = %(order_status_id)s
+            """
+            cursor.execute(query, update_order)
+
+            return cursor.fetchone()
 
     def get_order_status_options(self, connection, order_filter):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -192,7 +200,7 @@ class OrderDao:
             query = """
             UPDATE delivery_info
             INNER JOIN order_tickets ON order_tickets.delivery_info_id = delivery_info.id
-            INNER JOIN order_items AS item ON order_items.order_ticket_id = order_tickets.id 
+            INNER JOIN order_items ON order_items.order_ticket_id = order_tickets.id 
             SET 
                 phone_number = %(phone_number)s,
                 address_1 = %(address_1)s,
@@ -205,7 +213,7 @@ class OrderDao:
 
             cursor.execute(query, delivery_info)
 
-            return True
+            return cursor.lastrowid
 
     def update_order_status(self, connection, update_order):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -213,25 +221,31 @@ class OrderDao:
             query = """
             UPDATE order_items
             SET 
-                order_status_id = %(new_order_status)s
+                order_status_id = %(new_order_status_id)s
             WHERE id IN %(order_item_id)s
             """
-            cursor.execute(query, update_order)
 
-            # 주문 변경이력 생성부분 (수정중)
-            # query = """
-            # INSERT INTO order_logs (
-            #     order_item_id,
-            #     editor_id,
-            #     order_status_id
-            # )
-            # VALUES (
-            #     %(order_item_id)s,
-            #     %(editor_id)s,
-            #     %(new_order_status)s
-            # )
-            # """
-            # cursor.executemany(query, update_order)
-            #
-            # return True
+            cursor.execute(query, update_order)
+            return cursor.rowcount
+
+    def create_order_log(self, connection, log_list):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            # 주문상태 변경 로그 생성
+            query = """
+            INSERT INTO order_logs (
+                order_item_id,
+                editor_id,
+                order_status_id
+            )
+            VALUES (
+                %(order_item_id)s,
+                %(editor_id)s,
+                %(order_status_id)s
+            )
+            """
+
+            for log in log_list:
+                cursor.execute(query, log)
+
+            return cursor.lastrowid
 
