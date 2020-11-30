@@ -20,19 +20,19 @@ class ProductDao:
 
                 query = '''
                     SELECT 
-                        S2.status as 등록상태,                        
-                        P.created_at as 등록일 ,
-                        I.img_url as 대표이미지,
-                        P.name as 상품명,
-                        P.code as 상품코드,
-                        P.number as 상품번호,
-                        S3.name as 셀러속성,
-                        S.seller_name_kr as 셀러명,
-                        P.price as 판매가,
-                        FLOOR(P.price*(100/P.discount_rate)) as 할인가,
-                        P.is_selling as 판매여부,
-                        P.is_visible as 진열여부,
-                        P.is_discount as 할인여부,
+                        S2.status as seller_status,                        
+                        P.created_at as created_at ,
+                        I.img_url as image,
+                        P.name as product_name,
+                        P.code as product_code,
+                        P.number as product_number,
+                        S3.name as seller_subcategory_name,
+                        S.seller_name_kr as seller_name,
+                        P.price ,
+                        FLOOR(P.price*(100/P.discount_rate)) as discount_price,
+                        P.is_selling as is_selling,
+                        P.is_visible as is_visible,
+                        P.is_discount as is_discount,
                         A.id as account_id           
                     FROM 
                         products as P
@@ -175,9 +175,35 @@ class ProductDao:
             db_connection.rollback()
             return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
 
-    # def get_main_categories(self,account_id,connection):
-    #     try:
-    #         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-    #             query = """
-    #
-    #             """
+    def seller_sub_categories(self, main_category_id, connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                    SELECT
+                        PC2.name,
+                        PC2.id
+                    FROM
+                        product_sub_categories as PC2
+                    LEFT JOIN
+                        product_categories as PC1
+                    ON
+                        PC2.category_id = PC1.id    
+                    """
+
+                if main_category_id:
+                    query += "PC1.id = %(main_category_id)s"
+
+                cursor.execute(query,main_category_id)
+                filter_categories = cursor.fetchall()
+                print(filter_categories)
+
+        except KeyError as e:
+            print(f'KEY_ERROR_WITH {e}')
+            db_connection.rollback()
+            return jsonify({'message': 'INVALID_KEY'}), 400
+
+        except Error as e:
+            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
+            db_connection.rollback()
+            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+

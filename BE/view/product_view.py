@@ -31,7 +31,6 @@ class ProductView:
         Param('is_selling', GET, bool, required=False),
         Param('is_visible', GET, bool, required=False),
         Param('is_discount', GET, bool, required=False),
-        Param('offset', GET, int, required=False),
         Param('limit', GET, int, required=False),
         Param('page', GET, int, required=False),
         Param('account_type_id', GET, int, required=False),#login_validator 완성 후 삭제 예정
@@ -97,16 +96,12 @@ class ProductView:
             'is_selling': args[7],
             'is_visible': args[8],
             'is_discount': args[9],
-            'offset': args[10],
-            'limit': args[11],
-            'page' : args[12],
-            'account_type_id' : args[13], # validator 완성 후 수정 예정
+            'limit': args[10],
+            'page' : args[11],
+            'account_type_id' : args[12], # validator 완성 후 수정 예정
             'account_id' : account_id
         }
 
-        # offset 과 limit 에 음수가 들어오면 default 값 지정
-        # if filter_data['offset'] < 0:
-        #     filter_data['offset'] = 0
 
         if filter_data['limit'] < 0:
             filter_data['limit'] = 10
@@ -138,7 +133,7 @@ class ProductView:
         Param('seller_id', GET, int, required=False),
         Param('seller_name', GET, str, required=False))
     def get_main_category(*args):
-        """ 상품 분류별 1차 카테고리 표출 엔드포인트
+        """ 상품 분류별 main 카테고리 표출 엔드포인트
         - master이면 seller검색
         - seller이면 validator 본인 id
 
@@ -173,6 +168,40 @@ class ProductView:
                 connection.close()
             except Exception as e:
                 return jsonify({'message': f'{e}'}), 500
+
+    @product_app.route('/category/<int:main_category_id>', methods=['GET'])
+    @validate_params(
+        Param('main_category_id', PATH, int)
+    )
+    def get_sub_category(main_category_id):
+        """ 상품 분류별 sub 카테고리 목록 표출 엔드포인트
+        Args:
+            *args:
+                main_category_id(int): 1차 카테고리 인덱스 번호
+        """
+        print(main_category_id)
+        connection = None
+        try:
+            connection = connect_db()
+            if connection:
+                product_service = ProductService()
+                sub_categories = product_service.product_sub_category(main_category_id, connection)
+                return sub_categories
+            else:
+                return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 400
+
+        except Exception as e:
+            return jsonify({'message': f'{e}'}), 500
+
+        finally:
+            try:
+                connection.close()
+            except Exception as e:
+                return jsonify({'message': f'{e}'}), 500
+
+
+
+
 
 
 

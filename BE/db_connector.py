@@ -10,7 +10,7 @@ def connect_db():
                             database = DATABASE['database'],
                             charset  = DATABASE['charset'],
                             #cursor   = pymysql.cursors.DictCursor,
-                            autocommit = 'False',
+                            autocommit = False,
                             read_timeout = 20,
                             db = 'brandi',
                             )
