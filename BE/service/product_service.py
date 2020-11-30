@@ -8,7 +8,7 @@ class ProductService:
         try:
             product_list = product_dao.product_list(filter_data,connection)
 
-            # pagination
+            #pagination
             page_size = filter_data['limit']
             limit = filter_data['page'] * page_size
             offset = limit - page_size
@@ -60,8 +60,11 @@ class ProductService:
         #     seller_categories = product_dao.seller_main_categories(filter_data, connection)
 
         main_categories = product_dao.seller_main_categories(filter_data,connection)
-
         return main_categories
 
+    def product_sub_category(self, main_category_id, connection):
+        product_dao = ProductDao()
+        sub_categories = product_dao.seller_sub_categories(main_category_id, connection)
+        print(main_category_id)
 
 
