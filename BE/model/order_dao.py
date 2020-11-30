@@ -12,7 +12,7 @@ class OrderDao:
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             count = """
             SELECT 
-                count(item.detailed_order_number)
+                count(item.detailed_order_number) as cnt
             """
 
             data = """
@@ -92,7 +92,7 @@ class OrderDao:
 
                 if order_filter['seller_name']:
                     condition += """
-                    AND (seller_name_kr = %(seller_name)s or seller_name_en = %seller_name)s
+                    AND (seller_name_kr = %(seller_name)s or seller_name_en = %(seller_name)s
                     """
 
                 if order_filter['product_name']:
@@ -154,7 +154,7 @@ class OrderDao:
             #if total_number == 0:
             #    데이터 없음 에러
 
-            return {"order_list": order_list, "total_number": total_number["count(item.detailed_order_number)"]}
+            return {"order_list": order_list, "total_number": total_number["cnt"]}
 
     def get_order_logs(self, connection, order_filter):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:

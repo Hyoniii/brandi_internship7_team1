@@ -65,6 +65,7 @@ class OrderView:
             'order_by': args[11] if args[11] else 'desc',
             'page': args[12] if args[12] else 1
         }
+        #page limt 마이너스일 경우?
 
         #셀러일 경우 필터에 seller_id 추가
         #if g.account_type_id == 2:
