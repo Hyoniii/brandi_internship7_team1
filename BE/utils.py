@@ -12,8 +12,8 @@ def login_validator:
 
         if access_token:
             try:
-                payload = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
-                account_id = payload['account_id']
+                data = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
+                account_id = data['account_id']
                 connection = connect_db()
 
                 if connection:
@@ -37,12 +37,12 @@ def login_validator:
                         account = connection.fetchone()
                         if account:
                             if account['is_active'] == 1 and account['account_type_id'] == 1:
-                                g.account_info = {
+                                g.toke_info = {
                                     'account_id': account_id,
                                     'account_type_id' : account['account_type_id'],
                                     'seller_id' : None}
                             if account['is_active'] == 1 and account['account_type_id'] == 2:
-                                g.account_info = {
+                                g.token_info = {
                                     'account_id': account_id,
                                     'account_type_id' : account['account_type_id'],
                                     'seller_id' : account['seller_id']
