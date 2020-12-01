@@ -1,10 +1,16 @@
-from flask      import Flask, jsonify
+from flask      import Flask, jsonify, g
 from flask_cors import CORS
 from flask.json import JSONEncoder
 from decimal    import Decimal
 from datetime   import datetime
 
 from view    import ProductView, OrderView, AccountView
+
+# g.acoount_info = {
+#     'account_id':1,
+#     'account_type_id':1,
+#     'seller_id': None
+# }
 
 class CustomJSONEncoder(JSONEncoder):
     """
@@ -20,6 +26,8 @@ class CustomJSONEncoder(JSONEncoder):
                History:
                    2020-11-25 : 초기 생성
                """
+        if isinstance(obj, set):
+            return list(obj)
         if isinstance(obj, Decimal): #tuple 반환 방지
             return float(obj)
         if isinstance(obj, bytes):
@@ -40,6 +48,7 @@ def create_app(test_config=None):
     app = Flask(__name__)
     app.json_encoder = CustomJSONEncoder
     CORS(app, resources={r'*': {'origins':'*'}})
+
     if test_config is None:
         app.config.from_pyfile('config.py')
     else:

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from flask                   import request, Blueprint,jsonify
 from flask.views             import MethodView
 from flask_request_validator import (

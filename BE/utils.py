@@ -1,19 +1,22 @@
 import os, io, jwt, uuid
 
-from flask        import request, jsonify, g 
+
+from flask        import request, jsonify, g
 from db_connector import connection
-from PIL          import image 
+from PIL          import image
 from config       import SECRET_KEY, ALGORITHM
 
 
-def login_validator:
+def login_validator(func):
+
     def wrapper(*args, **kwargs):
         access_token = request.headers.get('AUTHORIZATION', None)
 
         if access_token:
             try:
-                data = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
-                account_id = data['account_id']
+
+                payload = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
+                account_id = payload['account_id']
                 connection = connect_db()
 
                 if connection:
@@ -37,7 +40,7 @@ def login_validator:
                         account = connection.fetchone()
                         if account:
                             if account['is_active'] == 1 and account['account_type_id'] == 1:
-                                g.toke_info = {
+                                g.token_info = {
                                     'account_id': account_id,
                                     'account_type_id' : account['account_type_id'],
                                     'seller_id' : None}
@@ -50,9 +53,11 @@ def login_validator:
                                 return func(*args, **kwargs)
                             return jsonify({'MESSAGE' : 'account_not_active'}), 400
                         return jsonify({'MESSAGE' : 'account_nonexistant'}), 404
-                except Error as e:
-                    print (f'DATABASE_CURSOR_ERROR {e}')
-                    return Jsonify({'MESSAGE' : 'DB_error'}), 400
+
+                    except Error as e:
+                        print (f'DATABASE_CURSOR_ERROR {e}')
+                        return Jsonify({'MESSAGE' : 'DB_error'}), 400
+
             except jwt.InvalidTokenError:
                 return jsonify({'MESSAGE' : 'invalid_token'}), 401
 

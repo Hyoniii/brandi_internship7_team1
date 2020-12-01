@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ### OS ####
 import pymysql
 from mysql.connector.errors import Error
@@ -514,4 +515,3 @@ class AccountDao:
         except Error as e:
             print(f'DB_ERROR {e}')
             return jsonify({'MESSAGE': 'DB_CURSOR_ERROR'}), 500
-                        

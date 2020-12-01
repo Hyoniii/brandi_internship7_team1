@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import bcrypt
 
 from model.account_dao import AccountDao
