@@ -4,7 +4,7 @@ from flask.json import JSONEncoder
 from decimal    import Decimal
 from datetime   import datetime
 
-from view    import ProductView, OrderView
+from view    import ProductView, OrderView, AccountView
 
 # g.acoount_info = {
 #     'account_id':1,
@@ -56,5 +56,6 @@ def create_app(test_config=None):
 
     app.register_blueprint(ProductView.product_app)
     app.register_blueprint(OrderView.order_app)
+    app.register_blueprint(AccountView.account_app)
 
     return app
