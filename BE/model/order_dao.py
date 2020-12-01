@@ -19,27 +19,27 @@ class OrderDao:
             SELECT
                 item.id AS id,
                 item.detailed_order_number,
-                item.quantity,
+                item.quantity AS order_quantity,
                 item.product_price,
                 item.discount_rate,
-                item.total_price,
+                item.total_price AS item_subtotal,
                 item.seller_id,
                 item.order_status_id,
                 ticket.order_number,
                 ticket.purchase_date,
-                ticket.total_price,
-                status.status,
+                ticket.total_price AS total_order_amount,
+                status.status AS order_status,
                 log.created_at AS updated_at,
                 seller_name_kr,
                 products.name AS product_name,
                 products.number AS product_number,
-                color,
-                size, 
+                color AS option_color,
+                size AS option_size, 
                 buyer.buyer_name,
                 buyer.phone_number,
-                buyer.address_1,
-                buyer.address_2,
-                buyer.zip_code,
+                buyer.address_1 AS delivery_address_1,
+                buyer.address_2 AS delivery_address_2,
+                buyer.zip_code AS delivery_zip_code,
                 buyer.delivery_instruction
             """
 
@@ -168,7 +168,8 @@ class OrderDao:
 
             return cursor.fetchall()
 
-    def get_order_status_by_action(self, connection, update_order):
+    def get_order_status_by_action(self, connection, update_status):
+        # 클릭된 주문처리 버튼에 따라 변경할 상태 id를 리턴
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
             SELECT change_to
@@ -176,11 +177,12 @@ class OrderDao:
             WHERE order_action_id = %(order_action_id)s
             AND order_status_id = %(order_status_id)s
             """
-            cursor.execute(query, update_order)
+            cursor.execute(query, update_status)
 
             return cursor.fetchone()
 
     def get_order_status_options(self, connection, order_filter):
+        # 현재 주문 상태에서 선택 가능한 상태 id들을 리턴
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
             SELECT 
@@ -202,33 +204,70 @@ class OrderDao:
             INNER JOIN order_tickets ON order_tickets.delivery_info_id = delivery_info.id
             INNER JOIN order_items ON order_items.order_ticket_id = order_tickets.id 
             SET 
-                phone_number = %(phone_number)s,
-                address_1 = %(address_1)s,
-                address_2 = %(address_2)s,
-                zip_code = %(zip_code)s,
-                delivery_instruction = %(delivery_instruction)s,
-                editor_id = %(account_id)s
-            WHERE item.id = %(order_item_id)s
             """
 
+            if delivery_info['phone_number']:
+                query += """
+                phone_number = %(phone_number)s,
+                """
+            if delivery_info['address_1']:
+                query += """
+                address_1 = %(address_1)s,
+                """
+            if delivery_info['address_2']:
+                query += """
+                address_2 = %(address_2)s,
+                """
+            if delivery_info['zip_code']:
+                query += """
+                zip_code = %(zip_code)s,
+                """
+            if delivery_info['delivery_instruction']:
+                query += """
+                delivery_instruction = %(delivery_instruction)s
+                """
+
+            query += """
+                editor_id = %(editor_id)s
+            WHERE order_items.id = %(order_item_id)s
+            """
+
+            if 'seller_id' in delivery_info:
+                query += """
+                AND order_items.seller_id = %(seller_id)s
+                """
             cursor.execute(query, delivery_info)
 
             return cursor.lastrowid
 
-    def update_order_status(self, connection, update_order):
+    def update_order_status(self, connection, update_status):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-
             query = """
             UPDATE order_items
             SET 
                 order_status_id = %(new_order_status_id)s
-            WHERE id IN %(order_item_id)s
             """
 
-            cursor.execute(query, update_order)
+            if type(update_status['order_item_id']) == list:
+                query += """
+                WHERE id IN %(order_item_id)s
+                """
+
+            if type(update_status['order_item_id']) == int:
+                query += """
+                WHERE id = %(order_item_id)s
+                """
+
+            # 셀러일 경우 셀러id 확인
+            if 'seller_id' in update_status:
+                query += """
+                AND seller_id = %(seller_id)s
+                """
+            cursor.execute(query, update_status)
+
             return cursor.rowcount
 
-    def create_order_log(self, connection, log_list):
+    def create_order_log(self, connection, order_log):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             # 주문상태 변경 로그 생성
             query = """
@@ -244,8 +283,7 @@ class OrderDao:
             )
             """
 
-            for log in log_list:
-                cursor.execute(query, log)
+            cursor.executemany(query, order_log)
 
-            return cursor.lastrowid
+            return cursor.rowcount
 
