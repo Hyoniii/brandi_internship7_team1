@@ -1,5 +1,5 @@
 <template>
-  <div id="login">
+  <div id="Login">
     <div class="brandiLogo">
       <img
         src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
@@ -93,6 +93,8 @@ function hasErrors(fieldsError) {
 }
 
 export default {
+  name: "Login",
+
   data() {
     return {
       hasErrors,
@@ -131,7 +133,7 @@ export default {
 <style lang="scss">
 @import "../../styles.scss";
 
-#login {
+#Login {
   height: 100vh;
   margin: 0 auto;
   padding: 65px 0 50px;
@@ -180,6 +182,7 @@ export default {
 
       .loginInputs {
         .loginInfoInput {
+          margin-bottom: 5px;
           margin: 0 auto;
           width: 100%;
         }
