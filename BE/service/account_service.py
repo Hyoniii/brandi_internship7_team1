@@ -1,62 +1,63 @@
-<<<<<<< HEAD
 import bcrypt
 
 from model.account_dao import AccountDao
-from flask             import jsonify
+from flask import jsonify
+
 
 class AccountService:
-    # def get_first_categories(self,account_info,db_connection):
-    #     """  상품 1차 카테고리 목록 표출
-    #
-    #     seller 마다 다른
-    #     """
-
     def signup_account(self, account_info, connection):
         account_dao = AccountDao()
 
-        try:
-            is_existing_account = account_dao.find_account(account_info, connection)
-            if is_existing_account:
-                return jsonify({'MESSAGE': 'EXISTING_ID'}), 400
+        is_existing_email = account_dao.find_account(account_info, connection)
+        if is_existing_email:
+            raise Exception('EXISTING_EMAIL')
 
-            bcrypted_password = bcrypt.hashpw(account_info['password'].encode('utf-8'), bcrypt.gensalt())
-            account_info['password'] = bcrypted_password
+        bcrypt_password = bcrypt.hashpw(account_info['password'].encode('utf-8'), bcrypt.gensalt())
+        account_info['password'] = bcrypt_password
 
-            signed_up = account_dao.create_account(account_info, connection)
-            print(type(signed_up))
-            print(signed_up['ID']['account'])
+        signed_up_id = account_dao.create_account(account_info, connection)
+        return signed_up_id
 
-            return jsonify({'MESSAGE' : 'master_account_created', 'ID' : signed_up}), 200
-
-        except Exception as e:
-            return jsonify({'message': f'{e}'}), 500
-
-    def signup_seller(self, seller_info, connection):
+    def create_account_log(self, account_info, connection):
         account_dao = AccountDao()
 
-        try:
+        if signed_up_id:
+            account_info['account_id'] = signed_up_id
+            account_info['editor_id'] = signed_up_id
+            account_info['is_active'] = 1
 
-            is_kr_name_taken = account_dao.find_seller(seller_info, connection)
-            if is_kr_name_taken:
-                return jsonify({'MESSAGE': 'EXISTING_NAME'}), 400
+            account_log_id = account_dao.create_account_log(account_info, connection)
+            if not signed_up_id:
+                raise Exception('LOG_NOT_CREATED')
+            return account_log_id
 
-            is_en_name_taken = account_dao.find_seller(seller_info, connection)
-            if is_en_name_taken:
-                return jsonify({'MESSAGE' : 'EXISTING_NAME'}), 400
+        #
+        #     account_logged = account_dao.create_account_log(account_info, connection)
+        # except Exception as e:
+        #     return jsonify({'MESSAGE' : 'ACCOUNT_NOT_CREATED'}), 400
 
-            bcrypted_password = bcrypt.hashpw(account_info['password'].encode('utf-8'), bcrypt.gensalt())
-            account_info['password'] = bcrypted_password
+    def signup_seller(self, account_info, connection):
+        account_dao = AccountDao()
 
-            signed_up_account = account_dao.create_account(account_info, connection)
-            print(sign_up_account['ID']['account'])
-            signed_up_seller = account_dao.create_seller(seller_info, connection)
-            return jsonify({'MESSAGE' : 'seller_and_account_created' , 'account_ids' : signed_up}), 200
+        is_existing_email = account_dao.find_account(account_info, connection)
+        if is_existing_email:
+            raise Exception('EXISTING_EMAIL')
 
-        except Exception as e:
-            print(e)
-            return jsonify({'message': f'dao{e}'}), 500
+        is_kr_name_taken = account_dao.find_seller_name_kr_exist(account_info, connection)
+        if is_kr_name_taken:
+            raise Exception('EXISTING_KR_NAME')
 
+        is_en_name_taken = account_dao.find_seller_name_en_exist(account_info, connection)
+        if is_en_name_taken:
+            raise Exception('EXISTING_EN_NAME')
 
+        bcrypt_password = bcrypt.hashpw(account_info['password'].encode('utf-8'), bcrypt.gensalt())
+        account_info['password'] = bcrypt_password
+
+        signed_up_account = account_dao.create_account(account_info, connection)
+        account_info['account_id'] = signed_up_account
+        signed_up_seller = account_dao.create_seller(account_info, connection)
+        return 1
 
 
     # def signin(self, account_info, connection):

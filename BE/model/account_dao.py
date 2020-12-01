@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ### OS ####
 import pymysql
 from mysql.connector.errors import Error
@@ -25,30 +24,10 @@ class AccountDao:
                     email
                 FROM
                     accounts
+                WHERE
+                    email = %(email)s
                 """
-                # if account_info.get('email',None):
-                #     query += "WHERE email = %(email)s"
 
-                # elif account_info.get('id',None):
-                #     query += "WHERE id = %(id)s"
-                # print(account_info)
-
-                # for keys, values in account_info.items():
-                #     print(keys,values)
-                #     if keys == 'email': 
-                #         query += "WHERE email = %(email)s"
-                #     elif keys == 'id':
-                #         query += "WHERE id = %(id)s"
-                #     else:
-                #         pass
-
-                if account_info['email']:
-                    query += "WHERE email = %(email)s"
-
-                elif account_info['id']:
-                    query += "WHERE id = %(id)s"
-
-            
                 cursor.execute(query, account_info)
                 found_account = cursor.fetchone()
             return found_account
@@ -89,28 +68,29 @@ class AccountDao:
             return jsonify({'MESSAGE': 'DB_CURSOR_ERROR'}), 500
 
     def create_account(self, account_info, connection):
-        try: 
-            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                query = """
-                    INSERT INTO accounts(
-                        email,
-                        hashed_password,
-                        name,
-                        is_active,
-                        account_type_id
-                        )
-                    VALUES(
-                        %(email)s,
-                        %(password)s,
-                        %(name)s,
-                        1,
-                        %(account_type_id)s
-                        )
-                    """
-                cursor.execute(query, account_info)
-                created_account = cursor.lastrowid
-                account_info['account_id'] = created_account
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                INSERT INTO accounts(
+                    email,
+                    password,
+                    name,
+                    is_active,
+                    account_type_id
+                    )
+                VALUES(
+                    %(email)s,
+                    %(password)s,
+                    %(name)s,
+                    1,
+                    %(account_type_id)s
+                    )
+                """
+            cursor.execute(query, account_info)
+            return cursor.lastrowid
 
+    def create_account_log(self, account_info, connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
                 log_query = """
                     INSERT INTO account_logs(
                         email,
@@ -124,89 +104,52 @@ class AccountDao:
                     VALUES (
                         %(email)s,
                         %(account_id)s,
-                        1,
+                        %(editor_id)s,
                         %(account_id)s,
                         %(password)s,
                         %(name)s,
-                        1
+                        %(is_active)s
                         )
                 """
                 cursor.execute(log_query, account_info)
-                created_log = cursor.lastrowid
-                return {'account' : created_account, 'log' : created_log}
+                created_account_log = cursor.lastrowid
+                return created_account_log
 
         except KeyError as e:
-            print(f'KEY_ERROR {e}')
-            return jsonify({'MESSAGE': 'INVALID_KEY'}), 500
+            raise KeyError(f'{e}')
 
-        except Error as e:
-            print(f'DB_ERROR {e}')
-            return jsonify({'MESSAGE': 'DB_CURSOR_ERROR'}), 500
+        except Error:
+            raise Error('DB_ERROR')
+
             
 
-    def create_seller(self, seller_info, connection):
-
-        try:
-            with connection.cursor() as cursor:
-
-                seller_query = """
-                    INSERT INTO seller(
-                        account_id,
-                        subcategory_id,
-                        seller_status_id,
-                        seller_name_kr,
-                        seller_name_en,
-                        service_number
-                        )
-                    VALUES (
-                        %(account_id)s,
-                        %(subcategory_id)s,
-                        %(seller_status_id)s,
-                        %(seller_name_kr)s,
-                        %(seller_name_en)s,
-                        %(service_number)s
+    def create_seller(self, account_info, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            seller_query = """
+                INSERT INTO sellers(
+                    account_id,
+                    subcategory_id,
+                    seller_status_id,
+                    seller_name_kr,
+                    seller_name_en,
+                    service_number
                     )
-                """
-
-                cursor.execute(seller_query, seller_info)
-                created_seller = cursor.lastrowid
-
-                seller_log_query = """
-                    INSERT INTO seller(
-                        account_id,
-                        subcategory_id,
-                        seller_status_id,
-                        seller_name_kr,
-                        seller_name_en,
-                        service_number
-                        )
-                    VALUES (
-                        %(account_id)s,
-                        %(subcategory_id)s,
-                        %(seller_status_id)s,
-                        %(seller_name_kr)s,
-                        %(seller_name_en)s,
-                        %(service_number)s
-                    )
-                    
-                    """
-                cursor.execute(seller_log_query, seller_info)
-                created_seller_log = cursor.lastrowid
-
-                return {'seller' : created_seller, 'seller_log' : created_seller_log}
-
-        except KeyError as e:
-            print(f'KEY_ERROR {e}')
-            return jsonify({'MESSAGE': 'INVALID_KEY'}), 500
-
-        except Error as e:
-            print(f'DB_ERROR {e}')
-            return jsonify({'MESSAGE': 'DB_CURSOR_ERROR'}), 500
-
+                VALUES (
+                    %(account_id)s,
+                    %(subcategory_id)s,
+                    %(seller_status_id)s,
+                    %(seller_name_kr)s,
+                    %(seller_name_en)s,
+                    %(service_number)s
+                )
+            """
+            cursor.execute(seller_query, account_info)
+            created_seller = cursor.lastrowid
+            return created_seller
 
     def update_account_info(self, account_info, connection):
         try:
-            with connection.cursor() as cursor:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
 
                 query = """
                     UPDATE
@@ -268,7 +211,7 @@ class AccountDao:
     def update_seller(self, seller_info, connection):
 
         try:
-            with connection.cursor() as cursor:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
                 query = """
                     UPDATE
                         seller
@@ -341,53 +284,76 @@ class AccountDao:
 
 
     def find_seller(self, seller_info, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                SELECT
+                    accounts.id,
+                    accounts.account_type_id,
+                    accounts.email,
+                    sellers.id,
+                    sellers.seller_name_kr,
+                    sellers.seller_name_en
+                FROM 
+                    sellers
+                INNER JOIN 
+                    accounts
+                ON 
+                    accounts.id = sellers.account_id
+                WHERE
+                    sellers.id != NULL 
+                """
+            for keys, values in seller_info.items():
+                    if keys == 'email':
+                        query += """
+                        AND email = %(accounts.email)s
+                        """
+                    elif keys == 'id':
+                        query += """
+                        AND id = %(accounts.id)s
+                        """
+                    elif keys == 'seller_name_kr':
+                        query += """
+                        AND seller_name_kr = %(accounts.seller_name_kr)s
+                        """
+                    elif keys == 'seller_name_en':
+                        query += """
+                        AND seller_name_en = %(accounts.seller_name_en)s
+                        """
 
-        try:
-            with connection.cursor() as cursor:
-                query = """
-                    SELECT
-                        accounts.id,
-                        accounts.account_type_id,
-                        accounts.email,
-                        sellers.id,
-                        sellers.seller_name_kr
-                    FROM 
-                        sellers
-                    INNER JOIN 
-                        accounts
-                    ON 
-                        accounts.id = sellers.account_id
-                    WHERE
-                    """
-                for keys, values in seller_info.items():
-                        if keys == 'email': 
-                            query += """
-                            email = %(accounts.email)s
-                            """
-                        elif keys == 'id':
-                            query += """
-                            id = %(accounts.id)s
-                            """
-                        elif keys == 'seller_name_kr':
-                            query += """
-                            id = %(accounts.seller_name_kr)s
-                            """
-                        elif keys == 'seller_name_en':
-                            query += """
-                            id = %(accounts.seller_name_en)s
-                            """
+            cursor.execute(query, seller_info)
+            found_seller = cursor.fetchone()
+            return found_seller
 
-                cursor.execute(query, seller_info, connection)
-                found_seller = cursor.fetchone()
-                return found_seller
+    def find_seller_name_kr_exist(self, account_info, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                SELECT
+                    sellers.id,
+                    sellers.seller_name_kr
+                FROM 
+                    sellers
+                WHERE
+                    sellers.seller_name_kr = %(seller_name_kr)s 
+                """
+            cursor.execute(query, account_info)
+            found_seller = cursor.fetchone()
+            return found_seller
 
-        except KeyError as e:
-            print(f'KEY_ERROR {e}')
-            return jsonify({'MESSAGE': 'INVALID_KEY'}), 500
+    def find_seller_name_en_exist(self, account_info, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                SELECT
+                    sellers.id,
+                    sellers.seller_name_en
+                FROM 
+                    sellers
+                WHERE
+                    sellers.seller_name_en = %(seller_name_en)s
+                """
+            cursor.execute(query, account_info)
+            found_seller = cursor.fetchone()
+            return found_seller
 
-        except Error as e:
-            print(f'DB_ERROR {e}')
-            return jsonify({'MESSAGE': 'DB_CURSOR_ERROR'}), 500
 
     
     def list_seller(self, account_info, connection):
