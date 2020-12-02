@@ -14,6 +14,9 @@ from flask import jsonify
 """
 
 class AccountDao:
+    def __init__(self):
+        pass
+
     def find_account(self, account_info, connection):
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -57,7 +60,8 @@ class AccountDao:
                         id = %(id)s
                     """
 
-                cursor.execute(query, account_info)
+                result = cursor.execute(query, account_info)
+
                 got_account_password = cursor.fetchone
                 return got_account_password
 

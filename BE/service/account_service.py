@@ -7,6 +7,9 @@ from flask import jsonify
 
 
 class AccountService:
+    def __init__(self):
+        pass
+
     def signup_account(self, account_info, connection):
         account_dao = AccountDao()
 

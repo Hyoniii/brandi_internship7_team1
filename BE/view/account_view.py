@@ -156,7 +156,7 @@ class AccountView:
             connection = connect_db()
             account_service = AccountService()
             seller_list = account_service.filter_seller(filter_info, user, connection)
-            return seller_list
+            return jsonify({'seller_list' : seller_list}), 200
 
         except Exception as e:
             return jsonify ({'MESSAGE' : f'{e}'}, 400)
