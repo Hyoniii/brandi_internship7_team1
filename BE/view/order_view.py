@@ -85,6 +85,33 @@ class OrderView:
             except Exception as e:
                 return jsonify({"message": f"{e}"})
 
+    @order_app.route('/filter_options/<order_status_id>', methods=['GET'])
+    @validate_params(
+        Param('order_status_id', PATH, int, rules=[Enum(1, 2, 3, 4, 5)])
+    )
+    # @login_required
+    def get_filter_options(order_status_id):
+        # 주문관리 페이지에서 셀러속성 리스트와 주문상태변경 버튼 보내주는 엔드포인트
+
+        order_service = OrderService()
+        account_type_id = 2 # 테스트용 g.token_info['account_type_id']
+
+        connection = None
+        try:
+            connection = connect_db()
+            filter_options = order_service.get_filter_options(connection, account_type_id, order_status_id)
+            return jsonify(filter_options), 200
+
+        except Exception as e:
+            return jsonify({"message": f"{e}"})
+
+        finally:
+            try:
+                if connection:
+                    connection.close()
+            except Exception as e:
+                return jsonify({"message": f"{e}"})
+
     @order_app.route('', methods=['POST'])
     @validate_params(
         Param('order_item_id', JSON, list, rules=[MinLength(1)], required=True),

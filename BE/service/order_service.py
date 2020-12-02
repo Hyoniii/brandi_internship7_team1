@@ -1,4 +1,5 @@
 from model.order_dao import OrderDao
+from model.account_dao import AccountDao
 
 
 class OrderService():
@@ -23,6 +24,24 @@ class OrderService():
 
         return order_info
 
+    def get_filter_options(self, connection, account_type_id, order_status_id):
+
+        order_dao = OrderDao()
+        account_dao = AccountDao()
+        seller_types = None
+
+        # 마스터일 경우 셀러속성 리스트를 보냄
+        if account_type_id == 1:
+            seller_types = account_dao.get_seller_types(connection)
+
+        order_actions = order_dao.get_order_actions_by_status(connection, order_status_id)
+
+        filter_options = {
+            "seller_types": seller_types,
+            "order_actions": order_actions
+        }
+
+        return filter_options
 
     def update_order_status(self, connection, update_status):
         # 여러 아이템의 주문 상태를 한꺼번에 업데이트하고 아이템마다 로그를 생성함.
@@ -56,12 +75,8 @@ class OrderService():
         order_info = order_dao.get_order_info(connection, order_filter)
         order_logs = order_dao.get_order_logs(connection, order_filter)
 
-        # 현재상태와 다음 주문상태 id를 리스트로 만듬.
-        current_status_id = order_info['order_list'][0]['order_status_id']
-        new_status_id = current_status_id + 1
-        order_filter['order_status_options'] = [current_status_id, new_status_id]
-
         #가능한 주문상태 변경 옵션 가져오기
+        order_filter['order_status_id'] = order_info['order_list'][0]['order_status_id']
         order_status_options = order_dao.get_order_status_options(connection, order_filter)
 
         order_detail = {
