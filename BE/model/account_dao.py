@@ -21,7 +21,9 @@ class AccountDao:
                 SELECT
                     id,
                     account_type_id,
-                    email
+                    email,
+                    password,
+                    is_active
                 FROM
                     accounts
                 WHERE
@@ -89,39 +91,30 @@ class AccountDao:
             return cursor.lastrowid
 
     def create_account_log(self, account_info, connection):
-        try:
-            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                log_query = """
-                    INSERT INTO account_logs(
-                        email,
-                        account_id,
-                        account_type_id,
-                        editor_id,
-                        password,
-                        name,
-                        is_active
-                        )
-                    VALUES (
-                        %(email)s,
-                        %(account_id)s,
-                        %(editor_id)s,
-                        %(account_id)s,
-                        %(password)s,
-                        %(name)s,
-                        %(is_active)s
-                        )
-                """
-                cursor.execute(log_query, account_info)
-                created_account_log = cursor.lastrowid
-                return created_account_log
-
-        except KeyError as e:
-            raise KeyError(f'{e}')
-
-        except Error:
-            raise Error('DB_ERROR')
-
-            
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            log_query = """
+                INSERT INTO account_logs(
+                    email,
+                    account_id,
+                    account_type_id,
+                    editor_id,
+                    password,
+                    name,
+                    is_active
+                    )
+                VALUES (
+                    %(email)s,
+                    %(account_id)s,
+                    %(account_type_id)s,
+                    %(editor_id)s,
+                    %(password)s,
+                    %(name)s,
+                    %(is_active)s
+                    )
+            """
+            cursor.execute(log_query, account_info)
+            created_account_log = cursor.lastrowid
+            return created_account_log
 
     def create_seller(self, account_info, connection):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:

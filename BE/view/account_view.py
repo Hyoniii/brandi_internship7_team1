@@ -1,4 +1,5 @@
 from flask import request, Blueprint, jsonify
+from datetime import datetime, timedelta
 from flask.views import MethodView
 from flask_request_validator import (
     GET,
@@ -44,6 +45,7 @@ class AccountView:
             account_service = AccountService()
             try:
                 signed_up_id = account_service.signup_account(account_info, connection)
+
                 connection.commit()
                 connection.close()
                 return jsonify({'MESSAGE': 'ACCOUNT_CREATED', }), 200
@@ -91,18 +93,22 @@ class AccountView:
         finally:
                 connection.close()
 
-    # @account_app.route('/signin', methods=['POST'])
-    # def sign_in():
-    #     try:
-    #         brandiDB = connect_db()
-    #         data = request.json
-    #         return brandiDB
-    #     except Exception as e:
-    #         return jsonify ({'message' : f'{e}'}, 400)
+    @account_app.route('/signin', methods=['POST'])
+    def sign_in():
+        connection = None
+        try:
+            connection = connect_db()
+            login_data = request.json
+            account_service = AccountService()
+            token = account_service.signin(login_data, connection)
+            return token
+        except Exception as e:
+            connection.rollback()
+            return jsonify ({'MESSAGE' : f'{e}'}, 400)
 
-    #     finally:
-    #         if brandiDB:
-    #             brandiDB.close()
+        finally:
+            if connection:
+                connection.close()
 
     # @account_app.route('/find', methods=['POST'])
     # def get_user(*args):
@@ -125,31 +131,6 @@ class AccountView:
     #         if db_connection:
     #             db_connection.close()
 
-    # @account_app.route('/signup', methods=['POST'])
-    # def signup():
-    #     try:
-    #         brandiDB = connect_db()
-    #         data = request.json
-    #         return brandiDB
-    #     except Exception as e:
-    #         return jsonify ({'message' : f'{e}'}, 400)
-
-    #     finally:
-    #         if brandiDB:
-    #             brandiDB.close()
-
-    # @account_app.route('/navbar', methods=['GET'])
-    # def NavBar():
-    #     try:
-    #         brandiDB = connect_db()
-    #         data = request.json
-    #         return brandiDB ###different navbar items based on user 
-    #     except Exception as e:
-    #         return jsonify ({'message' : f'{e}'}, 400)
-
-    #     finally:
-    #         if brandiDB:
-    #             brandiDB.close()
 
     # @account_app.route('/password_change', methods=['POST'])
     # def change_password():
