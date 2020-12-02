@@ -47,7 +47,7 @@ class AccountService:
         signed_up_account = account_dao.create_account(account_info, connection)
         account_info['account_id'] = signed_up_account
         signed_up_seller = account_dao.create_seller(account_info, connection)
-        return 1
+        return signed_up_seller
 
     def create_account_log(self, account_info, signed_up_id, connection,*args):
         account_dao = AccountDao()
@@ -87,6 +87,17 @@ class AccountService:
                 raise Exception('ACCOUNT_NOT_ACTIVE')
         else:
             raise Exception('ACCOUNT_DOES_NOT_EXIST')
+
+    def filter_seller(self, filter_info, user, connection):
+        account_dao = AccountDao()
+        account_type_id = user.get('account_type_id')
+        if account_type_id == 1:
+            seller_list = account_dao.list_seller(filter_info, connection)
+            return seller_list
+        else:
+            raise Exception('NO_MASTER_AUTH')
+
+
 
     #     """
     #     1. Open DB 

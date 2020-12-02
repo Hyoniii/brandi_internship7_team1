@@ -1,4 +1,4 @@
-from flask import request, Blueprint, jsonify
+from flask import request, Blueprint, jsonify, g
 from datetime import datetime, timedelta
 from flask.views import MethodView
 from flask_request_validator import (
@@ -14,6 +14,7 @@ from flask_request_validator import (
 )
 from service.account_service import AccountService
 from db_connector import connect_db
+from utils import login_validator
 
 
 class AccountView:
@@ -103,33 +104,69 @@ class AccountView:
             token = account_service.signin(login_data, connection)
             return token
         except Exception as e:
-            connection.rollback()
             return jsonify ({'MESSAGE' : f'{e}'}, 400)
 
         finally:
             if connection:
                 connection.close()
 
-    # @account_app.route('/find', methods=['POST'])
-    # def get_user(*args):
 
-    #     db_connection = None
+    @account_app.route('/seller_list', methods=['GET'])
+    @login_validator
+    @validate_params(
+        Param('seller_id', GET, int, required=False),
+        Param('account_id', GET, int, required=False),
+        Param('email', GET, str, required=False),
+        Param('seller_en', GET, str, required=False),
+        Param('seller_kr', GET, str, required=False),
+        Param('user_id', GET, int, required=False),
+        Param('manager_name', GET, str, required=False),
+        Param('manager_email', GET, str, required=False),
+        Param('seller_status', GET, str, required=False),
+        Param('manager_phone', GET, str, required=False),
+        Param('seller_category', GET, str, required=False),
+        Param('created_lower', GET, str, required=False),
+        Param('created_upper', GET, str, required=False),
+        Param('excel', GET, int, required=False),
+        Param('offset', GET, int, required=False),
+        Param('limit', GET, int, required=False)
+    )
+    def list_sellers(*args):
+        db_connection = None
+        user = g.token_info
+        filter_info = {
+            'seller_id' : args[0],
+            'account_id' : args[1],
+            'email' : args[2],
+            'seller_en' : args[3],
+            'seller_kr' : args[4],
+            'user_id' : args[5],
+            'manager_name' : args[6],
+            'manager_email' : args[7],
+            'seller_status' : args[8],
+            'manager_phone' : args[9],
+            'seller_category' : args[10],
+            'created_upper' : args[11],
+            'created_lower' : args[12],
+            'excel' : args[13],
+            'page' : args[14],
+            'limit' : args[15]
+        }
+        try:
+            connection = connect_db()
+            account_service = AccountService()
+            seller_list = account_service.filter_seller(filter_info, user, connection)
+            return seller_list
 
-    #     try:
-    #         brandiDB = connect_db()
-    #         data = request.json
+        except Exception as e:
+            return jsonify ({'MESSAGE' : f'{e}'}, 400)
 
-    #         if brandi_DB:
-    #             filter_info = {
-    #                 'page'            : args[0],
-    #                 'limit'           : args[1]
-    #             }
-    #     except Exception as e:
-    #         return jsonify({"message" : f'{e}'}), 400
-
-    #     finally:
-    #         if db_connection:
-    #             db_connection.close()
+        # except Exception as e:
+        #     return jsonify({"message" : f'{e}'}), 400
+        #
+        # finally:
+        #     if db_connection:
+        #         db_connection.close()
 
 
     # @account_app.route('/password_change', methods=['POST'])

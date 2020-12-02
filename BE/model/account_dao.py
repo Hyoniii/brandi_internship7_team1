@@ -349,128 +349,113 @@ class AccountDao:
 
 
     
-    def list_seller(self, account_info, connection):
-        try:
-            with connection.cursor() as cursor:
-                query = """
-                    SELECT
-                        accounts.id,
-                        sellers.id,
-                        sellers.account_id,
-                        sellers.subcategory_id,
-                        subcategories.name
-                        sellers.seller_status_id,
-                        seller_statuses.status
-                        sellers.seller_name_kr,
-                        sellers.seller_name_en,
-                        sellers.service_number,
-                        sellers.open_time,
-                        sellers.close_time,
-                        sellers.delivery_policy,
-                        sellers.return_policy,
-                        sellers.zip_code,
-                        sellers.address_1,
-                        sellers.address_2,
-                        sellers.is_open_weekend,
-                        sellers.created_at,
-                        managers.name,
-                        managers.phone_number,
-                        managers.email,
-                        count(*)
-                    FROM 
-                        sellers
-                    LEFT JOIN
-                        accounts
-                    ON 
-                        sellers.account_id = account.id
-                    LEFT JOIN
-                        managers
-                    ON
-                        sellers.manager_id = managers.id WHERE managers.prority = 1
-                    LEFT JOIN 
-                        subcategories
-                    ON
-                        sellers.subcategory_id = subcategories.name
-                    LEFT JOIN
-                        seller_statuses
-                    ON
-                        sellers.seller_status_id = seller_statuses.status
-                    """
+    def list_seller(self, filter_info, connection):
 
+        with connection.cursor() as cursor:
+            query = """
+                SELECT
+                    accounts.id,
+                    accounts.email,
+                    accounts.is_active,
+                    sellers.id,
+                    sellers.account_id,
+                    sellers.subcategory_id,
+                    seller_subcategories.name,
+                    sellers.seller_status_id,
+                    seller_statuses.status,
+                    sellers.seller_name_kr,
+                    sellers.seller_name_en,
+                    sellers.service_number,
+                    sellers.created_at,
+                    managers.name,
+                    managers.phone_number,
+                    managers.email,
+                    COUNT(*) as filtered_items_count
+                FROM 
+                    sellers
+                LEFT JOIN
+                    accounts
+                ON 
+                    sellers.account_id = accounts.id
+                RIGHT JOIN
+                    managers
+                ON
+                    accounts.id = managers.seller_id
+                LEFT JOIN 
+                    seller_subcategories
+                ON
+                    sellers.subcategory_id = seller_subcategories.name
+                LEFT JOIN
+                    seller_statuses
+                ON
+                    sellers.seller_status_id = seller_statuses.status
+                WHERE 
+                    accounts.is_active = 1
+                AND
+                    managers.priority = 1
+                """
+
+            if filter_info['account_id']:
                 query += """
-                    WHERE 
-                        account.is_active = 1
-                    """
+                    AND 
+                        sellers.account_id = %(account_id)s
+                """
+            if filter_info['email']:
+                query += """
+                    AND
+                        accounts.email = %(email)s
+                """
+            if filter_info['seller_id']:
+                query += """
+                    AND
+                        sellers.id = %(seller_id)s
+                """
+            if filter_info['seller_category']:
+                query += """
+                    AND
+                        subcategories.name = %(seller_category)s
+                """
+            if filter_info['seller_kr']:
+                query += """
+                    AND
+                        seller.seller_name_kr = %(seller_kr)s
+                """
+            if filter_info['seller_en']:
+                query += """
+                    AND 
+                        seller.seller_name_en = %(seller_en)s
+                """
+            if filter_info['created_lower']:
+                query += """
+                    AND
+                        sellers.created_at <= %(created_lower)s
+                """
+            if filter_info['created_upper']:
+                query += """
+                    AND
+                        sellers.created_at <= %(created_upper)s
+                """
+            if filter_info['manager_name']:
+                query += """
+                    AND
+                        manager.name <= %(manager_name)s
+                """
+            if filter_info['seller_status']:
+                query += """
+                    AND
+                        seller_statuses.status <= %(seller_status)s
+                """
+            if filter_info['manager_phone']:
+                query += """
+                    AND
+                        managers.phone_number <= %(manager_phone)s
+                """
+            if filter_info['email']:
+                query += """
+                    AND
+                        managers.email <= %(email)s
+                """
 
-                if account_info['account_id']:
-                    query += """
-                        AND 
-                            sellers.account_id = %(account_is)s
-                    """
-                if account_info['seller_id']:
-                    query += """
-                        AND
-                            seller.id = %(account_is)s
-                    """
-                if account_info['subcategory_id']:
-                    query += """
-                        AND
-                            subcategories.name = %(subcategory_name)s
-                    """
-                if account_info['seller_name_kr']:
-                    query += """
-                        AND
-                            seller.seller_name_kr = %(seller_name_kr)s
-                    """
-                if account_info['seller_name_en']:
-                    query += """
-                        AND 
-                            seller.seller_name_en = %(seller_name_en)s
-                    """
-                if account_info['seller_name_en']:
-                    query += """
-                        AND 
-                            seller.seller_name_en = %(seller_name_en)s
-                    """
-                if account_info['created_lower']:
-                    query += """
-                        AND
-                            sellers.created_at <= %(created_lower)s
-                    """
-                if account_info['created_upper']:
-                    query += """
-                        AND
-                            sellers.created_at <= %(created_upper)s
-                    """
-                if account_info['manager_name']:
-                    query += """
-                        AND
-                            manager.name <= %(manager_name)s
-                    """
-                if account_info['seller_status']:
-                    query += """
-                        AND
-                            seller_statuses.status <= %(seller_status)s
-                    """
-                if account_info['phone_number']:
-                    query += """
-                        AND
-                            managers.phone_number <= %(phone_number)s
-                    """
-                if account_info['email']:
-                    query += """
-                        AND
-                            managers.email <= %(email)s
-                    """
-
-                cursor.execute(query, account_info, connection)
-                listed_seller = cursor.fetchone()
-                return listed_seller
-
-        except KeyError as e:
-            print(f'KEY_ERROR {e}')
-            return jsonify({'MESSAGE': 'INVALID_KEY'}), 500
-
-        except Error as e:
-            print(f'DB_ERROR {e}')
-            return jsonify({'MESSAGE': 'DB_CURSOR_ERROR'}), 500
+            cursor.execute(query, filter_info)
+            listed_seller = cursor.fetchall()
+            return listed_seller

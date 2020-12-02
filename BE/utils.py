@@ -1,9 +1,10 @@
 import os, io, jwt, uuid
+import pymysql
 
 
 from flask        import request, jsonify, g
-from db_connector import connection
-from PIL          import image
+from db_connector import connect_db
+from mysql.connector.errors import Error
 from config       import SECRET_KEY, ALGORITHM
 
 
@@ -27,29 +28,24 @@ def login_validator(func):
                                     accounts.account_type_id,
                                     accounts.is_active,
                                     accounts.id,
-                                    sellers.account_id
                                     sellers.id as seller_id
                                 FROM
                                     accounts
-                                INNER JOIN
-                                    sellers ON sellers.account_id = account.id
+                                LEFT JOIN
+                                    sellers ON sellers.account_id = accounts.id
                                 WHERE
                                     accounts.id = %(account_id)s
                             """
-                        cursor.execute(query, {'account_id': account_id})
-                        account = connection.fetchone()
+                            cursor.execute(query, {'account_id': account_id})
+                            print(cursor.execute(query, {'account_id': account_id}))
+                            account = cursor.fetchone()
+                            print(account)
                         if account:
-                            if account['is_active'] == 1 and account['account_type_id'] == 1:
+                            if account['is_active'] == 1:
                                 g.token_info = {
                                     'account_id': account_id,
                                     'account_type_id' : account['account_type_id'],
                                     'seller_id' : None}
-                            if account['is_active'] == 1 and account['account_type_id'] == 2:
-                                g.token_info = {
-                                    'account_id': account_id,
-                                    'account_type_id' : account['account_type_id'],
-                                    'seller_id' : account['seller_id']
-                                    }
                                 return func(*args, **kwargs)
                             return jsonify({'MESSAGE' : 'account_not_active'}), 400
                         return jsonify({'MESSAGE' : 'account_nonexistant'}), 404
