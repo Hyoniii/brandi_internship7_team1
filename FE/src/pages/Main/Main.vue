@@ -14,7 +14,7 @@
           sub-title="This is a
         subtitle"
         />
-        <router-view class="routerView" />
+        <router-view />
       </a-layout>
     </a-layout>
     <main-footer />
@@ -27,7 +27,7 @@ import MainSideNav from "../../Components/MainSideNav";
 import MainFooter from "../../Components/MainFooter";
 import SellerList from "../SellerList/SellerList";
 export default {
-  name: "Main",
+  name: "main",
 
   components: {
     "main-top-nav": MainTopNav,
@@ -52,6 +52,11 @@ export default {
         },
       ],
     };
+  },
+  created() {
+    // this.$route.path; // /teams/t1
+    // console.log(this.$route);
+    const menu = this.$route.params.menu;
   },
 };
 </script>

@@ -1,10 +1,7 @@
 <template>
   <div id="Login">
     <div class="brandiLogo">
-      <img
-        src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
-        alt="브랜디로고"
-      />
+      <img src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png" alt="브랜디로고" />
     </div>
     <div class="loginContainer">
       <div class="loginHeader">브랜디 어드민 로그인</div>
@@ -25,11 +22,7 @@
               ]"
               placeholder="아이디"
             >
-              <a-icon
-                slot="prefix"
-                type="user"
-                style="color: rgba(0, 0, 0, 0.25)"
-              />
+              <a-icon slot="prefix" type="user" style="color: rgba(0, 0, 0, 0.25)" />
             </a-input>
           </a-form-item>
           <a-form-item
@@ -49,11 +42,7 @@
               type="password"
               placeholder="비밀번호"
             >
-              <a-icon
-                slot="prefix"
-                type="lock"
-                style="color: rgba(0, 0, 0, 0.25)"
-              />
+              <a-icon slot="prefix" type="lock" style="color: rgba(0, 0, 0, 0.25)" />
             </a-input>
           </a-form-item>
         </section>
@@ -64,14 +53,13 @@
               html-type="submit"
               :disabled="hasErrors(form.getFieldsError())"
               class="loginBtn"
-            >
-              로그인
-            </a-button>
+              @click="handleLoginBtn"
+            >로그인</a-button>
           </a-form-item>
 
           <div class="registerOptions">
             아직 셀러가 아니신가요?
-            <a class="registerStartBtn">회원가입하기</a>
+            <a class="registerStartBtn" @click="createAccount">회원가입하기</a>
           </div>
         </section>
       </a-form>
@@ -93,7 +81,7 @@ function hasErrors(fieldsError) {
 }
 
 export default {
-  name: "Login",
+  name: "login",
 
   data() {
     return {
@@ -108,6 +96,9 @@ export default {
     });
   },
   methods: {
+    createAccount() {
+      this.$router.push("/signup");
+    },
     // Only show error after a field is touched.
     userNameError() {
       const { getFieldError, isFieldTouched } = this.form;
@@ -125,6 +116,25 @@ export default {
           console.log("Received values of form: ", values);
         }
       });
+    },
+    handleLoginBtn(e) {
+// fetch(API, {
+//       method: "POST",
+//       body: JSON.stringify({
+//         email: emailValue,
+//         password: pwValue
+//       })
+//     })
+//       .then(response => response.json())
+//       .then(response => {
+//         console.log("================================");
+//         console.log("백앤드에서 오는 응답 메세지: ", response);
+
+//         if (response.Authorization) {
+//           alert("로그인 성공");
+//           localStorage.setItem("token", response.Authorization);
+//         }
+//       });
     },
   },
 };
