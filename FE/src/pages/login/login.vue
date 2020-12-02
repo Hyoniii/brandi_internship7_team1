@@ -71,7 +71,7 @@
 
           <div class="registerOptions">
             아직 셀러가 아니신가요?
-            <a class="registerStartBtn">회원가입하기</a>
+            <a class="registerStartBtn" @click="createAccount">회원가입하기</a>
           </div>
         </section>
       </a-form>
@@ -93,7 +93,7 @@ function hasErrors(fieldsError) {
 }
 
 export default {
-  name: "Login",
+  name: "login",
 
   data() {
     return {
@@ -108,6 +108,9 @@ export default {
     });
   },
   methods: {
+    createAccount() {
+      this.$router.push("/signup");
+    },
     // Only show error after a field is touched.
     userNameError() {
       const { getFieldError, isFieldTouched } = this.form;

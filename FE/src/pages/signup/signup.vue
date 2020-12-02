@@ -241,7 +241,7 @@
         <section v-show="isSellerAccountType" class="signupSection sellerInfo">
           <div class="sectionTitle">셀러 정보</div>
           <div class="sellerTypes">
-            <a-radio-group v-model="sellerType">
+            <a-radio-group v-model="sellerType" required>
               <a-radio
                 :value="sellerTypeOption.id"
                 :key="sellerTypeOption.id"
@@ -328,7 +328,7 @@
               <a-button
                 class="btnGrouped"
                 type="danger"
-                v-on:click="handleCancelBtn"
+                @click="handleCancelBtn"
                 >취소</a-button
               >
               <a-button
@@ -348,7 +348,7 @@
 
 <script>
 export default {
-  name: "MainTopNav",
+  name: "signup",
 
   data() {
     return {
@@ -379,7 +379,6 @@ export default {
         { id: 6, value: "내셔널 브랜드" },
         { id: 7, value: "뷰티" },
       ],
-      //폴더 따로 생성
       sellerType: "쇼핑몰",
       hasError: false,
       autoCompleteResult: [],
@@ -393,9 +392,15 @@ export default {
     //   target.state = reg.test(target.value);
     // },
     handleCancelBtn() {
-      alert("브랜디 가입을 취소하시겠습니까?");
+      this.$confirm({
+        title: "브랜디 가입을 취소하시겠습니까?",
+        content: "OK를 누르면 1초후에 창이 자동으로 닫힙니다!",
+        onOk: () => {
+          this.$router.push("/");
+        },
+        onCancel() {},
+      });
     },
-    //antdesign 사용하기
     handleSubmit(e) {
       e.preventDefault();
       this.form.validateFieldsAndScroll((err, values) => {
