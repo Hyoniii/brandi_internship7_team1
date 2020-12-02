@@ -3,6 +3,8 @@ from flask import jsonify,g
 from mysql.connector.errors import Error
 
 class ProductDao:
+    def __init__(self):
+        pass
 
     def product_list(self,filter_data,connection):
         """필터링 된 상품 리스트
@@ -24,7 +26,8 @@ class ProductDao:
 
                 list_select = """
                 SELECT 
-                    S2.status as seller_status,                        
+                    S2.status as seller_status, 
+                    PO.number,                    
                     P.created_at as created_at ,
                     I.img_url as image,
                     P.name as product_name,
@@ -42,6 +45,10 @@ class ProductDao:
                 list_from = """
                 FROM 
                     products as P
+                LEFT JOIN
+                    product_options as PO
+                ON
+                    PO.product_id = P.id
                 LEFT JOIN
                     product_images as I
                 ON 
@@ -63,7 +70,7 @@ class ProductDao:
                 ON
                     A.id = S.account_id
                 WHERE
-                    I.ordering = 1     
+                    I.ordering = 1   
                 """
                 #seller일 경우 seller의 product만 표출 , validator 완성 후 수정
                 if filter_data['account_type_id'] != 1:
@@ -131,7 +138,6 @@ class ProductDao:
                         list_from += """
                         AND P.is_discount = 0
                         """
-
 
                 # 등록순 정렬
                 list_from += """
@@ -358,69 +364,39 @@ class ProductDao:
             connection.rollback()
             return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
 
-
-    # def create_code(self,code,connection):
-    #     try:
-    #         with connection.cursor() as cursor:
-    #
-    #             query = """
-	#             DROP TRIGGER IF EXISTS product_codes_seq;
-	#             DELIMITER $$
-    #             CREATE TRIGGER product_codes_seq
-    #             BEFORE INSERT products
-    #             FOR EACH ROW
-    #             BEGIN
-    #               INSERT INTO product_codes_seq;
-    #               SET NEW.code = CONCAT( %s , LPAD(LAST_INSERT_ID(), 4, '0'));
-    #             END$$
-    #             DELIMITER ;
-    #             """
-    #
-    #             cursor.execute(query,code)
-    #             code = cursor.fetchall()
-    #             print(code)
-    #             return code
-    #
-    #     except KeyError as e:
-    #         print(f'KEY_ERROR WITH {e}')
-    #         return jsonify({'message': 'INVALID_KEY'}), 400
-    #
-    #     except Error as e:
-    #         print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-    #         connection.rollback()
-    #         return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
-
-
     def create_product(self,filter_data,connection):
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                # 트랜잭션 시작
-                cursor.execute("START TRANSACTION")
-                # 자동 커밋 비활성화
-                cursor.execute("SET AUTOCOMMIT=0")
 
-                product_insert_query = """
+                query = """
                 INSERT INTO products(
                     seller_id,
                     sub_category_id,
                     name,
                     code,
-                    number,
                     price,
                     is_selling,
                     is_visible,
                     short_desc,
                     desc_img_url,
                     min_order,
-                    max_order"""
-
-                product_values_query = """
-                VALUES (
+                    max_order """
+                if filter_data['is_information_notice'] == 1:
+                    query += "," \
+                    "manufacturer," \
+                    "manufacture_date," \
+                    "made_in"
+                if filter_data['is_discount_period'] == 1:
+                     query += "," \
+                    "discount_start_datetime," \
+                    "discount_end_datetime"
+                query += """
+                )
+                VALUES(
                     %(seller_id)s,
                     %(sub_category_id)s,
                     %(product_name)s,
-                    CONCAT(%(product_code)s,%(seller_id)s,%(product_name)s),
-                    %(number)s,
+                    %(code)s, 
                     %(price)s,
                     %(is_selling)s,
                     %(is_visible)s,
@@ -428,78 +404,138 @@ class ProductDao:
                     %(desc_img_url)s,
                     %(min_order)s,
                     %(max_order)s"""
+                if filter_data['is_information_notice'] == 1:
+                    query += "," \
+                    "%(manufacturer)s," \
+                    "%(manufacture_date)s," \
+                    "%(made_in)s"
+                if filter_data['is_discount_period'] == 1:
+                    query += "," \
+                    "%(discount_start_datetime)s," \
+                    "%(discount_end_datetime)s"
+                query += """
+                )
+                """
 
-                if filter_data.get('is_information_notice'):
-                    if filter_data['is_information_notice'] == 1:
-                        product_insert_query += ",manufacturer," \
-                                        "manufacture_date," \
-                                        "made_in"
-                        product_values_query += ",%(manufacturer)s," \
-                                        "%(manufacture_date)s," \
-                                        "%(made_in)s"
-
-
-                if filter_data.get('is_discount_period'):
-                    if filter_data['is_discount_period'] == 1:
-                        product_insert_query += ",discount_start_datetime," \
-                                        "discount_end_datetime"
-                        product_values_query += ",%(discount_start_datetime)s," \
-                                        "%(discount_end_datetime)s"
-
-                product_insert_query += ")"
-                product_values_query += ")"
-
-                query = product_insert_query + product_values_query
                 cursor.execute(query, filter_data)
-
                 product_id = cursor.lastrowid
                 filter_data['product_id'] = product_id
 
-                print(filter_data['is_inventory_management'])
-                if filter_data.get('is_inventory_management') is not None:
-                    if filter_data['is_inventory_management'] != 1:
-                        filter_data['inventory'] = None
-
-                        option_insert_query = """
-                        INSERT INTO product_options(
-                            product_id,
-                            color_id,
-                            size_id,
-                            inventory
-                        )
-                        VALUES(
-                            %(product_id)s,
-                            %(color_id)s,
-                            %(size_id)s,
-                            %(inventory)s  
-                        )
-                        """
-                        inventory  = filter_data['inventory']
-                        product_id = filter_data['product_id']
-                        color_list = filter_data['color_option_id']
-                        size_list  = filter_data['size_option_id']
-
-                        for color in color_list:
-                            for size in size_list:
-                                option = {
-                                    'color_id'  : color,
-                                    'size_id'   : size,
-                                    'product_id': product_id,
-                                    'inventory' : inventory
-                                }
-                                cursor.execute(option_insert_query, option)
-
-                create_product = cursor.fetchall()
-                connection.commit()
-                return jsonify({'message': 'SUCCESS'}), 200
+                return filter_data
 
         except KeyError as e:
-            print(f'KEY_ERROR WITH {e}')
-            return jsonify({'message': 'INVALID_KEY'}), 400
+            raise e
 
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
+
+    def create_product_log(self,product_data,connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+
+                query = """
+                INSERT INTO product_logs(
+                    product_id,
+                    editor_id,
+                    seller_id,
+                    sub_category_id,
+                    name,
+                    code,
+                    price,
+                    is_selling,
+                    is_visible,
+                    short_desc,
+                    desc_img_url,
+                    min_order,
+                    max_order """
+                if product_data['is_information_notice'] == 1:
+                    query += "," \
+                    "manufacturer," \
+                    "manufacture_date," \
+                    "made_in"
+                if product_data['is_discount_period'] == 1:
+                     query += "," \
+                    "discount_start_datetime," \
+                    "discount_end_datetime"
+                query += """
+                )
+                VALUES(
+                    %(product_id)s,
+                    %(editor_id)s,
+                    %(seller_id)s,
+                    %(sub_category_id)s,
+                    %(product_name)s,
+                    %(code)s, 
+                    %(price)s,
+                    %(is_selling)s,
+                    %(is_visible)s,
+                    %(short_description)s,
+                    %(desc_img_url)s,
+                    %(min_order)s,
+                    %(max_order)s"""
+                if product_data['is_information_notice'] == 1:
+                    query += "," \
+                    "%(manufacturer)s," \
+                    "%(manufacture_date)s," \
+                    "%(made_in)s"
+                if product_data['is_discount_period'] == 1:
+                    query += "," \
+                    "%(discount_start_datetime)s," \
+                    "%(discount_end_datetime)s"
+                query += """
+                )
+                """
+
+                cursor.execute(query, product_data)
+                product_log = cursor.fetchall()
+
+                return product_log
+
+        except KeyError as e:
+            raise e
+
+        except Exception as e:
+            raise e
+
+
+
+    def create_options(self,options, connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                INSERT INTO product_options(
+                    product_id,
+                    color_id,
+                    size_id,
+                    inventory,
+                    number,
+                    id
+                )
+                VALUES(
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s,
+                    %s
+                )
+                """
+
+                cursor.executemany(query, options)
+                #options_count = cursor.rowcount
+                options_count = cursor.fetchall()
+
+                return options_count
+
+        except KeyError as e:
+            raise e
+
+        except Exception as e:
+            raise e
+
+
+
+
+
 
 
