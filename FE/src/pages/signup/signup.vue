@@ -2,26 +2,18 @@
   <div id="signup">
     <div class="signupContainer">
       <div class="brandiLogo">
-        <img
-          alt="로고이미지"
-          src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
-        />
+        <img alt="로고이미지" src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png" />
       </div>
       <div class="signupHeader">
         <div class="signupHeading">회원가입</div>
         <div class="divider"></div>
-        <a-radio-group
-          class="signupAccountTypes"
-          v-model="accountType"
-          button-style="solid"
-        >
+        <a-radio-group class="signupAccountTypes" v-model="accountType" button-style="solid">
           <a-radio-button
             :value="signupAccountType.id"
             :key="signupAccountType.id"
             v-for="signupAccountType in signupAccountTypes"
             class="signupAccountType"
-            >{{ signupAccountType.value }}</a-radio-button
-          >
+          >{{ signupAccountType.value }}</a-radio-button>
         </a-radio-group>
       </div>
       <a-form :form="form" @submit="handleSubmit" class="signupInfo">
@@ -51,11 +43,7 @@
               <a-icon slot="prefix" type="user" />
             </a-input>
           </a-form-item>
-          <a-form-item
-            v-bind="formItemLayout"
-            has-feedback
-            class="inputDefault"
-          >
+          <a-form-item v-bind="formItemLayout" has-feedback class="inputDefault">
             <a-input-password
               placeholder="비밀번호"
               id="formInputs.pw.value"
@@ -84,11 +72,7 @@
               <a-icon slot="prefix" type="lock" theme="filled" />
             </a-input-password>
           </a-form-item>
-          <a-form-item
-            v-bind="formItemLayout"
-            has-feedback
-            class="inputDefault"
-          >
+          <a-form-item v-bind="formItemLayout" has-feedback class="inputDefault">
             <a-input-password
               placeholder="비밀번호 재입력"
               id="formInputs.pwConfirm.value"
@@ -119,10 +103,7 @@
             담당자 정보
             <span class="titleHelper">(*실제 샵을 운영하시는 분)</span>
           </div>
-          <a-form-item
-            v-bind="formItemLayout"
-            class="{ hasError ? inputError : inputDefault }"
-          >
+          <a-form-item v-bind="formItemLayout" class="{ hasError ? inputError : inputDefault }">
             <a-input
               placeholder="핸드폰번호"
               id="formInputs.managerNumber.value"
@@ -175,11 +156,7 @@
               <a-icon slot="prefix" type="bold" />
             </a-input>
           </a-form-item>
-          <a-form-item
-            v-bind="formItemLayout"
-            has-feedback
-            class="inputDefault"
-          >
+          <a-form-item v-bind="formItemLayout" has-feedback class="inputDefault">
             <a-input-password
               placeholder="마스터 시크릿코드"
               id="formInputs.masterSecretCode.value"
@@ -232,9 +209,7 @@
               <a-icon slot="prefix" type="question" />
             </a-input-password>
             <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.masterSecretCode.errorMessage }}
-              </p>
+              <p v-if="hasError" class="errorMessage">{{ formInputs.masterSecretCode.errorMessage }}</p>
             </div>
           </a-form-item>
         </section>
@@ -247,8 +222,7 @@
                 :key="sellerTypeOption.id"
                 v-for="sellerTypeOption in sellerTypeOptions"
                 class="sellerTypesOptions"
-                >{{ sellerTypeOption.value }}</a-radio
-              >
+              >{{ sellerTypeOption.value }}</a-radio>
             </a-radio-group>
           </div>
           <a-form-item v-bind="formItemLayout" class="inputDefault">
@@ -315,9 +289,7 @@
               <a-icon slot="prefix" type="phone" theme="filled" />
             </a-input>
             <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">
-                {{ formInputs.managerNumber.errorMessage }}
-              </p>
+              <p v-if="hasError" class="errorMessage">{{ formInputs.managerNumber.errorMessage }}</p>
             </div>
           </a-form-item>
         </section>
@@ -325,19 +297,13 @@
         <a-form-item v-bind="tailFormItemLayout" class="signupBtnsContainer">
           <div class="signupBtns">
             <a-button-group class="signupBtnsGroup">
-              <a-button
-                class="btnGrouped"
-                type="danger"
-                @click="handleCancelBtn"
-                >취소</a-button
-              >
+              <a-button class="btnGrouped" type="danger" @click="handleCancelBtn">취소</a-button>
               <a-button
                 class="btnGrouped"
                 type="primary"
                 @click="handleRegisterBtn"
                 html-type="submit"
-                >신청</a-button
-              >
+              >신청</a-button>
             </a-button-group>
           </div>
         </a-form-item>
@@ -391,6 +357,28 @@ export default {
     // validateInput(reg, target) {
     //   target.state = reg.test(target.value);
     // },
+    handleRegisterBtn() {
+    // fetch(API, {
+    //   method: "POST",
+    //   body: JSON.stringify({
+    //     first_name: nameFirstValue,
+    //     last_name: nameLastValue,
+    //     email: emailValue,
+    //     birth_date: dateValue,
+    //     password: pwValue
+    //   })
+    // })
+    //   .then(response => response.json())
+    //   .then(result => {
+    //     console.log("================================");
+    //     console.log("백앤드에서 오는 응답 메세지: ", result);
+    //     if (result.message === "SUCCESS") {
+    //       alert("회원가입 성공");
+    //     } else {
+    //       alert("다시 시도해주세용! ;P");
+    //     }
+    //   });
+    },
     handleCancelBtn() {
       this.$confirm({
         title: "브랜디 가입을 취소하시겠습니까?",
