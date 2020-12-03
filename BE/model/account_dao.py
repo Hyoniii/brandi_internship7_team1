@@ -450,12 +450,12 @@ class AccountDao:
                     managers.email <= %(email)s
                 """
             if filter_info['order_by']:
-                if filter_info['order_by'] = 'desc'
-                query += """
+                if filter_info['order_by'] == 'desc':
+                    query += """
                 ORDER BY sellers.created_at DESC
                 """
                 else:
-                query += """
+                    query += """
                 ORDER BY sellers.created_at ASC
                 """
             elif not filter_info['order_by']:
