@@ -1,8 +1,14 @@
+import uuid
+import re
+
 from model.product_dao import ProductDao
 from flask             import jsonify, g
-from config            import MAIN_CODE
+
+
 
 class ProductService:
+    def __init__(self):
+        pass
 
     def get_product_list(self, filter_data, connection):
         product_dao = ProductDao()
@@ -101,41 +107,51 @@ class ProductService:
 
     def create_product(self,filter_data,connection):
         product_dao = ProductDao()
-        #account_type_id = g.account_info['account_type_id']
+        # account_type_id = g.account_info['account_type_id']
 
-        #min,max order 범위 설정
+        # min,max order 범위 설정
         if filter_data['min_order'] > filter_data['max_order']:
             filter_data['min_order'] = filter_data['max_order']
 
-        #code 생성
-        product_subcategory_id = filter_data['sub_category_id']
+        # code,number 생성
+        filter_data['code'] = uuid.uuid4().hex[:6].upper()
+        filter_data['number'] = re.sub("[^0-9]", "", str(uuid.uuid4()) )
 
-        code_info = product_dao.get_code_info(product_subcategory_id,connection)
+        # insert_product
+        product_data = product_dao.create_product(filter_data,connection)
+        print(product_data)
 
-        if code_info[0] is not None:
-            code = ""
-            if code_info[0] >= 1 or code_info[0] <= 61:
-                code += MAIN_CODE[0] + str(code_info[1])
-            elif code_info[0] >= 32 or code_info[0] <= 79:
-                code += MAIN_CODE[1] + str(code_info[1])
-            filter_data['product_code'] = code
-            #new_code = product_dao.create_code(code,connection)
+        # product_log 생성
+        product_log = product_dao.create_product_log(product_data,connection)
+        print(product_log)
 
 
-        #number 생성
-        # count = len(filter_data['size_option_id']) * len(filter_data['color_option_id'])
-        # filter_data['count'] = count
 
-        account_type_id = 1 #하드코딩
-        #master이면 form 데이터에서 seller_id
 
-        if account_type_id == 1 :
-            if filter_data['seller_id']:
-                create_product_result = product_dao.create_product(filter_data, connection)
-                #create_product_log = product_dao.create_product(filter_data, connection)
-        elif account_type_id == 2:
-            #filter_data['seller_id'] = g.account_info['seller_id']
-            create_product_result = product_dao.create_product(filter_data, connection)
-            #create_product_log = product_dao.create_product(filter_data, connection)
+        # 옵션 생성
+        product_id  = product_data['product_id']
+        options = product_data['option_list']
+
+        [option.insert(0, product_id) or option.append(str(options.index(option) + 1)) for option in options]
+
+        print(options)
+
+        #new_option = product_dao.create_options(options,connection)
+        #print(option_count)
+
+
+
+
+
+
+        return None
+
+
+
+
+
+
+
+
 
 

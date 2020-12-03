@@ -5,6 +5,7 @@ from db_connector            import connect_db
 from flask_request_validator import (
     GET,
     FORM,
+    JSON,
     PATH,
     Param,
     Pattern,
@@ -209,46 +210,43 @@ class ProductView:
     @product_app.route('/register', methods=['POST'])
     ##@login_validator
     @validate_params(
-        Param('is_selling', FORM, int),
-        Param('is_visible', FORM, int),
-        Param('sub_category_id', FORM, int, required=False),
-        Param('product_name', FORM, str,
+        Param('is_selling', JSON, int),
+        Param('is_visible', JSON, int),
+        Param('sub_category_id', JSON, int, required=False),
+        Param('product_name', JSON, str,
               rules=[Pattern(r"[^\"\']")]),
-        Param('is_information_notice', FORM, int),
-        Param('manufacturer', FORM, str, required=False),
-        Param('manufacture_date', FORM, str, required=False, rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
-        Param('made_in', FORM, str, required=False),
-        Param('short_description', FORM, str, required=False),
-        Param('color_option_id', FORM, list),
-        Param('size_option_id', FORM, list),
-        Param('is_inventory_management', FORM, int),
-        Param('inventory', FORM, int, required=False),
-        Param('price', FORM, int),
-        Param('discount_rate', FORM, float, required=False),
-        Param('is_discount_period', FORM, int),
-        Param('discount_start_time', FORM, str, required=False),
-        Param('discount_end_time', FORM, str, required=False),
-        Param('min_order', FORM, int),
-        Param('max_order', FORM, int),
-        Param('seller_id', FORM, int, required=False),
-        Param('number', FORM, int, required=False),
-
-        # integer parameter 범위 지정을 위한 검증
-        Param('is_selling', FORM, str,
+        Param('is_information_notice', JSON, int),
+        Param('manufacturer', JSON, str, required=False),
+        Param('manufacture_date', JSON, str, required=False, rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
+        Param('made_in', JSON, str, required=False),
+        Param('short_description', JSON, str, required=False),
+        Param('is_inventory_management', JSON, int),
+        Param('inventory', JSON, int, required=False),
+        Param('price', JSON, int),
+        Param('discount_rate', JSON, float, required=False),
+        Param('is_discount_period', JSON, int),
+        Param('discount_start_time', JSON, str, required=False),
+        Param('discount_end_time', JSON, str, required=False),
+        Param('min_order', JSON, int),
+        Param('max_order', JSON, int),
+        Param('seller_id', JSON, int, required=False),
+        Param('option_list', JSON, list),
+      # integer parameter 범위 지정을 위한 검증
+        Param('is_selling', JSON, str,
               rules=[Pattern(r'^([0-1])$')]),
-        Param('is_visible', FORM, str,
+        Param('is_visible', JSON, str,
               rules=[Pattern(r'^([0-1])$')]),
-        Param('sub_category_id', FORM, str,
+        Param('sub_category_id', JSON, str,
               rules=[Pattern(r'^([0-9]|[0-9][0-9]|[1][0][0-9]|[1][1][0-4])$')]),
-        Param('max_order', FORM, str,
+        Param('max_order', JSON, str,
               rules=[Pattern(r'^([1-9]|[1-2][0-9])$')]),
-        Param('min_order', FORM, str,
+        Param('min_order', JSON, str,
               rules=[Pattern(r'^([1-9]|[1-2][0-9])$')])
               )
     def create_product(*args):
         connection = None
 
-        if args[18] > 19 or args[19] > 19:
+        if args[16] > 19 or args[17] > 19:
             return jsonify({'message': 'value_error'}), 400
 
         filter_data = {
@@ -262,39 +260,41 @@ class ProductView:
             'manufacture_date'        : args[6],
             'made_in'                 : args[7],
             'short_description'       : args[8],
-            'color_option_id'         : args[9],
-            'size_option_id'          : args[10],
-            'is_inventory_management' : args[11],
-            'inventory'               : args[12],
-            'price'                   : args[13],
-            'discount_rate'           : args[14],
-            'is_discount_period'      : args[15],
-            'discount_start_datetime'     : args[16],
-            'discount_end_datetime'       : args[17],
-            'min_order'               : args[18],
-            'max_order'               : args[19],
-            'seller_id'               : args[20],
-            'number'                  : args[21],
-            'desc_img_url'            : "image.jpg"
+            'is_inventory_management' : args[9],
+            'inventory'               : args[10],
+            'price'                   : args[11],
+            'discount_rate'           : args[12],
+            'is_discount_period'      : args[13],
+            'discount_start_datetime' : args[14],
+            'discount_end_datetime'   : args[15],
+            'min_order'               : args[16],
+            'max_order'               : args[17],
+            'seller_id'               : args[18], #if args[20] else g.token_info['seller_id'],
+            'desc_img_url'            : "image.jpg",
+            'option_list'             : args[19]
         }
         try:
             connection = connect_db()
+
             if connection:
                 product_service = ProductService()
-                new_product     = product_service.create_product(filter_data, connection)
-                print(new_product)
-                return jsonify(new_product)
-
+                product_service.create_product(filter_data, connection)
+                connection.commit()
+                return jsonify({'message' : 'SUCCESS'}), 200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
         except Exception as e:
+            connection.rollback()
             return jsonify({'message': f'{e}'}), 500
+
+        except KeyError:
+            db_connection.rollback()
+            return jsonify({'message' 'KEY_ERROR'}), 400
 
         finally:
             try:
                 connection.close()
-
             except Exception as e:
                 return jsonify({'message': f'{e}'}), 500
 
