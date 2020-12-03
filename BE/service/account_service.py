@@ -24,7 +24,6 @@ class AccountService:
         account_info['account_id']= signed_up_id
         account_info['editor_id'] = signed_up_id
         account_info['is_active'] = 1
-        print(account_info)
         account_dao.create_account_log(account_info, connection)
         return signed_up_id
 
@@ -49,29 +48,18 @@ class AccountService:
 
         signed_up_account = account_dao.create_account(account_info, connection)
         account_info['account_id'] = signed_up_account
+        account_info['editor_id'] = signed_up_account
+        account_info['is_active'] = 1
+
+        account_dao.create_account_log(account_info, connection)
+
         signed_up_seller = account_dao.create_seller(account_info, connection)
+        account_info['seller_id'] = signed_up_seller
+
+        account_dao.create_seller_log(account_info, connection)
+
         return signed_up_seller
 
-    def create_account_log(self, account_info, signed_up_id, connection,*args):
-        account_dao = AccountDao()
-        signupaccount = signup_account()
-        signupseller = signup_seller()
-
-        if signed_up_id:
-            account_info['account_id'] = signed_up_id
-            account_info['editor_id'] = signed_up_id
-            account_info['is_active'] = 1
-            print(account_info)
-
-            account_log_id = account_dao.create_account_log(account_info, connection)
-            if not signed_up_id:
-                raise Exception('LOG_NOT_CREATED')
-        return account_log_id
-
-        #
-        #     account_logged = account_dao.create_account_log(account_info, connection)
-        # except Exception as e:
-        #     return jsonify({'MESSAGE' : 'ACCOUNT_NOT_CREATED'}), 400
 
 
     def signin(self, login_info, connection):
@@ -79,15 +67,13 @@ class AccountService:
         account = account_dao.find_account(login_info, connection)
 
         if account:
-            if account['is_active'] == 1:
-                if bcrypt.checkpw(login_info['password'].encode('utf-8'), account['password'].encode('utf-8')):
-                    token = jwt.encode({'account_id': account['id'], 'expiration': str(datetime.utcnow() + timedelta(hours=1))}, SECRET_KEY, algorithm=ALGORITHM)
-                    print(token)
-                    return jsonify({'AUTHORIZATION' : token})
-                else:
-                    raise Exception('PASSWORD_INCORRECT')
-            else:
+            if account['is_active'] == 0:
                 raise Exception('ACCOUNT_NOT_ACTIVE')
+            if bcrypt.checkpw(login_info['password'].encode('utf-8'), account['password'].encode('utf-8')):
+                token = jwt.encode({'account_id': account['id'], 'expiration': str(datetime.utcnow() + timedelta(hours=1))}, SECRET_KEY, algorithm=ALGORITHM)
+                return jsonify({'AUTHORIZATION' : token})
+            else:
+                raise Exception('CHECK_LOGIN')
         else:
             raise Exception('ACCOUNT_DOES_NOT_EXIST')
 
@@ -100,7 +86,7 @@ class AccountService:
         else:
             raise Exception('NO_MASTER_AUTH')
 
-
+    def
 
     #     """
     #     1. Open DB 

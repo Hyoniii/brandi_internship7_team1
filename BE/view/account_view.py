@@ -7,6 +7,7 @@ from flask_request_validator import (
     PATH,
     JSON,
     Param,
+    Enum,
     Pattern,
     MinLength,
     MaxLength,
@@ -29,8 +30,8 @@ class AccountView:
         Param('account_type_id', JSON, int),
         Param('account_type_id', JSON, str,
               rules=[Pattern(r"^[1-2]{1}$")]),
-        Param('name', JSON, str,
-              rules=[Pattern(r"^[가-힣]{1,20}$")])
+        Param('name', JSON, str, rules=[Pattern(r"^[가-힣]{1,20}$")]),
+        Param('master_code', JSON, str, required=True)
     )
     def sign_up_master(*args):
         connection = None
@@ -38,15 +39,18 @@ class AccountView:
             'email': args[0],
             'password': args[1],
             'account_type_id': args[2],
-            'name': args[4]
+            'name': args[4],
+            'master_code': args[5]
         }
 
         connection = connect_db()
         if connection:
             account_service = AccountService()
             try:
-                signed_up_id = account_service.signup_account(account_info, connection)
-
+                account_service.signup_account(account_info, connection)
+                if account_info['master_code'] != 'brandi_team1':
+                    connection.rollback()
+                    return jsonify({'MESSAGE' : 'WRONG_MASTER_CODE'})
                 connection.commit()
                 connection.close()
                 return jsonify({'MESSAGE': 'ACCOUNT_CREATED', }), 200
@@ -129,37 +133,39 @@ class AccountView:
         Param('created_upper', GET, str, required=False),
         Param('excel', GET, int, required=False),
         Param('offset', GET, int, required=False),
-        Param('limit', GET, int, required=False)
+        Param('limit', GET, int, required=False),
+        Param('order_by', GET, str, required=False, rules=[Enum('asc', 'desc')])
     )
     def list_sellers(*args):
         db_connection = None
         user = g.token_info
         filter_info = {
-            'seller_id' : args[0],
-            'account_id' : args[1],
-            'email' : args[2],
-            'seller_en' : args[3],
-            'seller_kr' : args[4],
-            'user_id' : args[5],
-            'manager_name' : args[6],
-            'manager_email' : args[7],
-            'seller_status' : args[8],
-            'manager_phone' : args[9],
-            'seller_category' : args[10],
-            'created_upper' : args[11],
-            'created_lower' : args[12],
-            'excel' : args[13],
-            'page' : args[14],
-            'limit' : args[15]
+            'seller_id': args[0],
+            'account_id': args[1],
+            'email': args[2],
+            'seller_en': args[3],
+            'seller_kr': args[4],
+            'user_id': args[5],
+            'manager_name': args[6],
+            'manager_email': args[7],
+            'seller_status': args[8],
+            'manager_phone': args[9],
+            'seller_category': args[10],
+            'created_upper': args[11],
+            'created_lower': args[12],
+            'excel': args[13],
+            'offset': args[14] if args[14] else 0,
+            'limit': args[15] if args[15] else 20,
+            'order_by': args[16]
         }
         try:
             connection = connect_db()
             account_service = AccountService()
             seller_list = account_service.filter_seller(filter_info, user, connection)
-            return jsonify({'seller_list' : seller_list}), 200
+            return jsonify({'seller_list': seller_list}), 200
 
         except Exception as e:
-            return jsonify ({'MESSAGE' : f'{e}'}, 400)
+            return jsonify({'MESSAGE': f'{e}'}, 400)
 
         # except Exception as e:
         #     return jsonify({"message" : f'{e}'}), 400
