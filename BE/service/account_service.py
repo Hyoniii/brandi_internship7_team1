@@ -86,8 +86,6 @@ class AccountService:
         else:
             raise Exception('NO_MASTER_AUTH')
 
-    def
-
     #     """
     #     1. Open DB 
     #     2. create_account
