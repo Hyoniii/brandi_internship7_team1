@@ -168,6 +168,21 @@ class OrderDao:
 
             return cursor.fetchall()
 
+    def get_order_actions_by_status(self, connection, order_status_id):
+        # 리스트에서 보여줄 상태처리 버튼
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+            SELECT
+                OA.id, 
+                action
+            FROM order_actions as OA
+            INNER JOIN order_status_actions AS SA ON SA.order_action_id = OA.id
+            WHERE order_status_id = %s
+            """
+            cursor.execute(query, order_status_id)
+
+            return cursor.fetchall()
+
     def get_order_status_by_action(self, connection, update_status):
         # 클릭된 주문처리 버튼에 따라 변경할 상태 id를 리턴
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -181,18 +196,19 @@ class OrderDao:
 
             return cursor.fetchone()
 
-    def get_order_status_options(self, connection, order_filter):
-        # 현재 주문 상태에서 선택 가능한 상태 id들을 리턴
+    def get_order_status_options(self, connection, order_status_id):
+        # 현재 주문 상태에서 선택 가능한 상태 id들을 리턴(현재상태 id도 포함)
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
             SELECT 
-                id,
+                OS.id,
                 status
-            FROM order_statuses
-            WHERE id IN %(order_status_options)s
+            FROM order_statuses AS OS
+            LEFT JOIN order_status_actions AS OA ON OA.change_to = OS.id
+            WHERE OA.order_status_id = %(order_status_id)s OR OS.id = %(order_status_id)s 
             """
 
-            cursor.execute(query, order_filter)
+            cursor.execute(query, order_status_id)
 
             return cursor.fetchall()
 
