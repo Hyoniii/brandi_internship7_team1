@@ -37,9 +37,7 @@ def login_validator(func):
                                     accounts.id = %(account_id)s
                             """
                             cursor.execute(query, {'account_id': account_id})
-                            print(cursor.execute(query, {'account_id': account_id}))
                             account = cursor.fetchone()
-                            print(account)
                         if account:
                             if account['is_active'] == 1:
                                 g.token_info = {
@@ -51,7 +49,6 @@ def login_validator(func):
                         return jsonify({'MESSAGE' : 'account_nonexistant'}), 404
 
                     except Error as e:
-                        print (f'DATABASE_CURSOR_ERROR {e}')
                         return Jsonify({'MESSAGE' : 'DB_error'}), 400
 
             except jwt.InvalidTokenError:
