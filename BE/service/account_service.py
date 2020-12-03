@@ -71,7 +71,7 @@ class AccountService:
                 raise Exception('ACCOUNT_NOT_ACTIVE')
             if bcrypt.checkpw(login_info['password'].encode('utf-8'), account['password'].encode('utf-8')):
                 token = jwt.encode({'account_id': account['id'], 'expiration': str(datetime.utcnow() + timedelta(hours=1))}, SECRET_KEY, algorithm=ALGORITHM)
-                return jsonify({'AUTHORIZATION' : token})
+                return jsonify({'AUTHORIZATION': token}), 200
             else:
                 raise Exception('CHECK_LOGIN')
         else:
@@ -85,6 +85,32 @@ class AccountService:
             return seller_list
         else:
             raise Exception('NO_MASTER_AUTH')
+
+    def change_account_info(self, change_info, user, connection):
+        account_dao = AccountDao()
+        if change_info['password']:
+            bcrypt_password = bcrypt.hashpw(change_info['password'].encode('utf-8'), bcrypt.gensalt())
+            change_info['password'] = bcrypt_password
+        change = account_dao.update_account_info(change_info, connection)
+        if not change:
+            raise Exception('NOTHING_CHANGED')
+        get_account_info = account_dao.get_account_info(change_info, connection)
+        get_account_info['editor_id'] = user['account_id']
+        get_account_info["account_id"] = get_account_info.pop("id")
+        account_dao.create_account_log(get_account_info, connection)
+        if change_info['id'] != user['account_id'] and user['account_type_id'] == 2:
+            raise Exception('NO_AUTH')
+        return jsonify({'MESSAGE': 'SUCCESS'}), 200
+
+    def change_seller_info(self, change_info, user, connection):
+        account_dao = AccountDao()
+        if change_info['id'] != user['account_id'] and user['account_type_id'] == 2:
+            raise Exception('NO_AUTH')
+        account_dao.update_account_info(change_info, connection)
+        change_info['editor_id'] = user['account_id']
+        account_dao.create_account_log(change_info, connection)
+
+
 
     #     """
     #     1. Open DB 
@@ -114,8 +140,7 @@ class AccountService:
     # def get_seller_log(self, user_filter, connection):
     #     ###needs get_seller_log
     # def get_account_info(self, user_filter, connection):
-    #     ###needs 
-    # def change_seller_status(self, user_filter, connection):
+    #     ###needs
     #     ###get_seller_actions, log_info, change_seller_info
     # def filter_seller
     # def count_seller

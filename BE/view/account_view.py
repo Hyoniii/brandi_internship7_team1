@@ -56,7 +56,7 @@ class AccountView:
                 return jsonify({'MESSAGE': 'ACCOUNT_CREATED', }), 200
             except Exception as e:
                 connection.rollback()
-                return jsonify({'MESSAGE': f'{e}'}),400
+                return jsonify({'MESSAGE': f'{e}'}), 400
 
     @account_app.route('signup/seller', methods=['POST'])
     @validate_params(
@@ -65,10 +65,10 @@ class AccountView:
         Param('password', JSON, str, rules=[MaxLength(80), MinLength(4)]),
         Param('account_type_id', JSON, int),
         Param('account_type_id', JSON, str, rules=[Pattern(r"^[1-2]{1}$")]),
-        Param('service_number', JSON, str, rules=[Pattern(r"^\d{3}-\d{3,4}-\d{4}$")]),
-        Param('seller_name_kr', JSON, str, rules=[Pattern(r"^[가-힣]{1,20}$")]),
+        Param('service_number', JSON, str, rules=[Pattern(r"^[0-9]{11}$|^[0-9]{12}$")]),
+        Param('seller_name_kr', JSON, str, rules=[Pattern(r"^[가-힣0-9]{1,20}$")]),
         Param('seller_name_en', JSON, str, rules=[Pattern(
-            r"^[a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]{1,20}$")]),
+            r"^[a-zA-Z0-9àáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]{1,20}$")]),
         Param('subcategory_id', JSON, str, rules=[Pattern(r"^[1-8]{1}$")])
     )
     def sign_up_seller(*args):
@@ -108,8 +108,7 @@ class AccountView:
             token = account_service.signin(login_data, connection)
             return token
         except Exception as e:
-            return jsonify ({'MESSAGE' : f'{e}'}, 400)
-
+            return jsonify ({'MESSAGE' : f'{e}'}), 400
         finally:
             if connection:
                 connection.close()
@@ -139,6 +138,7 @@ class AccountView:
     def list_sellers(*args):
         db_connection = None
         user = g.token_info
+        print(user)
         filter_info = {
             'seller_id': args[0],
             'account_id': args[1],
@@ -165,7 +165,45 @@ class AccountView:
             return jsonify({'seller_list': seller_list}), 200
 
         except Exception as e:
-            return jsonify({'MESSAGE': f'{e}'}, 400)
+            return jsonify({'MESSAGE': f'{e}'}), 400
+
+    @account_app.route('edit', methods=['POST'])
+    @login_validator
+    @validate_params(
+        Param('email', JSON, str,
+              rules=[Pattern(r'^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$')]),
+        Param('password', JSON, str,
+              rules=[MaxLength(80), MinLength(4)]),
+        Param('account_type_id', JSON, int),
+        Param('account_type_id', JSON, str,
+              rules=[Pattern(r"^[1-2]{1}$")]),
+        Param('name', JSON, str, rules=[Pattern(r"^[가-힣]{1,20}$")]),
+        Param('account_id', JSON, int, required=True),
+        Param('is_active', JSON, int, required=False)
+    )
+    def edit_account(*args):
+        connection = None
+        change_info = {
+            'email': args[0],
+            'password': args[1],
+            'account_type_id': args[2],
+            'name': args[4],
+            'id': args[5],
+            'is_active': args[6]
+        }
+
+        connection = connect_db()
+        user = g.token_info
+        if connection:
+            account_service = AccountService()
+            try:
+                change_account = account_service.change_account_info(change_info, user, connection)
+                connection.commit()
+                connection.close()
+                return change_account
+            except Exception as e:
+                connection.rollback()
+                return jsonify({'MESSAGE': f'{e}'}), 400
 
         # except Exception as e:
         #     return jsonify({"message" : f'{e}'}), 400

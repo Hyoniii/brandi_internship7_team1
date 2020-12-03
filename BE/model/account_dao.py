@@ -32,6 +32,30 @@ class AccountDao:
         except Error as e:
             raise Exception(f'DAO_find_account_error{e}')
 
+    def get_account_info(self, account_info, connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                SELECT
+                    id,
+                    email,
+                    account_type_id,
+                    password,
+                    name,
+                    is_active
+                FROM
+                    accounts
+                WHERE
+                    id = %(id)s     
+                """
+                cursor.execute(query, account_info)
+                got_account_info = cursor.fetchone()
+                return got_account_info
+        except KeyError as e:
+            raise Exception(f'DAO_get_account_info_keyerror{e}')
+        except Error as e:
+            raise Exception(f'DAO_get_account_info_error{e}')
+
     def get_account_password(self, account_info, connection):
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -47,7 +71,6 @@ class AccountDao:
                     """
 
                 cursor.execute(query, account_info)
-
                 got_account_password = cursor.fetchone
                 return got_account_password
 
@@ -184,45 +207,35 @@ class AccountDao:
                         accounts
                     SET
                 """
-                for keys, values in change_info.items():
-                    if keys == 'email':
-                        query += """
-                        email = %(email)s
-                    """
-                    if keys == 'password':
-                        query += """
-                        password = %(password)s
-                    """
-                    if keys == 'name':
-                        query += """
-                        name = %(name)s
-                    """
-                    if keys == 'is_active':
-                        query += """
-                        password = %(is_active)s
-                    """
+                if change_info['email']:
+                    query += 'email = %(email)s,'
+                if change_info['password']:
+                    query += "password = %(password)s,"
+                if change_info['name']:
+                    query += "name = %(name)s,"
+                if change_info['is_active']:
+                    query += "is_active = %(is_active)s,"
+                if change_info['account_type_id']:
+                    query += "account_type_id = %(account_type_id)s,"
+                query = query[:-1]
+                print(query)
                 query += """
                     WHERE
+                        id = %(id)s
                     """
-                for keys, values in change_info.items():
-                    if keys == 'email':
-                        query += """
-                    email = %(account_email)s
-                        """
-                    elif keys == 'id':
-                        query += """
-                    id = %(account_id)s
-                        """
+                print(1)
+                print(query)
+                update_account_info_check = cursor.execute(query, change_info)
+                if not update_account_info_check:
+                    raise Exception("update fail")
 
-                    cursor.execute(query, change_info)
-                    updated_account_info = cursor.lastrowid
-            return updated_account_info
+                return cursor.rowcount
 
         except KeyError as e:
-            return jsonify({'MESSAGE': 'DAO_update_account_info'}), 500
+            return jsonify({'MESSAGE': f'DAO_update_account_info{e}'}), 500
 
         except Error as e:
-            return jsonify({'MESSAGE': 'DAO_update_account_info'}), 500
+            return jsonify({'MESSAGE': f'DAO_update_account_info{e}'}), 500
 
     def update_seller(self, seller_info, connection):
 

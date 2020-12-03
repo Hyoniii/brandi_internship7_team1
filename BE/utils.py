@@ -1,7 +1,7 @@
 import os, io, jwt, uuid
 import pymysql
 
-
+from functools import wraps
 from flask        import request, jsonify, g
 from db_connector import connect_db
 from mysql.connector.errors import Error
@@ -9,7 +9,7 @@ from config       import SECRET_KEY, ALGORITHM
 
 
 def login_validator(func):
-
+    @wraps(func)
     def wrapper(*args, **kwargs):
         access_token = request.headers.get('AUTHORIZATION', None)
 
@@ -42,18 +42,18 @@ def login_validator(func):
                             if account['is_active'] == 1:
                                 g.token_info = {
                                     'account_id': account_id,
-                                    'account_type_id' : account['account_type_id'],
-                                    'seller_id' : None}
+                                    'account_type_id': account['account_type_id'],
+                                    'seller_id': None}
                                 return func(*args, **kwargs)
-                            return jsonify({'MESSAGE' : 'account_not_active'}), 400
-                        return jsonify({'MESSAGE' : 'account_nonexistant'}), 404
+                            return jsonify({'MESSAGE': 'account_not_active'}), 400
+                        return jsonify({'MESSAGE': 'account_nonexistant'}), 404
 
                     except Error as e:
-                        return Jsonify({'MESSAGE' : 'DB_error'}), 400
+                        return Jsonify({'MESSAGE': 'DB_error'}), 400
 
             except jwt.InvalidTokenError:
-                return jsonify({'MESSAGE' : 'invalid_token'}), 401
+                return jsonify({'MESSAGE': 'invalid_token'}), 401
 
-            return jsonify({'MESSAGE' : 'no_db_connection'}), 400
-        return jsonify({'MESSAGE' : 'invalid_token'}), 401
+            return jsonify({'MESSAGE': 'no_db_connection'}), 400
+        return jsonify({'MESSAGE': 'invalid_token'}), 401
     return wrapper
