@@ -27,7 +27,7 @@ import MainSideNav from "../../Components/MainSideNav";
 import MainFooter from "../../Components/MainFooter";
 import SellerList from "../SellerList/SellerList";
 export default {
-  name: "main",
+  name: "mainpage",
 
   components: {
     "main-top-nav": MainTopNav,

@@ -103,3 +103,39 @@ a {
 .ant-table td {
   white-space: nowrap;
 }
+
+.ant-modal-mask {
+  background: rgba($color: #000, $alpha: 0.02) !important;
+}
+
+.ant-modal-content {
+  box-shadow: 0 2px 6px rgba($color: #000, $alpha: 0.01) !important;
+}
+
+.ant-pagination-item {
+  padding-top: 5px !important;
+}
+
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  padding-top: 6px !important;
+}
+
+.ant-select-selection--single {
+  padding-top: 6px !important;
+  width: 100% !important;
+}
+
+.ant-select-selection {
+  padding-top: 6px !important;
+  width: 300px !important;
+}
+
+.ant-select-selection__placeholder {
+  position: absolute !important;
+  top: 30% !important;
+}
+
+.ant-select-dropdown-menu-item, .ant-select-dropdown-menu-item-active {
+  width: 100% !important;
+}

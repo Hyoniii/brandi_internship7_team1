@@ -1,12 +1,15 @@
 <template>
   <div id="Login">
     <div class="brandiLogo">
-      <img src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png" alt="브랜디로고" />
+      <img
+        src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
+        alt="브랜디로고"
+      />
     </div>
     <div class="loginContainer">
       <div class="loginHeader">브랜디 어드민 로그인</div>
 
-      <a-form :form="form" @submit="handleSubmit" class="loginForm">
+      <a-form :form="form" @submit="handleLoginBtn" class="loginForm">
         <section class="loginInputs">
           <a-form-item
             :validate-status="userNameError() ? 'error' : ''"
@@ -15,14 +18,18 @@
           >
             <a-input
               v-decorator="[
-                'userName',
+                'email',
                 {
                   rules: [{ required: true, message: '아이디를 입력해주세요' }],
                 },
               ]"
               placeholder="아이디"
             >
-              <a-icon slot="prefix" type="user" style="color: rgba(0, 0, 0, 0.25)" />
+              <a-icon
+                slot="prefix"
+                type="user"
+                style="color: rgba(0, 0, 0, 0.25)"
+              />
             </a-input>
           </a-form-item>
           <a-form-item
@@ -32,7 +39,7 @@
           >
             <a-input
               v-decorator="[
-                'password',
+                'pw',
                 {
                   rules: [
                     { required: true, message: '비밀번호를 입력해주세요' },
@@ -42,7 +49,11 @@
               type="password"
               placeholder="비밀번호"
             >
-              <a-icon slot="prefix" type="lock" style="color: rgba(0, 0, 0, 0.25)" />
+              <a-icon
+                slot="prefix"
+                type="lock"
+                style="color: rgba(0, 0, 0, 0.25)"
+              />
             </a-input>
           </a-form-item>
         </section>
@@ -53,8 +64,8 @@
               html-type="submit"
               :disabled="hasErrors(form.getFieldsError())"
               class="loginBtn"
-              @click="handleLoginBtn"
-            >로그인</a-button>
+              >로그인</a-button
+            >
           </a-form-item>
 
           <div class="registerOptions">
@@ -68,14 +79,10 @@
 </template>
 
 <script>
-const formItemLayout = {
-  labelCol: { span: 20 },
-  wrapperCol: { span: 20 },
-};
-const formTailLayout = {
-  labelCol: { span: 20 },
-  wrapperCol: { span: 20 },
-};
+import axios from 'axios';
+
+const loginAPI = "http://10.251.1.201:5000/account/signin";
+
 function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some((field) => fieldsError[field]);
 }
@@ -86,6 +93,8 @@ export default {
   data() {
     return {
       hasErrors,
+      email: "",
+      pw: "",
       form: this.$form.createForm(this, { name: "horizontal_login" }),
     };
   },
@@ -109,35 +118,31 @@ export default {
       const { getFieldError, isFieldTouched } = this.form;
       return isFieldTouched("password") && getFieldError("password");
     },
-    handleSubmit(e) {
+    handleLoginBtn(e){
       e.preventDefault();
-      this.form.validateFields((err, values) => {
-        if (!err) {
-          console.log("Received values of form: ", values);
-        }
-      });
-    },
-    handleLoginBtn(e) {
-// fetch(API, {
-//       method: "POST",
-//       body: JSON.stringify({
-//         email: emailValue,
-//         password: pwValue
-//       })
-//     })
-//       .then(response => response.json())
-//       .then(response => {
-//         console.log("================================");
-//         console.log("백앤드에서 오는 응답 메세지: ", response);
+      this.form.validateFieldsAndScroll((err, values) => {
+        let loginData ={
+          email: values.email,
+          password: values.pw,
+        };
+        console.log(loginData, "=================")
 
-//         if (response.Authorization) {
-//           alert("로그인 성공");
-//           localStorage.setItem("token", response.Authorization);
-//         }
-//       });
+        axios.post(loginAPI, loginData)
+        .then(res => {
+          console.log("백앤드에서 오는 응답 메세지: ", res);
+          if (res) {
+            alert("로그인 성공");
+            console.log("token", res.data.AUTHORIZATION)
+            localStorage.setItem("token", res.data.AUTHORIZATION);
+            this.$router.push("/main/sellerlist");
+        } else {
+          alert("다시 시도해주세용! ;P");
+        }
+        })
+      })
     },
-  },
-};
+  }
+}
 </script>
 
 <style lang="scss">
