@@ -1,7 +1,8 @@
 from flask                   import request, Blueprint, jsonify, g
+import json
 #from utils                   import login_validator
 from service.product_service import ProductService
-from db_connector            import connect_db
+from db_connector            import connect_db, get_s3_connection
 from flask_request_validator import (
     GET,
     FORM,
@@ -26,7 +27,7 @@ class ProductView:
               rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
         Param('seller_name', GET, str, required=False),
         Param('product_name', GET, str, required=False),
-        Param('product_number', GET, int, required=False),
+        Param('product_number', GET, str, required=False),
         Param('product_code', GET, str, required=False),
         Param('seller_subcategory_id', GET, list, required=False),
         Param('is_selling', GET, bool, required=False),
@@ -210,37 +211,38 @@ class ProductView:
     @product_app.route('/register', methods=['POST'])
     ##@login_validator
     @validate_params(
-        Param('is_selling', JSON, int),
-        Param('is_visible', JSON, int),
-        Param('sub_category_id', JSON, int, required=False),
-        Param('product_name', JSON, str,
+        Param('is_selling', FORM, int),
+        Param('is_visible', FORM, int),
+        Param('sub_category_id', FORM, int, required=False),
+        Param('product_name', FORM, str,
               rules=[Pattern(r"[^\"\']")]),
-        Param('is_information_notice', JSON, int),
-        Param('manufacturer', JSON, str, required=False),
-        Param('manufacture_date', JSON, str, required=False, rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
-        Param('made_in', JSON, str, required=False),
-        Param('short_description', JSON, str, required=False),
-        Param('is_inventory_management', JSON, int),
-        Param('inventory', JSON, int, required=False),
-        Param('price', JSON, int),
-        Param('discount_rate', JSON, float, required=False),
-        Param('is_discount_period', JSON, int),
-        Param('discount_start_time', JSON, str, required=False),
-        Param('discount_end_time', JSON, str, required=False),
-        Param('min_order', JSON, int),
-        Param('max_order', JSON, int),
-        Param('seller_id', JSON, int, required=False),
-        Param('option_list', JSON, list),
+        Param('is_information_notice', FORM, int),
+        Param('manufacturer', FORM, str, required=False),
+        Param('manufacture_date', FORM, str, required=False, rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
+        Param('made_in', FORM, str, required=False),
+        Param('short_description', FORM, str, required=False),
+        Param('is_inventory_management', FORM, int),
+        Param('inventory', FORM, int, required=False),
+        Param('price', FORM, int),
+        Param('discount_rate', FORM, float, required=False),
+        Param('is_discount_period', FORM, int),
+        Param('discount_start_time', FORM, str, required=False),
+        Param('discount_end_time', FORM, str, required=False),
+        Param('min_order', FORM, int),
+        Param('max_order', FORM, int),
+        Param('seller_id', FORM, int, required=False),
+        #Param('option_list', FORM, list),
+        #Param('test',FORM,int),
       # integer parameter 범위 지정을 위한 검증
-        Param('is_selling', JSON, str,
+        Param('is_selling', FORM, str,
               rules=[Pattern(r'^([0-1])$')]),
-        Param('is_visible', JSON, str,
+        Param('is_visible', FORM, str,
               rules=[Pattern(r'^([0-1])$')]),
-        Param('sub_category_id', JSON, str,
+        Param('sub_category_id', FORM, str,
               rules=[Pattern(r'^([0-9]|[0-9][0-9]|[1][0][0-9]|[1][1][0-4])$')]),
-        Param('max_order', JSON, str,
+        Param('max_order', FORM, str,
               rules=[Pattern(r'^([1-9]|[1-2][0-9])$')]),
-        Param('min_order', JSON, str,
+        Param('min_order', FORM, str,
               rules=[Pattern(r'^([1-9]|[1-2][0-9])$')])
               )
     def create_product(*args):
@@ -271,16 +273,63 @@ class ProductView:
             'max_order'               : args[17],
             'seller_id'               : args[18], #if args[20] else g.token_info['seller_id'],
             'desc_img_url'            : "image.jpg",
-            'option_list'             : args[19]
+            #'option_list'             : args[19]
+            #'test'  :args[20]
         }
         try:
             connection = connect_db()
 
             if connection:
+
+                #option_list : '{},{}' => None
+                # option_list : '' => None
+                # a = request.form.get('option_list')
+                # print(a)
+                # print(type(a))
+                # b = json.loads(a)
+                # print(b)
+                #
+                # print('________________')
+
+
+                # form data로 list를 보내면 생기는 오류로 인한 후 처리(strip,split)
+                # 이 방법밖에 없는지 여쭤보기
+                # options = request.form.getlist('option_list')
+                # option_list =[]
+                # for option in form_options:
+                #     options = option.strip('[]')
+                #     option_list.append(options.split(','))
+                # filter_data['option_list'] = option_list
+
+                # option_list = '[{"name":"bb","age":29},{"name":"hh","age":20}]' 형태
+                options = request.form.get('option_list')
+                option_list= json.loads(options)
+
+                #image 저장을 위한 S3 connection instance 생성
+                """
+                images        : File Request(List)
+                [
+                    { 'product_image_<int>' : <FileStorage: {filename} ({content_type})>}
+                ]
+                """
+                # s3_connection = get_s3_connection()
+                # images = request.form.getlist('files')
+                # print(images)
+
+
                 product_service = ProductService()
-                product_service.create_product(filter_data, connection)
-                connection.commit()
-                return jsonify({'message' : 'SUCCESS'}), 200
+                create_count = product_service.create_product(filter_data,option_list, connection)
+
+                #상품 이미지를 사이즈 별로 S3에 저장 및 URL을 DB에 Insert하는 함수 실행
+                # product_service.upload_product_image(
+                #     images,
+                #     product_id,
+                #     s3_connection,
+                #     connection
+                # )
+
+                #connection.commit()
+                return jsonify({'message' : f'{create_count}products are created'}), 200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
