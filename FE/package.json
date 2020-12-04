@@ -12,8 +12,10 @@
   "dependencies": {
     "@vue/babel-helper-vue-jsx-merge-props": "^1.2.1",
     "@vue/babel-preset-jsx": "^1.2.4",
+    "axios": "^0.21.0",
     "beegridtable": "^1.1.4",
     "vue": "^2.6.12",
+    "vue-axios": "^3.2.0",
     "vue-router": "^3.0.1",
     "vue-table-dynamic": "^0.3.3",
     "vuex": "^3.5.1"

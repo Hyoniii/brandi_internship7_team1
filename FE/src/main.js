@@ -5,6 +5,7 @@ import Routes from "./Routes";
 import "ant-design-vue/dist/antd.css";
 import Antd from "ant-design-vue";
 import "../src/styles.scss";
+import axios from 'axios'
 
 Vue.use(Antd);
 Vue.use(VueRouter);

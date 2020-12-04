@@ -9,13 +9,9 @@
       }"
     >
       <div style="margin-bottom: 14px">
-        <a-button type="primary" :disabled="!hasSelected" :loading="loading" @click="start">Reload</a-button>
+        <a-button type="primary" :disabled="!hasSelected"  @click="start">Reload</a-button>
         <span style="margin-left: 8px">
-          <template v-if="hasSelected">
-            {{
-            `Selected ${selectedRowKeys.length} items`
-            }}
-          </template>
+          <template v-if="hasSelected">{{ `Selected ${selectedRowKeys.length} items` }}</template>
         </span>
       </div>
       <a-table
@@ -67,15 +63,18 @@
           :style="{ color: filtered ? '#108ee9' : undefined }"
         />
         <template slot="sellerId" slot-scope="text">
-          <a :href="sellerDetailsLink" @click="handleSellerDetailsLink">{{ text }}</a>
-          <!-- <router-link to="/foo" tag="button">foo</router-link> -->
+          <a :href="sellerDetailsLink" @click="handleSellerDetailsLink">
+            {{
+            text
+            }}
+          </a>
         </template>
         <span slot="actionButtons" slot-scope="actions">
           <a-tag
             v-for="action in actions"
             :key="action.id"
             :color="
-              action.name === '입점 승인' 
+              action.name === '입점 승인'
                 ? 'blue'
                 : action.name === '입점 거절' ||
                   action.name === '퇴점신청 처리' ||
@@ -86,8 +85,56 @@
                 : 'green'
             "
           >
-            <a-button @click="confirmAction" :id="action.id" class="tableButtons">{{ action.name }}</a-button>
+            <a-button
+              @click="confirmAction"
+              :id="action.id"
+              size="small"
+              class="tableButtons"
+            >{{ action.name }}</a-button>
           </a-tag>
+          <a-modal v-model="sellerAccepted" title="셀러 태그 / 수수료 선택" on-ok="handleOk">
+            <template slot="footer">
+              <a-button key="back" @click="handleCancel">닫기</a-button>
+              <a-button key="submit" type="primary"  @click="handleOk">입점 승인</a-button>
+            </template>
+            <div class="sellerAcceptForm">
+              <a-form-item label="연령 선택">
+                <a-radio-group v-decorator="['radio-group']" required>
+                  <a-radio v-for="age in ageTarget" :value="age.id" :key="age.id">{{ age.value }}</a-radio>
+                </a-radio-group>
+              </a-form-item>
+              <a-form-item label="스타일 선택" has-feedback>
+                <a-select
+                  v-decorator="
+                    'select',
+                    {
+                      rules: [
+                        {
+                          required: true,
+                          message: '스타일을 선택해주세요!',
+                        },
+                      ],
+                    },
+                  ]"
+                  placeholder="스타일 선택"
+                >
+                  <a-select-option
+                    v-for="style in styleTarget"
+                    :value="style.id"
+                    :key="style.id"
+                  >{{ style.value }}</a-select-option>
+                </a-select>
+              </a-form-item>
+              <a-form-item label="수수료">
+                <a-radio-group v-decorator="['radio-button']">
+                  <a-radio-button v-for="fee in commissionFeesTarget" :value="fee.id" :key="fee.id">
+                    <span class="commissionFeeType">{{ fee.type }}:</span>
+                    수수료 {{ fee.value }}
+                  </a-radio-button>
+                </a-radio-group>
+              </a-form-item>
+            </div>
+          </a-modal>
         </span>
         <template slot="customRender" slot-scope="text, record, index, column">
           <span v-if="searchText && searchedColumn === column.dataIndex">
@@ -112,7 +159,6 @@
 </template>
 
 <script>
-import VueTableDynamic from "vue-table-dynamic";
 import MainHeader from "../../Components/MainHeader";
 
 const data = [
@@ -130,14 +176,14 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:1,
-        name: "입점 승인"
+        id: 1,
+        name: "입점 승인",
       },
       {
-        id:2,
-        name: "입점 거절"
+        id: 2,
+        name: "입점 거절",
       },
-    ]
+    ],
   },
   {
     id: "2",
@@ -153,14 +199,14 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:4,
-        name: "퇴점신청 처리"
+        id: 4,
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
     id: "3",
@@ -176,14 +222,14 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:7,
-        name: "휴점 해제"
+        id: 7,
+        name: "휴점 해제",
       },
       {
         id: 4,
-        name: "퇴점신청 처리"
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
     id: "4",
@@ -197,23 +243,23 @@ const data = [
     repEmail: "nblasfd@gmail.com",
     sellerType: "쇼핑몰",
     dateCreated: "	2020-11-27 16:56:37",
-        actions: [
+    actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:5,
-        name: "퇴점확정 처리"
+        id: 5,
+        name: "퇴점확정 처리",
       },
       {
-        id:6,
-        name: "퇴점철회 처리"
+        id: 6,
+        name: "퇴점철회 처리",
       },
-    ]
+    ],
   },
-    {
-    id: "1",
+  {
+    id: "5",
     sellerNumber: "22417",
     name: "gw111",
     englishLabel: "gyuwon",
@@ -226,17 +272,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:1,
-        name: "입점 승인"
+        id: 1,
+        name: "입점 승인",
       },
       {
-        id:2,
-        name: "입점 거절"
+        id: 2,
+        name: "입점 거절",
       },
-    ]
+    ],
   },
   {
-    id: "2",
+    id: "6",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -249,17 +295,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:4,
-        name: "퇴점신청 처리"
+        id: 4,
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
-    id: "3",
+    id: "7",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -272,17 +318,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:7,
-        name: "휴점 해제"
+        id: 7,
+        name: "휴점 해제",
       },
       {
         id: 4,
-        name: "퇴점신청 처리"
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
-    id: "4",
+    id: "8",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -293,23 +339,23 @@ const data = [
     repEmail: "nblasfd@gmail.com",
     sellerType: "쇼핑몰",
     dateCreated: "	2020-11-27 16:56:37",
-        actions: [
+    actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:5,
-        name: "퇴점확정 처리"
+        id: 5,
+        name: "퇴점확정 처리",
       },
       {
-        id:6,
-        name: "퇴점철회 처리"
+        id: 6,
+        name: "퇴점철회 처리",
       },
-    ]
+    ],
   },
-    {
-    id: "1",
+  {
+    id: "9",
     sellerNumber: "22417",
     name: "gw111",
     englishLabel: "gyuwon",
@@ -322,17 +368,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:1,
-        name: "입점 승인"
+        id: 1,
+        name: "입점 승인",
       },
       {
-        id:2,
-        name: "입점 거절"
+        id: 2,
+        name: "입점 거절",
       },
-    ]
+    ],
   },
   {
-    id: "2",
+    id: "10",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -345,17 +391,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:4,
-        name: "퇴점신청 처리"
+        id: 4,
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
-    id: "3",
+    id: "11",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -368,17 +414,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:7,
-        name: "휴점 해제"
+        id: 7,
+        name: "휴점 해제",
       },
       {
         id: 4,
-        name: "퇴점신청 처리"
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
-    id: "4",
+    id: "12",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -389,23 +435,23 @@ const data = [
     repEmail: "nblasfd@gmail.com",
     sellerType: "쇼핑몰",
     dateCreated: "	2020-11-27 16:56:37",
-        actions: [
+    actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:5,
-        name: "퇴점확정 처리"
+        id: 5,
+        name: "퇴점확정 처리",
       },
       {
-        id:6,
-        name: "퇴점철회 처리"
+        id: 6,
+        name: "퇴점철회 처리",
       },
-    ]
+    ],
   },
-    {
-    id: "1",
+  {
+    id: "13",
     sellerNumber: "22417",
     name: "gw111",
     englishLabel: "gyuwon",
@@ -418,17 +464,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:1,
-        name: "입점 승인"
+        id: 1,
+        name: "입점 승인",
       },
       {
-        id:2,
-        name: "입점 거절"
+        id: 2,
+        name: "입점 거절",
       },
-    ]
+    ],
   },
   {
-    id: "2",
+    id: "14",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -441,17 +487,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:4,
-        name: "퇴점신청 처리"
+        id: 4,
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
-    id: "3",
+    id: "15",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -464,17 +510,17 @@ const data = [
     dateCreated: "	2020-11-27 16:56:37",
     actions: [
       {
-        id:7,
-        name: "휴점 해제"
+        id: 7,
+        name: "휴점 해제",
       },
       {
         id: 4,
-        name: "퇴점신청 처리"
+        name: "퇴점신청 처리",
       },
-    ]
+    ],
   },
   {
-    id: "4",
+    id: "16",
     sellerNumber: "2398402983",
     name: "fsjdkf",
     englishLabel: "shelby",
@@ -485,21 +531,21 @@ const data = [
     repEmail: "nblasfd@gmail.com",
     sellerType: "쇼핑몰",
     dateCreated: "	2020-11-27 16:56:37",
-        actions: [
+    actions: [
       {
-        id:3,
-        name: "휴점 신청"
+        id: 3,
+        name: "휴점 신청",
       },
       {
-        id:5,
-        name: "퇴점확정 처리"
+        id: 5,
+        name: "퇴점확정 처리",
       },
       {
-        id:6,
-        name: "퇴점철회 처리"
+        id: 6,
+        name: "퇴점철회 처리",
       },
-    ]
-  }
+    ],
+  },
 ];
 
 export default {
@@ -515,6 +561,29 @@ export default {
       searchInput: null,
       searchedColumn: "",
       selectedRowKeys: [],
+      sellerAccepted: false,
+      sellerAcceptedBtnLoading: false,
+      ageTarget: [
+        { id: 1, value: "10대" },
+        { id: 2, value: "20대초반" },
+        { id: 3, value: "20대중반" },
+        { id: 4, value: "20대후반" },
+        { id: 5, value: "30대" },
+        { id: 6, value: "연령대선택안함" },
+      ],
+      styleTarget: [
+        { id: 1, value: "심플베이직" },
+        { id: 2, value: "러블리" },
+        { id: 3, value: "페미닌" },
+        { id: 4, value: "캐주얼" },
+        { id: 5, value: "섹시글램" },
+        { id: 6, value: "스타일선택안함" },
+      ],
+      commissionFeesTarget: [
+        { id: 1, type: "A안", value: "9%" },
+        { id: 2, type: "C안", value: "9%" },
+        { id: 3, type: "E안", value: "13%" },
+      ],
       pagination: {
         defaultCurrent: 1, // Default current page number
         defaultPageSize: 10, // The default size of the data displayed on the current page
@@ -779,7 +848,7 @@ export default {
             customRender: "actionButtons",
           },
           fixed: "right",
-          width: 380,
+          width: 350,
           onFilter: (value, record) =>
             record.actions
               .toString()
@@ -797,29 +866,44 @@ export default {
     };
   },
   methods: {
-    confirmAction(e){
-      console.log(e.target.id)
+    confirmAction(e) {
+      console.log(e.target.id);
+      if (+e.target.id === 1) {
+        this.sellerAccepted = true;
+      }
       if (+e.target.id === 2) {
         this.$confirm({
-        title: "Confirm",
-        content: "셀러의 입점을 거절하시겠습니까?",
-        onOk: () => {
-          // disable 시키는법 구현중
-        },
-      });
+          title: "Confirm",
+          content: "셀러의 입점을 거절하시겠습니까?",
+          onOk: () => {
+            // disable 시키는법 구현중
+            this.handleOk();
+          },
+        });
       }
       if (+e.target.id === 5) {
         this.$confirm({
-        title: "Confirm",
-        content: "퇴점 확정 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 퇴점 확정을 하시겠습니까?",
-        onOk: () => {
-          // disable 시키는법 구현중
-        },
-      });
+          title: "Confirm",
+          content:
+            "퇴점 확정 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 퇴점 확정을 하시겠습니까?",
+          onOk: () => {
+            // disable 시키는법 구현중
+          },
+        });
       }
-      if (+e.target.id === 4) {
+    },
+    handleOk(e) {
 
-      }
+
+      this.sellerAcceptedBtnLoading = true;
+
+      setTimeout(() => {
+        this.sellerAccepted = false;
+        this.sellerAcceptedBtnLoading = false;
+      }, 3000);
+    },
+    handleCancel(e) {
+      this.sellerAccepted = false;
     },
     handleSearch(selectedKeys, confirm, dataIndex) {
       confirm();
@@ -831,10 +915,8 @@ export default {
       this.searchText = "";
     },
     start() {
-      this.loading = true;
       // ajax request after empty completing
       setTimeout(() => {
-        this.loading = false;
         this.selectedRowKeys = [];
       }, 1000);
     },
@@ -859,6 +941,4 @@ export default {
 <style lang="scss">
 @import "../../styles.scss";
 
-#SellerList {
-}
 </style>
