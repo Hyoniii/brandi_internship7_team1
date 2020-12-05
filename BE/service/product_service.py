@@ -2,6 +2,8 @@ import uuid
 import re
 
 from model.product_dao import ProductDao
+from config            import S3
+from PIL               import Image
 from flask             import jsonify, g
 
 
@@ -40,7 +42,14 @@ class ProductService:
             filter_data['offset'] = (filter_data['page'] * filter_data['limit']) - filter_data['limit']
 
             product_list = product_dao.product_list(filter_data,connection)
-            return product_list
+
+            products = product_list['product_list']
+            counts   = product_list['count']
+            #Group by로 grouping 해서 중복 값 제거함
+            count    = len(counts)
+
+
+            return {'product_list' : products, 'count' : count}
 
         except Exception as e:
             print(f'DATABASE_CURSOR_ERROR_WITH {e}')
@@ -105,7 +114,7 @@ class ProductService:
         sizes       = product_dao.get_size_list(connection)
         return {'colors':colors,'sizes':sizes}
 
-    def create_product(self,filter_data,connection):
+    def create_product(self, filter_data, option_list, connection):
         product_dao = ProductDao()
         # account_type_id = g.account_info['account_type_id']
 
@@ -115,36 +124,87 @@ class ProductService:
 
         # code,number 생성
         filter_data['code'] = uuid.uuid4().hex[:6].upper()
-        filter_data['number'] = re.sub("[^0-9]", "", str(uuid.uuid4()) )
+        #filter_data['number'] = re.sub("[^0-9]", "", str(uuid.uuid4()) )
+
 
         # insert_product
         product_data = product_dao.create_product(filter_data,connection)
-        print(product_data)
+        print("product_create",product_data)
+
 
         # product_log 생성
         product_log = product_dao.create_product_log(product_data,connection)
-        print(product_log)
-
-
-
+        print("product_log", product_log)
 
         # 옵션 생성
         product_id  = product_data['product_id']
-        options = product_data['option_list']
 
-        [option.insert(0, product_id) or option.append(str(options.index(option) + 1)) for option in options]
+        for options in option_list:
+            options['product_id'] = product_id
+            options['number'] = str(product_id) + str(option_list.index(options))
 
-        print(options)
+        # [option.insert(0, product_id) for option in options]
+        #
+        # for i in range(len(options)):
+        #     options[i].append(str(options[i][0])+str(i))
 
-        #new_option = product_dao.create_options(options,connection)
-        #print(option_count)
+        create_count = product_dao.create_options(option_list, connection)
+        print("yeeeeeeeeeeeeee",create_count)
+        return create_count
+
+    def upload_product_image(self, images, product_id, s3_connection, connection):
+        product_images = {}
+
+        try:
+            for num in range(1,6):
+
+                #대표사진 미등록 예외처리
+                if 'product_image_1' not in images:
+                    raise Exception('THUMBNAIL_IMAGE_IS_REQUIRED')
+
+                #상품사진 미정렬 예외처리
+                if num > 2:
+                    if(f'product_image_{num}' in images) and (f'product_image_{num-1}' not in images):
+                        raise Exception('IMAGE_CAN_ONLY_REGISTER_IN_ORDER')
+
+                # 상품사진 있는 경우 product_images Dictionary에 저장
+                if f'product_image_{num}' in images:
+                    product_images[images[f'product_image_{num}'].name] = images.get(f'product_image_{num}',
+                                                                                     None)
+
+                    # 파일이 Image가 아닌 경우 Exception 발생
+                    image = Image.open(product_images[f'product_image_{num}'])
+                    width, height = image.size
+
+                    # 사이즈가 너무 작은 경우 예외처리
+                    if width < 640 or height < 720:
+                        raise Exception('IMAGE_SIZE_IS_TOO_SMALL')
+
+            # image file name에 등록되는 product_code 조회
+            product_code = self.product_dao.select_product_code(product_id, db_connection)
+
+            # 상품 이미지 받아오기 및 유효성 검사 이후 S3 upload
+            resizing = ResizeImage(product_code['product_code'], product_images, s3_connection)
+            resized_image = resizing()
+
+            # 사진크기 별 product_image(최대 5개)에 대해 image URL insert & product_images(매핑테이블) insert
+            for product_image_no, image_url in resized_image.items():
+                image_no = self.product_dao.insert_image(image_url, db_connection)
+                self.product_dao.insert_product_image(product_id, image_no, product_image_no, db_connection)
+
+            return None
+
+
+
+
+        except Exception as e:
+            raise e
 
 
 
 
 
 
-        return None
 
 
 
