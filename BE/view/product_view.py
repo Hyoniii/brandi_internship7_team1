@@ -99,7 +99,7 @@ class ProductView:
             if connection:
                 product_service = ProductService()
                 products        = product_service.get_product_list( filter_data, connection )
-                return jsonify({'data':products}),200
+                return jsonify(products),200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 

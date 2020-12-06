@@ -32,7 +32,7 @@ class ProductDao:
                     P.name as product_name,
                     P.code as product_code,
                     PO.number as number,
-                    I.img_url as Image,
+                    I.img_url as desc_img_url,
                     S3.name as seller_subcategory_name,
                     S.seller_name_kr as seller_name,
                     P.price ,
@@ -152,16 +152,14 @@ class ProductDao:
 
                 #상품 리스트
                 query = list_select + list_from
-                print(query)
+
                 cursor.execute(query,filter_data)
                 product_list = cursor.fetchall()
-                print(product_list)
 
                 #count
                 query = count_select + list_from
                 cursor.execute(query, filter_data)
                 total_count = cursor.fetchall()
-                print(total_count)
 
                 return {'product_list':product_list,'count':total_count}
 

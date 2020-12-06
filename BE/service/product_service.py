@@ -42,7 +42,7 @@ class ProductService:
             filter_data['offset'] = (filter_data['page'] * filter_data['limit']) - filter_data['limit']
 
             product_list = product_dao.product_list(filter_data,connection)
-
+            
             products = product_list['product_list']
             counts   = product_list['count']
             #Group by로 grouping 해서 중복 값 제거함
