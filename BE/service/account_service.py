@@ -106,8 +106,16 @@ class AccountService:
         account_dao = AccountDao()
         if change_info['id'] != user['account_id'] and user['account_type_id'] == 2:
             raise Exception('NO_AUTH')
-        account_dao.update_account_info(change_info, connection)
+        account_dao.update_seller_info(change_info, connection)
+        get_seller_info = account_dao.get_seller_info(change_info, connection)
+        get_seller_info["seller_id"] = get_seller_info.pop("id")
+        account_dao.create_seller_log(get_seller_info, connection)
+
+
+        account_dao.update_seller_info(change_info, connection)
         change_info['editor_id'] = user['account_id']
+        account_info = change_info
+
         account_dao.create_account_log(change_info, connection)
 
 
@@ -142,7 +150,6 @@ class AccountService:
     # def get_account_info(self, user_filter, connection):
     #     ###needs
     #     ###get_seller_actions, log_info, change_seller_info
-    # def filter_seller
     # def count_seller
     # def image_saver
     # def count_total_products

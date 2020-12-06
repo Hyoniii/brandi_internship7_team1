@@ -178,7 +178,18 @@ class AccountDao:
                         editor_id,
                         seller_name_kr,
                         seller_name_en,
-                        service_number
+                        service_number,
+                        profile_pic_url,
+                        short_desc,
+                        long_desc,
+                        close_time,
+                        open_time,
+                        delivery_policy,
+                        return_policy,
+                        zip_code,
+                        address_1,
+                        address_2,
+                        is_open_weekend
                         )
                     VALUES (
                         %(seller_id)s,
@@ -187,12 +198,22 @@ class AccountDao:
                         %(editor_id)s, 
                         %(seller_name_kr)s, 
                         %(seller_name_en)s,
-                        %(service_number)s
+                        %(service_number)s,
+                        %(profile_pic_url)s,
+                        %(short_desc)s,
+                        %(long_desc)s,
+                        %(close_time)s,
+                        %(open_time)s,
+                        %(delivery_policy)s,
+                        %(return_policy)s,
+                        %(zip_code)s,
+                        %(address_1)s,
+                        %(address_2)s,
+                        %(is_open_weekend)s
                     )
-                    
                 """
                 cursor.execute(query, account_info)
-                created_seller_log = cursor.lastrowid
+                created_seller_log = cursor.fetchone()
                 return created_seller_log
         except KeyError as e:
             raise Exception(f'DAO_create_seller_log_keyerror{e}')
@@ -218,13 +239,10 @@ class AccountDao:
                 if change_info['account_type_id']:
                     query += "account_type_id = %(account_type_id)s,"
                 query = query[:-1]
-                print(query)
                 query += """
                     WHERE
                         id = %(id)s
                     """
-                print(1)
-                print(query)
                 update_account_info_check = cursor.execute(query, change_info)
                 if not update_account_info_check:
                     raise Exception("update fail")
@@ -237,7 +255,7 @@ class AccountDao:
         except Error as e:
             return jsonify({'MESSAGE': f'DAO_update_account_info{e}'}), 500
 
-    def update_seller(self, seller_info, connection):
+    def update_seller(self, change_info, connection):
 
         try:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -245,39 +263,89 @@ class AccountDao:
                     UPDATE
                         seller
                     SET
-                        account_id = %(account_id)s,
-                        subcategory_id = %(subcategory_id)s,
-                        seller_status = %(seller_status)s,
-                        seller_name_kr = %(seller_name_kr)s,
-                        seller_name_en = %(seller_name_en)s,
-                        service_number = %(seller_number)s,
-                        profile_pic_url = %(profile_pic)s,
-                        cover_pic_url = %(cover_pic_url)s,
-                        short_desc = %(short_desc)s,
-                        long_desc = %(long_desc)s,
-                        open_time = %(open_time)s,
-                        close_time = %(close_time)s,
-                        delivery_policy = %(delivery_policy)s,
-                        return_policy = %(return_policy)s,
-                        zip_code = %(zip_code)s,
-                        address_1 = %(address_1)s,
-                        address_2 = %(address_2)s,
-                        is_open_weekend = %(is_open_weekend)s,
+                """
+                if change_info['subcategory_id']:
+                    query += 'subcategory_id = %(subcategory_id)s,'
+                if change_info['seller_status']:
+                    query += 'seller_status = %(seller_status)s,'
+                if change_info['seller_name_kr']:
+                    query += 'seller_name_kr = %(seller_name_kr)s,'
+                if change_info['seller_name_en']:
+                    query += 'seller_name_en = %(seller_name_en)s,'
+                if change_info['service_number']:
+                    query += 'service_number = %(service_number)s,'
+                if change_info['profile_pic_url']:
+                    query += 'profile_pic_url = %(profile_pic_url)s,'
+                if change_info['short_desc']:
+                    query += 'short_desc = %(short_desc)s,'
+                if change_info['long_desc']:
+                    query += 'long_desc = %(email)s,'
+                if change_info['open_time']:
+                    query += 'open_time = %(open_time)s,'
+                if change_info['close_time']:
+                    query += 'close_time = %(close_time)s,'
+                if change_info['delivery_policy']:
+                    query += 'delivery_policy = %(delivery_policy)s,'
+                if change_info['return_policy']:
+                    query += 'return_policy= %(return_policy)s,'
+                if change_info['zip_code']:
+                    query += 'zip_code = %(zip_code)s,'
+                if change_info['address_1']:
+                    query += 'address_1 = %(address_1)s,'
+                if change_info['address_2']:
+                    query += 'address_2 = %(address_2)s,'
+                if change_info['is_open_weekend']:
+                    query += 'is_open_weekend = %(is_open_weekend)s,'
+
+                query = query[:-1]
+                query += """
                     WHERE
                         id = %(id)s
-
-                        """
-                cursor.execute(query, seller_info)
+                    """
+                cursor.execute(query, change_info)
                 updated_seller_info = cursor.lastrowid
                 return updated_seller_info
 
         except KeyError as e:
-            print(f'KEY_ERROR {e}')
-            return jsonify({'MESSAGE': 'INVALID_KEY'}), 500
+            return jsonify({'MESSAGE': f'DAO_update_seller{e}'}), 500
 
         except Error as e:
-            print(f'DB_ERROR {e}')
-            return jsonify({'MESSAGE': 'DB_CURSOR_ERROR'}), 500
+            return jsonify({'MESSAGE': f'DAO_update_seller{e}'}), 500
+
+    def get_seller_info(self, seller_info, connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                SELECT
+                    id,
+                    subcategory_id,
+                    seller_status_id,
+                    seller_name_kr,
+                    seller_name_en,
+                    seller_number,
+                    profile_pic_url,
+                    short_desc,
+                    long_desc,
+                    open_time,
+                    close_time,
+                    delivery_policy,
+                    return_policy,
+                    sip_code,
+                    address_1,
+                    address_2,
+                    is_open_weekend
+                FROM
+                    accounts
+                WHERE
+                    id = %(id)s     
+                """
+                cursor.execute(query, seller_info)
+                got_account_info = cursor.fetchone()
+                return got_account_info
+        except KeyError as e:
+            raise Exception(f'DAO_get_seller_info_keyerror{e}')
+        except Error as e:
+            raise Exception(f'DAO_get_seller_info_error{e}')
 
     def find_seller(self, seller_info, connection):
         try:
@@ -361,23 +429,21 @@ class AccountDao:
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
                 SELECT
-                    accounts.id,
-                    accounts.email,
-                    accounts.is_active,
-                    sellers.id,
-                    sellers.account_id,
-                    sellers.subcategory_id,
-                    seller_subcategories.name,
-                    sellers.seller_status_id,
-                    seller_statuses.status,
-                    sellers.seller_name_kr,
-                    sellers.seller_name_en,
-                    sellers.service_number,
-                    sellers.created_at,
-                    managers.name,
-                    managers.phone_number,
-                    managers.email,
-                    COUNT(*) as filtered_items_count
+                    accounts.id AS account_id,
+                    accounts.email AS account_email,
+                    accounts.is_active AS is_active,
+                    sellers.id AS seller_id,
+                    sellers.subcategory_id AS subcategory_id,
+                    seller_subcategories.name AS subcategory_name,
+                    sellers.seller_status_id AS seller_status_id,
+                    seller_statuses.status AS seller_status,
+                    sellers.seller_name_kr AS korean_label,
+                    sellers.seller_name_en AS english_label,
+                    sellers.service_number AS seller_number,
+                    sellers.created_at AS join_date,
+                    managers.name AS manager_name,
+                    managers.phone_number AS manager_phone,
+                    managers.email AS manager_email
                 FROM 
                     sellers
                 LEFT JOIN

@@ -1,6 +1,4 @@
 from flask import request, Blueprint, jsonify, g
-from datetime import datetime, timedelta
-from flask.views import MethodView
 from flask_request_validator import (
     GET,
     FORM,
@@ -204,13 +202,6 @@ class AccountView:
             except Exception as e:
                 connection.rollback()
                 return jsonify({'MESSAGE': f'{e}'}), 400
-
-        # except Exception as e:
-        #     return jsonify({"message" : f'{e}'}), 400
-        #
-        # finally:
-        #     if db_connection:
-        #         db_connection.close()
 
 
     # @account_app.route('/password_change', methods=['POST'])
