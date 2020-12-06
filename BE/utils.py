@@ -16,7 +16,7 @@ def login_validator(func):
         if access_token:
             try:
 
-                payload = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
+                payload    = jwt.decode(access_token, SECRET_KEY, ALGORITHM)
                 account_id = payload['account_id']
                 connection = connect_db()
 
@@ -41,9 +41,9 @@ def login_validator(func):
                         if account:
                             if account['is_active'] == 1:
                                 g.token_info = {
-                                    'account_id': account_id,
+                                    'account_id'      : account_id,
                                     'account_type_id' : account['account_type_id'],
-                                    'seller_id' : None}
+                                    'seller_id'       : None}
                                 return func(*args, **kwargs)
                             return jsonify({'MESSAGE' : 'account_not_active'}), 400
                         return jsonify({'MESSAGE' : 'account_nonexistant'}), 404
@@ -85,10 +85,10 @@ class Image_uploader:
 
                 try:
                     s3_connection.put_object(
-                        Body=buffer,
-                        Bucket='brandi-intern01',
-                        Key=filename,
-                        ContentType='image/jpeg'
+                        Body        = buffer,
+                        Bucket      = 'brandi-intern01',
+                        Key         = filename,
+                        ContentType = 'image/jpeg'
                     )
 
                 except KeyError as e:
@@ -128,7 +128,7 @@ class Image_uploader:
                 # 상품사진 있는 경우 product_images Dictionary에 저장
                 if images.get(f'product_image_{num}'):
                     # 파일이 Image가 아닌 경우 Exception 발생
-                    image = Image.open(images[f'product_image_{num}'])
+                    image         = Image.open(images[f'product_image_{num}'])
                     width, height = image.size
 
                     # 사이즈가 너무 작은 경우 예외처리
@@ -144,10 +144,10 @@ class Image_uploader:
 
                     try:
                         s3_connection.put_object(
-                            Body=buffer,
-                            Bucket='brandi-intern01',
-                            Key=filename,
-                            ContentType='image/jpeg'
+                            Body        = buffer,
+                            Bucket      ='brandi-intern01',
+                            Key         = filename,
+                            ContentType ='image/jpeg'
                         )
 
                     except KeyError as e:

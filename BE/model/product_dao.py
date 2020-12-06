@@ -168,8 +168,7 @@ class ProductDao:
                 #return {'product_list':product_list,'count':total_count}
         # 데이터베이스 error
         except Exception as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e} finally')
-            return jsonify({'error': 'DB_CURSOR_ERROR'}), 500
+            raise e
 
     def get_seller_id(self,filter_data,connection):
         try:
@@ -187,9 +186,9 @@ class ProductDao:
                 seller_id = cursor.fetchone()
                 return seller_id[0]
 
+
         except Exception as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e} finally')
-            return jsonify({'error': 'DB_CURSOR_ERROR'}), 500
+            raise e
 
     def seller_main_categories(self,filter_data,connection):
         try:
@@ -241,15 +240,9 @@ class ProductDao:
                 if filter_categories:
                     return filter_categories
                 return jsonify({'message': 'SELLER_CATEGORY_DOES_NOT_EXIST'}), 404
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
 
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
     def seller_sub_categories(self, filter_data, connection):
         try:
@@ -276,15 +269,8 @@ class ProductDao:
 
                 return filter_categories
 
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
-
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
     def get_color_list(self,connection):
         try:
@@ -300,15 +286,8 @@ class ProductDao:
                 color_list = cursor.fetchall()
                 return color_list
 
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
-
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
 
     def get_size_list(self,connection):
@@ -325,17 +304,9 @@ class ProductDao:
                 size_list = cursor.fetchall()
                 return size_list
 
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
 
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
-
-
+        except Exception as e:
+            raise e
 
     def get_code_info(self,product_subcategory_id,connection):
         try:
@@ -358,16 +329,8 @@ class ProductDao:
                 code_info = list(cursor.fetchone())
                 return code_info
 
-
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
-
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
     def create_product(self,filter_data,connection):
         try:
