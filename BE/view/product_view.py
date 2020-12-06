@@ -120,6 +120,7 @@ class ProductView:
         Param('seller_id', GET, int, required=False),
         Param('seller_name', GET, str, required=False))
     def get_main_category(*args):
+
         """ 상품 분류별 main 카테고리 표출 엔드포인트
         - master이면 seller검색
         - seller이면 validator 본인 id
@@ -129,11 +130,7 @@ class ProductView:
                  {  "main_category_id": 8,
                     "main_category_name": "주얼리"}
             400: 데이터베이스 연결 에러
-            500: server error
-
-        History:
-            2020-11-30 : 초기 생성
-        """
+            500: server error"""
         connection = None
         try:
             connection = connect_db()
@@ -236,8 +233,6 @@ class ProductView:
         Param('min_order', FORM, int),
         Param('max_order', FORM, int),
         Param('seller_id', FORM, int, required=False),
-        #Param('option_list', FORM, list),
-        #Param('test',FORM,int),
       # integer parameter 범위 지정을 위한 검증
         Param('is_selling', FORM, str,
               rules=[Pattern(r'^([0-1])$')]),
@@ -277,9 +272,7 @@ class ProductView:
             'min_order'               : args[16],
             'max_order'               : args[17],
             'seller_id'               : args[18], #if args[20] else g.token_info['seller_id'],
-            'desc_img_url'            : "image.jpg",
-            #'option_list'             : args[19]
-            #'test'  :args[20]
+            'desc_img_url'            : "image.jpg"
         }
         try:
             connection = connect_db()
@@ -307,28 +300,28 @@ class ProductView:
                 # filter_data['option_list'] = option_list
 
                 # option_list = '[{"name":"bb","age":29},{"name":"hh","age":20}]' 형태
-                options = request.form.get('option_list')
-                option_list= json.loads(options)
+                options     = request.form.get('option_list')
+                option_list = json.loads(options)
 
                 #image 저장을 위한 S3 connection instance 생성
                 """
-                images        : File Request(List)
+                images : File Request(List)
                 [
                     { 'product_image_<int>' : <FileStorage: {filename} ({content_type})>}
                 ]
                 """
                 images = request.files
 
-                desc_image = request.files.get('desc_image')
+                desc_image     = request.files.get('desc_image')
                 desc_image_url = Image_uploader.upload_desc_images(desc_image)
 
                 filter_data['desc_img_url'] = desc_image_url
 
                 product_service = ProductService()
-                create_info = product_service.create_product(filter_data, option_list, connection)
+                create_info     = product_service.create_product(filter_data, option_list, connection)
 
-                product_id = create_info['product_id']
-                editor_id = filter_data['editor_id']
+                product_id   = create_info['product_id']
+                editor_id    = filter_data['editor_id']
                 insert_count = create_info['create_count']
 
                 #상품 이미지 URL화, S3에 올리기
@@ -338,7 +331,7 @@ class ProductView:
                 a = product_service.upload_product_image(product_images, product_id, editor_id, connection)
 
                 #connection.commit()
-                return jsonify({'message' : f'{insert_count}products are created'}), 200
+                return jsonify({'message': f'{insert_count}products are created'}), 200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
@@ -348,7 +341,7 @@ class ProductView:
 
         except KeyError:
             db_connection.rollback()
-            return jsonify({'message' 'KEY_ERROR'}), 400
+            return jsonify({'message': 'KEY_ERROR'}), 400
 
         finally:
             try:

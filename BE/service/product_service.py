@@ -51,9 +51,9 @@ class ProductService:
 
             return {'product_list' : products, 'count' : count}
 
+
         except Exception as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            return jsonify({'error': 'DB_CURSOR_ERROR'}), 500
+            raise e
 
 
     def product_main_category(self, filter_data, connection):
@@ -124,8 +124,6 @@ class ProductService:
 
         # code,number 생성
         filter_data['code'] = uuid.uuid4().hex[:6].upper()
-        #filter_data['number'] = re.sub("[^0-9]", "", str(uuid.uuid4()) )
-
 
         # insert_product
         product_data = product_dao.create_product(filter_data,connection)
@@ -138,7 +136,7 @@ class ProductService:
 
         for options in option_list:
             options['product_id'] = product_id
-            options['number'] = str(product_id) + str(option_list.index(options)+1)
+            options['number']     = str(product_id) + str(option_list.index(options)+1)
 
         create_count = product_dao.create_options(option_list, connection)
         print(create_count)
@@ -151,12 +149,13 @@ class ProductService:
         #리스트 안에 있는 이미지 딕셔너리 안에 유효 값 추가
         for image in product_images:
             image['product_id'] = product_id
-            image['ordering'] = product_images.index(image) + 1
-            image['editor_id'] = editor_id
+            image['ordering']   = product_images.index(image) + 1
+            image['editor_id']  = editor_id
             image['is_deleted'] = 0
 
-        insert_product_images = product_dao.create_images(product_images, connection)
-        print(insert_product_images)
+        product_dao.create_images(product_images, connection)
+
+        return None
 
 
 
