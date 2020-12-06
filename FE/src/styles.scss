@@ -4,6 +4,9 @@ $default-black: rgb(34, 34, 34);
 $black: rgb(15, 15, 15);
 $default-border: 1px solid rgb(224, 223, 223);
 $default-grey: rgb(223, 223, 223);
+$default-grey-text-onblack: rgb(153, 155, 162);
+$default-grey-text-onwhite: rgb(119, 119, 119);
+$default-grey-background: rgb(53, 54, 58);
 $default-blue: rgb(30, 144, 255);
 $default-red: rgb(169, 68, 66);
 
@@ -52,7 +55,7 @@ a {
 
 .inputDefault {
   width: 100% !important;
-  margin-bottom: 0 !important;
+  margin-bottom: 3px !important;
 }
 
 .inputDefaultLastChild {
@@ -78,4 +81,61 @@ a {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.highlight {
+  background-color: rgb(255, 192, 105);
+  padding: 0px;
+}
+
+.tableButtons {
+  background-color: transparent;
+  border: none;
+  font-size: 10px;
+  width: 100%;
+
+  &:hover {
+    background-color: transparent !important;
+    border-color: transparent !important;
+  }
+}
+
+.ant-table td {
+  white-space: nowrap;
+}
+
+.ant-modal-mask {
+  background: rgba($color: #000, $alpha: 0.02) !important;
+}
+
+.ant-modal-content {
+  box-shadow: 0 2px 6px rgba($color: #000, $alpha: 0.01) !important;
+}
+
+.ant-pagination-item {
+  padding-top: 5px !important;
+}
+
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  padding-top: 6px !important;
+}
+
+.ant-select-selection--single {
+  padding-top: 6px !important;
+  width: 100% !important;
+}
+
+.ant-select-selection {
+  padding-top: 6px !important;
+  width: 300px !important;
+}
+
+.ant-select-selection__placeholder {
+  position: absolute !important;
+  top: 30% !important;
+}
+
+.ant-select-dropdown-menu-item, .ant-select-dropdown-menu-item-active {
+  width: 100% !important;
 }

@@ -1,5 +1,5 @@
 <template>
-  <div id="login">
+  <div id="Login">
     <div class="brandiLogo">
       <img
         src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
@@ -9,7 +9,7 @@
     <div class="loginContainer">
       <div class="loginHeader">브랜디 어드민 로그인</div>
 
-      <a-form :form="form" @submit="handleSubmit" class="loginForm">
+      <a-form :form="form" @submit="handleLoginBtn" class="loginForm">
         <section class="loginInputs">
           <a-form-item
             :validate-status="userNameError() ? 'error' : ''"
@@ -18,7 +18,7 @@
           >
             <a-input
               v-decorator="[
-                'userName',
+                'email',
                 {
                   rules: [{ required: true, message: '아이디를 입력해주세요' }],
                 },
@@ -39,7 +39,7 @@
           >
             <a-input
               v-decorator="[
-                'password',
+                'pw',
                 {
                   rules: [
                     { required: true, message: '비밀번호를 입력해주세요' },
@@ -64,14 +64,13 @@
               html-type="submit"
               :disabled="hasErrors(form.getFieldsError())"
               class="loginBtn"
+              >로그인</a-button
             >
-              로그인
-            </a-button>
           </a-form-item>
 
           <div class="registerOptions">
             아직 셀러가 아니신가요?
-            <a class="registerStartBtn">회원가입하기</a>
+            <a class="registerStartBtn" @click="createAccount">회원가입하기</a>
           </div>
         </section>
       </a-form>
@@ -80,22 +79,22 @@
 </template>
 
 <script>
-const formItemLayout = {
-  labelCol: { span: 20 },
-  wrapperCol: { span: 20 },
-};
-const formTailLayout = {
-  labelCol: { span: 20 },
-  wrapperCol: { span: 20 },
-};
+import axios from 'axios';
+
+const loginAPI = "http://10.251.1.201:5000/account/signin";
+
 function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some((field) => fieldsError[field]);
 }
 
 export default {
+  name: "login",
+
   data() {
     return {
       hasErrors,
+      email: "",
+      pw: "",
       form: this.$form.createForm(this, { name: "horizontal_login" }),
     };
   },
@@ -106,6 +105,9 @@ export default {
     });
   },
   methods: {
+    createAccount() {
+      this.$router.push("/signup");
+    },
     // Only show error after a field is touched.
     userNameError() {
       const { getFieldError, isFieldTouched } = this.form;
@@ -116,22 +118,37 @@ export default {
       const { getFieldError, isFieldTouched } = this.form;
       return isFieldTouched("password") && getFieldError("password");
     },
-    handleSubmit(e) {
+    handleLoginBtn(e){
       e.preventDefault();
-      this.form.validateFields((err, values) => {
-        if (!err) {
-          console.log("Received values of form: ", values);
+      this.form.validateFieldsAndScroll((err, values) => {
+        let loginData ={
+          email: values.email,
+          password: values.pw,
+        };
+        console.log(loginData, "=================")
+
+        axios.post(loginAPI, loginData)
+        .then(res => {
+          console.log("백앤드에서 오는 응답 메세지: ", res);
+          if (res) {
+            alert("로그인 성공");
+            console.log("token", res.data.AUTHORIZATION)
+            localStorage.setItem("token", res.data.AUTHORIZATION);
+            this.$router.push("/main/sellerlist");
+        } else {
+          alert("다시 시도해주세용! ;P");
         }
-      });
+        })
+      })
     },
-  },
-};
+  }
+}
 </script>
 
 <style lang="scss">
 @import "../../styles.scss";
 
-#login {
+#Login {
   height: 100vh;
   margin: 0 auto;
   padding: 65px 0 50px;
@@ -180,6 +197,7 @@ export default {
 
       .loginInputs {
         .loginInfoInput {
+          margin-bottom: 5px;
           margin: 0 auto;
           width: 100%;
         }
