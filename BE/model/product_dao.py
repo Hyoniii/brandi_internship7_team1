@@ -536,6 +536,37 @@ class ProductDao:
         except Exception as e:
             raise e
 
+    def create_images(self, product_images, connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                INSERT INTO product_images(
+                    product_id,
+                    editor_id,
+                    img_url,
+                    ordering,
+                    is_deleted
+                )
+                VALUES(
+                    %(product_id)s,
+                    %(editor_id)s,
+                    %(image_url)s,
+                    %(ordering)s,
+                    %(is_deleted)s
+                )
+                """
+
+                cursor.executemany(query, product_images)
+                product_images = cursor.fetchall()
+
+                return product_images
+
+        except KeyError as e:
+            raise e
+
+        except Exception as e:
+            raise e
+
 
 
 

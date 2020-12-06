@@ -1,7 +1,12 @@
+import json, io
+import uuid
+
 from flask                   import request, Blueprint, jsonify, g
-import json
+from PIL                     import Image
+
 #from utils                   import login_validator
 from service.product_service import ProductService
+from utils                   import Image_uploader
 from db_connector            import connect_db, get_s3_connection
 from flask_request_validator import (
     GET,
@@ -312,24 +317,28 @@ class ProductView:
                     { 'product_image_<int>' : <FileStorage: {filename} ({content_type})>}
                 ]
                 """
-                # s3_connection = get_s3_connection()
-                # images = request.form.getlist('files')
-                # print(images)
+                images = request.files
 
+                desc_image = request.files.get('desc_image')
+                desc_image_url = Image_uploader.upload_desc_images(desc_image)
+
+                filter_data['desc_img_url'] = desc_image_url
 
                 product_service = ProductService()
-                create_count = product_service.create_product(filter_data,option_list, connection)
+                create_info = product_service.create_product(filter_data, option_list, connection)
 
-                #상품 이미지를 사이즈 별로 S3에 저장 및 URL을 DB에 Insert하는 함수 실행
-                # product_service.upload_product_image(
-                #     images,
-                #     product_id,
-                #     s3_connection,
-                #     connection
-                # )
+                product_id = create_info['product_id']
+                editor_id = filter_data['editor_id']
+                insert_count = create_info['create_count']
+
+                #상품 이미지 URL화, S3에 올리기
+                product_images = Image_uploader.upload_product_images(images)
+
+                #상품 이미지를 DB에 Insert하는 함수 실행
+                a = product_service.upload_product_image(product_images, product_id, editor_id, connection)
 
                 #connection.commit()
-                return jsonify({'message' : f'{create_count}products are created'}), 200
+                return jsonify({'message' : f'{insert_count}products are created'}), 200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
