@@ -1,11 +1,8 @@
 import os, io, jwt, uuid
 import pymysql
 
-<<<<<<< HEAD
 from functools import wraps
-=======
 from PIL          import Image
->>>>>>> main
 from flask        import request, jsonify, g
 from db_connector import connect_db, get_s3_connection
 from mysql.connector.errors import Error
