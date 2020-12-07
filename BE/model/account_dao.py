@@ -257,60 +257,59 @@ class AccountDao:
 
     def update_seller(self, change_info, connection):
 
-        try:
-            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-                query = """
-                    UPDATE
-                        seller
-                    SET
+        # try:
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                UPDATE
+                    sellers
+                SET
+            """
+            if change_info['subcategory_id']:
+                query += 'subcategory_id = %(subcategory_id)s,'
+            if change_info['seller_status_id']:
+                query += 'seller_status_id = %(seller_status)s,'
+            if change_info['seller_name_kr']:
+                query += 'seller_name_kr = %(seller_name_kr)s,'
+            if change_info['seller_name_en']:
+                query += 'seller_name_en = %(seller_name_en)s,'
+            if change_info['seller_number']:
+                query += 'service_number = %(seller_number)s,'
+            if change_info['profile_pic_url']:
+                query += 'profile_pic_url = %(profile_pic_url)s,'
+            if change_info['short_desc']:
+                query += 'short_desc = %(short_desc)s,'
+            if change_info['long_desc']:
+                query += 'long_desc = %(email)s,'
+            if change_info['open_time']:
+                query += 'open_time = %(open_time)s,'
+            if change_info['close_time']:
+                query += 'close_time = %(close_time)s,'
+            if change_info['delivery_policy']:
+                query += 'delivery_policy = %(delivery_policy)s,'
+            if change_info['return_policy']:
+                query += 'return_policy= %(return_policy)s,'
+            if change_info['zip_code']:
+                query += 'zip_code = %(zip_code)s,'
+            if change_info['address_1']:
+                query += 'address_1 = %(address_1)s,'
+            if change_info['address_2']:
+                query += 'address_2 = %(address_2)s,'
+            if change_info['is_open_weekend']:
+                query += 'is_open_weekend = %(is_open_weekend)s,'
+            query = query[:-1]
+            query += """
+                WHERE
+                    id = %(id)s
                 """
-                if change_info['subcategory_id']:
-                    query += 'subcategory_id = %(subcategory_id)s,'
-                if change_info['seller_status']:
-                    query += 'seller_status = %(seller_status)s,'
-                if change_info['seller_name_kr']:
-                    query += 'seller_name_kr = %(seller_name_kr)s,'
-                if change_info['seller_name_en']:
-                    query += 'seller_name_en = %(seller_name_en)s,'
-                if change_info['service_number']:
-                    query += 'service_number = %(service_number)s,'
-                if change_info['profile_pic_url']:
-                    query += 'profile_pic_url = %(profile_pic_url)s,'
-                if change_info['short_desc']:
-                    query += 'short_desc = %(short_desc)s,'
-                if change_info['long_desc']:
-                    query += 'long_desc = %(email)s,'
-                if change_info['open_time']:
-                    query += 'open_time = %(open_time)s,'
-                if change_info['close_time']:
-                    query += 'close_time = %(close_time)s,'
-                if change_info['delivery_policy']:
-                    query += 'delivery_policy = %(delivery_policy)s,'
-                if change_info['return_policy']:
-                    query += 'return_policy= %(return_policy)s,'
-                if change_info['zip_code']:
-                    query += 'zip_code = %(zip_code)s,'
-                if change_info['address_1']:
-                    query += 'address_1 = %(address_1)s,'
-                if change_info['address_2']:
-                    query += 'address_2 = %(address_2)s,'
-                if change_info['is_open_weekend']:
-                    query += 'is_open_weekend = %(is_open_weekend)s,'
-
-                query = query[:-1]
-                query += """
-                    WHERE
-                        id = %(id)s
-                    """
-                cursor.execute(query, change_info)
-                updated_seller_info = cursor.lastrowid
-                return updated_seller_info
-
-        except KeyError as e:
-            return jsonify({'MESSAGE': f'DAO_update_seller{e}'}), 500
-
-        except Error as e:
-            return jsonify({'MESSAGE': f'DAO_update_seller{e}'}), 500
+            cursor.execute(query, change_info)
+            updated_seller_info = cursor.lastrowid
+            return updated_seller_info
+        #
+        # except KeyError as e:
+        #     return jsonify({'MESSAGE': f'DAO_update_seller{e}'}), 500
+        #
+        # except Error as e:
+        #     return jsonify({'MESSAGE': f'DAO_update_seller{e}'}), 500
 
     def get_seller_info(self, seller_info, connection):
         try:
@@ -322,7 +321,7 @@ class AccountDao:
                     seller_status_id,
                     seller_name_kr,
                     seller_name_en,
-                    seller_number,
+                    service_number,
                     profile_pic_url,
                     short_desc,
                     long_desc,
@@ -330,12 +329,12 @@ class AccountDao:
                     close_time,
                     delivery_policy,
                     return_policy,
-                    sip_code,
+                    zip_code,
                     address_1,
                     address_2,
                     is_open_weekend
                 FROM
-                    accounts
+                    sellers
                 WHERE
                     id = %(id)s     
                 """
@@ -435,8 +434,8 @@ class AccountDao:
                     sellers.id AS seller_id,
                     sellers.subcategory_id AS subcategory_id,
                     seller_subcategories.name AS subcategory_name,
-                    sellers.seller_status_id AS seller_status_id,
                     seller_statuses.status AS seller_status,
+                    seller_statuses.id AS seller_status_id,
                     sellers.seller_name_kr AS korean_label,
                     sellers.seller_name_en AS english_label,
                     sellers.service_number AS seller_number,
@@ -450,28 +449,25 @@ class AccountDao:
                     accounts
                 ON 
                     sellers.account_id = accounts.id
-                RIGHT JOIN
+                LEFT JOIN
                     managers
                 ON
                     accounts.id = managers.seller_id
                 LEFT JOIN 
                     seller_subcategories
                 ON
-                    sellers.subcategory_id = seller_subcategories.name
+                    sellers.subcategory_id = seller_subcategories.id
                 LEFT JOIN
                     seller_statuses
                 ON
-                    sellers.seller_status_id = seller_statuses.status
+                    sellers.seller_status_id = seller_statuses.id
                 WHERE 
                     accounts.is_active = 1
-                AND
-                    managers.priority = 1
             """
-
             if filter_info['account_id']:
                 query += """
-                AND 
-                    sellers.account_id = %(account_id)s
+                AND
+                    accounts.id = %(account_id)s
                 """
             if filter_info['email']:
                 query += """
@@ -511,37 +507,34 @@ class AccountDao:
             if filter_info['manager_name']:
                 query += """
                 AND
-                    manager.name <= %(manager_name)s
+                    manager.name = %(manager_name)s
                 """
             if filter_info['seller_status']:
                 query += """
                 AND
-                    seller_statuses.status <= %(seller_status)s
+                    seller_statuses.status = %(seller_status)s
                 """
             if filter_info['manager_phone']:
                 query += """
                 AND
-                    managers.phone_number <= %(manager_phone)s
+                    managers.phone_number = %(manager_phone)s
                 """
             if filter_info['email']:
                 query += """
                 AND
-                    managers.email <= %(email)s
+                    managers.email = %(email)s
                 """
             if filter_info['order_by']:
-                if filter_info['order_by'] == 'desc':
-                    query += """
-                ORDER BY sellers.created_at DESC
-                """
-                else:
-                    query += """
-                ORDER BY sellers.created_at ASC
+                query += """
+                ORDER BY sellers.created_at %(order_by)s
                 """
             elif not filter_info['order_by']:
                 query += """
-                ORDER BY sellers.created_at DESC LIMIT %(limit)s OFFSET %(offset)s
-                    """
-
+                ORDER BY sellers.created_at DESC
+                """
+            query += """
+                LIMIT %(limit)s OFFSET %(offset)s
+            """
             cursor.execute(query, filter_info)
             listed_seller = cursor.fetchall()
             return listed_seller
@@ -556,3 +549,71 @@ class AccountDao:
             """
             cursor.execute(query)
             return cursor.fetchall()
+
+    def get_seller_actions(self, status, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+            SELECT
+                seller_statuses.id AS status_id,
+                seller_statuses.status AS status_name,
+                status_actions.action_id AS action_id,
+                actions.name AS action_name,
+                status_actions.status_after_action_id AS new_status_id
+                
+            FROM
+                status_actions
+            LEFT JOIN
+                actions
+            ON
+                status_actions.action_id = actions.id
+            LEFT JOIN
+                seller_statuses
+            ON
+                status_actions.status_id = seller_statuses.id
+            WHERE
+                status_id = %(status_id)s
+            """
+            cursor.execute(query, status)
+            return cursor.fetchall()
+
+    def get_seller_actions_two(self, status, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+            SELECT
+                seller_statuses.id AS status_id,
+                seller_statuses.status AS status_name,
+                status_actions.action_id AS action_id,
+                actions.name AS action_name,
+                status_actions.status_after_action_id AS new_status_id
+
+            FROM
+                status_actions
+            LEFT JOIN
+                actions
+            ON
+                status_actions.action_id = actions.id
+            LEFT JOIN
+                seller_statuses
+            ON
+                status_actions.status_id = seller_statuses.id
+            WHERE
+                status_id = %(status_id)s
+            AND
+                action_id = %(action_id)s
+            """
+            cursor.execute(query, status)
+            return cursor.fetchall()
+
+    def update_seller_status(self, change_info, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                UPDATE
+                    sellers
+                SET
+                    seller_status_id = %(seller_status)s
+                WHERE
+                    id = %(id)s
+                """
+            cursor.execute(query, change_info)
+            updated_seller_info = cursor.lastrowid
+            return updated_seller_info
