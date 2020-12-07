@@ -240,9 +240,8 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            # update_order_detail 서비스 호출
+            # 주문정보 업데이트 후 업데이트된 상세정보 가져오기
             order_service.update_order_detail(connection, update_status, delivery_info)
-            # 업데이트된 주문정보 가져오기
             updated_order_detail = order_service.get_order_detail(connection, order_filter)
 
             connection.commit()
