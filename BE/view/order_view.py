@@ -1,6 +1,7 @@
 from flask import (
     Blueprint,
-    jsonify
+    jsonify,
+    g
 )
 from flask_request_validator import (
     validate_params,
@@ -14,7 +15,7 @@ from flask_request_validator import (
     MaxLength
 )
 
-# from utils import login_required
+from utils import login_validator
 from db_connector import connect_db
 from service.order_service import OrderService
 
@@ -41,7 +42,7 @@ class OrderView:
         Param('order_by', GET, str, rules=[Enum('desc', 'asc')], required=False),
         Param('page', GET, int, required=False)
     )
-    # @login_required
+    @login_validator
     def get_order_list(*args):
         # 주문상태별 주문 리스트 필터하여 보내주는 엔드포인트
         order_service = OrderService()
@@ -68,8 +69,8 @@ class OrderView:
         }
 
         # 셀러일 경우 필터에 seller_id 추가
-        # if g.token_info['account_type_id'] == 2:
-        #    order_filter['seller_id'] = g.token_info['seller_id']
+        if g.token_info['account_type_id'] == 2:
+            order_filter['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
@@ -92,11 +93,11 @@ class OrderView:
     @validate_params(
         Param('order_status_id', PATH, int, rules=[Enum(1, 2, 3, 4, 5)])
     )
-    # @login_required
+    @login_validator
     def get_filter_options(order_status_id):
         # 주문관리에 페이지에서 셀러속성 리스트와 주문상태변경 버튼 보내주는 엔드포인트
         order_service = OrderService()
-        account_type_id = 1  # 나중에 수정: g.token_info['account_type_id']
+        account_type_id = g.token_info['account_type_id']
 
         connection = None
         try:
@@ -123,22 +124,22 @@ class OrderView:
         # 1: 배송처리 2: 배송완료처리
         Param('order_action_id', JSON, int, rules=[Enum(1, 2)], required=True)
     )
-    # @login_required
+    @login_validator
     def update_order_status(*args):
         # 주문 아이템의 주문 상태를 변경하는 엔드포인트
         # 변경할 아이템의 id를 리스트로 받아서 일괄 업데이트
         order_service = OrderService()
 
         update_status = {
-            'editor_id': 1,  # g.token_info['account_id'],
+            'editor_id': g.token_info['account_id'],
             'order_item_id': args[0],
             'order_status_id': args[1],
             'order_action_id': args[2]
         }
 
         # 셀러일 경우 필터에 seller_id 추가
-        # if g.token_info['account_type_id'] == 2:
-        #    order_filter['seller_id'] = g.token_info['seller_id']
+        if g.token_info['account_type_id'] == 2:
+            update_status['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
@@ -163,7 +164,7 @@ class OrderView:
     @validate_params(
         Param('order_item_id', PATH, int)
     )
-    # @login_required
+    @login_validator
     def get_order_detail(order_item_id):
         # 주문 상세정보 가져오는 엔드포인트
 
@@ -174,8 +175,8 @@ class OrderView:
         }
 
         # 셀러일 경우 필터에 seller_id 추가
-        # if g.token_info['account_type_id'] == 2:
-        #    order_filter['seller_id'] = g.token_info['seller_id']
+        if g.token_info['account_type_id'] == 2:
+            order_filter['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
@@ -204,7 +205,7 @@ class OrderView:
         Param('zip_code', JSON, str, rules=[Pattern('^[0-9]{5}')], required=False),
         Param('delivery_instruction', JSON, str, required=False)
     )
-    # @login_required
+    @login_validator
     def update_order_detail(*args):
         # 주문 상세정보(주문상태, 연락처, 배송지 정보)를 업데이트하는 엔드포인트
 
@@ -215,13 +216,13 @@ class OrderView:
         }
 
         update_status = {
-            'editor_id': 1,  # 나중에 수정: g.token_info['account_id']
+            'editor_id':  g.token_info['account_id'],
             'order_item_id': args[0],
             'new_order_status_id': args[1]
         }
 
         delivery_info = {
-            'editor_id': 1,  # 나중에 수정: g.token_info['account_id']
+            'editor_id': g.token_info['account_id'],
             'order_item_id': args[0],
             'phone_number': args[2],
             'address_1': args[3],
@@ -231,10 +232,10 @@ class OrderView:
         }
 
         # 셀러일 경우 필터에 seller_id 추가
-        # if g.token_info['account_type_id'] == 2:
-        #    order_filter['seller_id'] = g.token_info['seller_id']
-        #    update_status['seller_id'] = g.token_info['seller_id']
-        #    delivery_info['seller_id'] = g.token_info['seller_id']
+        if g.token_info['account_type_id'] == 2:
+            order_filter['seller_id'] = g.token_info['seller_id']
+            update_status['seller_id'] = g.token_info['seller_id']
+            delivery_info['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:

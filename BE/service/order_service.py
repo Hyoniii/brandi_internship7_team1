@@ -101,7 +101,7 @@ class OrderService():
 
         # 주문상태 업데이트
         if update_status['new_order_status_id']:
-            #현재 주문 상태와 선택 가능한 상태변경 옵션 확인
+            # 현재 주문 상태와 선택 가능한 상태변경 옵션 확인
             order_info = order_dao.get_order_info(connection, update_status)
             update_status['order_status_id'] = order_info['order_list'][0]["order_status_id"]
             order_status_options = order_dao.get_order_status_options(connection, update_status)
@@ -111,10 +111,8 @@ class OrderService():
             if update_status['new_order_status_id'] not in ids_available:
                 raise Exception('wrong order status action')
 
-            # 주문상태 변경
+            # 주문상태 변경, 변경이력 생성
             order_dao.update_order_status(connection, update_status)
-
-            # 주문상태 변경로그 생성
             order_log = [
                 [update_status['order_item_id'], update_status['editor_id'], update_status['new_order_status_id']]
             ]

@@ -1,6 +1,7 @@
 import pymysql
 from mysql.connector.errors import Error
 
+
 class OrderDao:
 
     def __init__(self):
@@ -346,4 +347,29 @@ class OrderDao:
                 )
             """
             cursor.executemany(query, order_log)
+
+    def seller_validator(self, connection, order_item_id):
+        # 셀러 id 확인용
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+            SELECT 
+                O.id as order_item_id,
+                S.id as seller_id,
+            FROM 
+                order_items AS O
+            LEFT JOIN sellers AS S ON O.seller_id = S.id
+            """
+
+            if type(order_item_id) == list:
+                query += """
+                WHERE id IN %s
+                """
+
+            if type(order_item_id) == int:
+                query += """
+                WHERE id = %s
+                """
+
+            cursor.execute(query, order_item_id)
+            return cursor.fetchall()
 
