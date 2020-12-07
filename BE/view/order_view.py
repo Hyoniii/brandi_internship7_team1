@@ -225,7 +225,9 @@ class OrderView:
             'zip_code': args[5],
             'delivery_instruction': args[6],
         }
-
+        ###############################################
+        ###### g객체 쓰는법 다시생각해보기##################
+        #############################################
         # 셀러일 경우 필터에 seller_id 추가
         if g.token_info['account_type_id'] == 2:
             order_filter['seller_id'] = g.token_info['seller_id']
