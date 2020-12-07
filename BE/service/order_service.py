@@ -17,7 +17,6 @@ class OrderService():
         if order_filter['end_date']:
             order_filter['end_date'] += " 23:59:59"
 
-        # get_order_info dao 호출
         order_info = order_dao.get_order_info(connection, order_filter)
         return order_info
 
