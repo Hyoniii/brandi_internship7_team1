@@ -99,12 +99,12 @@ class OrderDao:
                     """
                 if order_filter['start_date']:
                     condition += """
-                    AND updated_at >= %(start_date)s
+                    AND log.created_at > %(start_date)s
                     """
 
                 if order_filter['end_date']:
                     condition += """
-                    AND updated_at <= %(end_date)s
+                    AND log.created_at < %(end_date)s
                     """
 
                 if order_filter['seller_type_id']:
@@ -122,7 +122,7 @@ class OrderDao:
                     ORDER BY updated_at ASC
                     """
 
-                condition += """
+                pagination = """
                 LIMIT %(limit)s OFFSET %(offset)s
                 """
 
@@ -138,8 +138,10 @@ class OrderDao:
                     AND item.seller_id = %(seller_id)s
                     """
 
+                pagination = ""
+
             # 주문 정보 가져오는 쿼리문
-            query = data + condition
+            query = data + condition + pagination
             cursor.execute(query, order_filter)
             order_list = cursor.fetchall()
 
@@ -237,7 +239,7 @@ class OrderDao:
                 """
 
             query += """
-                editor_id = %(editor_id)s
+            editor_id = %(editor_id)s
             WHERE order_items.id = %(order_item_id)s
             """
 
@@ -249,7 +251,6 @@ class OrderDao:
             affected_row = cursor.execute(query, delivery_info)
             if affected_row == 0:
                 raise Exception('Failed to update delivery info')
-            return cursor.rowcount
 
     def update_order_status(self, connection, update_status):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -302,7 +303,7 @@ class OrderDao:
             """
             affected_row = cursor.executemany(query, order_log)
             if affected_row == 0:
-                raise ('failed to create order log')
+                raise ('Failed to create order log')
             return cursor.rowcount
 
     def confirm_purchase(self, connection, order_item_id, order_log):

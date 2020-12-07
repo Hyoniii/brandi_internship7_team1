@@ -2,6 +2,8 @@ import Login from "./Pages/Login/Login.vue";
 import Signup from "./Pages/Signup/Signup.vue";
 import Main from "./Pages/Main/Main.vue";
 import SellerList from "./Pages/SellerList/SellerList.vue";
+import OrderList from "./Pages/OrderList/OrderList.vue";
+import ProductList from "./Pages/ProductList/ProductList.vue";
 
 // Vue.use(Router);
 
@@ -18,13 +20,23 @@ export default [
   },
   {
     path: "/:menu",
-    name: "main",
+    name: "mainpage",
     component: Main,
     children: [
       {
         path: "sellerlist",
         name: "sellerlist",
         component: SellerList,
+      },
+      {
+        path: "orderlist",
+        name: "orderlist",
+        component: OrderList,
+      },
+      {
+        path: "productlist",
+        name: "productlist",
+        component: ProductList,
       },
     ],
   },

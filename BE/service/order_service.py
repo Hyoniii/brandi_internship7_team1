@@ -100,10 +100,11 @@ class OrderService():
         # 주문상태 변경하는 dao, 배송지정보 변경하는 dao를 각각 호출함
         order_dao = OrderDao()
 
+        # 주문상태 업데이트
         if update_status['new_order_status_id']:
-            # 주문상태 업데이트
-
-            # 현재 주문상태에서 가능한 상태변경 옵션 확인
+            #현재 주문 상태와 선택 가능한 상태변경 옵션 확인
+            order_info = order_dao.get_order_info(connection, update_status)
+            update_status['order_status_id'] = order_info['order_list'][0]["order_status_id"]
             order_status_options = order_dao.get_order_status_options(connection, update_status)
             ids_available = [status['id'] for status in order_status_options]
 
@@ -134,6 +135,3 @@ class OrderService():
                 or delivery_info['zip_code'] \
                 or delivery_info['delivery_instruction']:
             order_dao.update_delivery_info(connection, delivery_info)
-
-        else:
-            raise Exception('Nothing to update')

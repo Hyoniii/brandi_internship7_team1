@@ -2,18 +2,26 @@
   <div id="signup">
     <div class="signupContainer">
       <div class="brandiLogo">
-        <img alt="로고이미지" src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png" />
+        <img
+          alt="로고이미지"
+          src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
+        />
       </div>
       <div class="signupHeader">
         <div class="signupHeading">회원가입</div>
         <div class="divider"></div>
-        <a-radio-group class="signupAccountTypes" v-model="accountType" button-style="solid">
+        <a-radio-group
+          class="signupAccountTypes"
+          v-model="accountType"
+          button-style="solid"
+        >
           <a-radio-button
             :value="signupAccountType.id"
             :key="signupAccountType.id"
             v-for="signupAccountType in signupAccountTypes"
             class="signupAccountType"
-          >{{ signupAccountType.value }}</a-radio-button>
+            >{{ signupAccountType.value }}</a-radio-button
+          >
         </a-radio-group>
       </div>
       <a-form :form="form" @submit="handleRegisterBtn" class="signupInfo">
@@ -130,7 +138,7 @@
             </div>
           </a-form-item>
         </section>
-        <section v-if="accountType==2" class="signupSection sellerInfo">
+        <section v-if="accountType == 2" class="signupSection sellerInfo">
           <div class="sectionTitle">마스터 정보</div>
           <a-form-item class="inputDefault">
             <a-input
@@ -201,7 +209,9 @@
               <a-icon slot="prefix" type="question" />
             </a-input-password>
             <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">{{ formInputs.masterSecretCode.errorMessage }}</p>
+              <p v-if="hasError" class="errorMessage">
+                {{ formInputs.masterSecretCode.errorMessage }}
+              </p>
             </div>
           </a-form-item>
         </section>
@@ -214,7 +224,8 @@
                 :key="sellerTypeOption.id"
                 v-for="sellerTypeOption in sellerTypeOptions"
                 class="sellerTypesOptions"
-              >{{ sellerTypeOption.value }}</a-radio>
+                >{{ sellerTypeOption.value }}</a-radio
+              >
             </a-radio-group>
           </div>
           <a-form-item class="inputDefault">
@@ -278,7 +289,9 @@
               <a-icon slot="prefix" type="phone" theme="filled" />
             </a-input>
             <div class="inputHelper">
-              <p v-if="hasError" class="errorMessage">{{ formInputs.managerNumber.errorMessage }}</p>
+              <p v-if="hasError" class="errorMessage">
+                {{ formInputs.managerNumber.errorMessage }}
+              </p>
             </div>
           </a-form-item>
         </section>
@@ -286,12 +299,15 @@
         <a-form-item class="signupBtnsContainer">
           <div class="signupBtns">
             <a-button-group class="signupBtnsGroup">
-              <a-button class="btnGrouped" type="danger" @click="handleCancelBtn">취소</a-button>
               <a-button
                 class="btnGrouped"
-                type="primary"
-                html-type="submit"
-              >신청</a-button>
+                type="danger"
+                @click="handleCancelBtn"
+                >취소</a-button
+              >
+              <a-button class="btnGrouped" type="primary" html-type="submit"
+                >신청</a-button
+              >
             </a-button-group>
           </div>
         </a-form-item>
@@ -301,7 +317,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 const signupSellerAPI = "http://10.251.1.201:5000/account/signup/seller";
 const signupMasterAPI = "http://10.251.1.201:5000/account/signup/master";
@@ -339,8 +355,7 @@ export default {
     handleRegisterBtn(e) {
       e.preventDefault();
       this.form.validateFieldsAndScroll((err, values) => {
-
-        let signupData ={
+        let signupData = {
           email: values.email,
           password: values.pw,
           name: values.fullName,
@@ -350,26 +365,32 @@ export default {
           seller_name_en: values.sellerEnglishName,
         };
 
-        signupData ={
+        signupData = {
           ...signupData,
           subcategory_id: this.sellerType,
-          account_type_id: this.accountType ===1 ? 1: 2
+          account_type_id: this.accountType === 1 ? 1 : 2,
         };
 
-        console.log(signupData, "=================")
+        console.log(signupData, "=================");
 
-        axios.post(+signupData.account_type_id === 1 ?signupSellerAPI: signupMasterAPI, signupData)
-        .then(res=> {
-        console.log("백앤드에서 오는 응답 메세지: ", res);
-        if (res) {
-          alert("회원가입 성공");
-          this.$router.push("/");
-        } else {
-          alert("다시 시도해주세용! ;P");
-        }
-        })
-      })
-    }, 
+        axios
+          .post(
+            +signupData.account_type_id === 1
+              ? signupSellerAPI
+              : signupMasterAPI,
+            signupData
+          )
+          .then((res) => {
+            console.log("백앤드에서 오는 응답 메세지: ", res);
+            if (res) {
+              alert("회원가입 성공");
+              this.$router.push("/");
+            } else {
+              alert("다시 시도해주세용! ;P");
+            }
+          });
+      });
+    },
     handleCancelBtn() {
       this.$confirm({
         title: "브랜디 가입을 취소하시겠습니까?",
@@ -493,8 +514,6 @@ export default {
 
       .basicSellerInfo {
         display: block;
-
-       
       }
       .managerInfo {
         .sectionTitle {
