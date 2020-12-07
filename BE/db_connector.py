@@ -1,6 +1,7 @@
 import pymysql, boto3
-
-from config import DATABASE, S3
+import boto3
+from config import DATABASE
+from config import S3
 
 def connect_db():
     db = pymysql.connect(

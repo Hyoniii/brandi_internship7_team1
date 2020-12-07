@@ -1,11 +1,8 @@
 import os, io, jwt, uuid
 import pymysql
 
-<<<<<<< HEAD
 from functools import wraps
-=======
 from PIL          import Image
->>>>>>> main
 from flask        import request, jsonify, g
 from db_connector import connect_db, get_s3_connection
 from mysql.connector.errors import Error
@@ -47,7 +44,7 @@ def login_validator(func):
                                 g.token_info = {
                                     'account_id'      : account_id,
                                     'account_type_id' : account['account_type_id'],
-                                    'seller_id'       : None}
+                                    'seller_id'       : account['seller_id']}
                                 return func(*args, **kwargs)
                             return jsonify({'MESSAGE': 'account_not_active'}), 400
                         return jsonify({'MESSAGE': 'account_nonexistant'}), 404

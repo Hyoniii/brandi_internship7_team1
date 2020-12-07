@@ -129,14 +129,13 @@ class AccountView:
         Param('created_lower', GET, str, required=False),
         Param('created_upper', GET, str, required=False),
         Param('excel', GET, int, required=False),
-        Param('offset', GET, int, required=False),
+        Param('page', GET, int, required=False),
         Param('limit', GET, int, required=False),
         Param('order_by', GET, str, required=False, rules=[Enum('asc', 'desc')])
     )
     def list_sellers(*args):
         db_connection = None
         user = g.token_info
-        print(user)
         filter_info = {
             'seller_id': args[0],
             'account_id': args[1],
@@ -152,8 +151,8 @@ class AccountView:
             'created_upper': args[11],
             'created_lower': args[12],
             'excel': args[13],
-            'offset': args[14] if args[14] else 0,
-            'limit': args[15] if args[15] else 20,
+            'page': args[14] if args[14] else 1,
+            'limit': args[15] if args[15] else 10,
             'order_by': args[16]
         }
         try:
@@ -165,17 +164,17 @@ class AccountView:
         except Exception as e:
             return jsonify({'MESSAGE': f'{e}'}), 400
 
-    @account_app.route('edit', methods=['POST'])
+    @account_app.route('edit', methods=['PATCH'])
     @login_validator
     @validate_params(
         Param('email', JSON, str,
-              rules=[Pattern(r'^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$')]),
+              rules=[Pattern(r'^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$')], required=False),
         Param('password', JSON, str,
-              rules=[MaxLength(80), MinLength(4)]),
-        Param('account_type_id', JSON, int),
+              rules=[MaxLength(80), MinLength(4)], required=False),
+        Param('account_type_id', JSON, int, required=False),
         Param('account_type_id', JSON, str,
-              rules=[Pattern(r"^[1-2]{1}$")]),
-        Param('name', JSON, str, rules=[Pattern(r"^[가-힣]{1,20}$")]),
+              rules=[Pattern(r"^[1-2]{1}$")], required=False),
+        Param('name', JSON, str, rules=[Pattern(r"^[가-힣]{1,20}$")], required=False),
         Param('account_id', JSON, int, required=True),
         Param('is_active', JSON, int, required=False)
     )
@@ -202,6 +201,86 @@ class AccountView:
             except Exception as e:
                 connection.rollback()
                 return jsonify({'MESSAGE': f'{e}'}), 400
+
+    @account_app.route('edit_seller', methods=['PATCH'])
+    @login_validator
+    @validate_params(
+        Param('subcategory_id', JSON, int, required= False),
+        Param('seller_status_id', JSON, int, required= False),
+        Param('seller_name_kr', JSON, str, rules=[Pattern(r"^[가-힣0-9]{1,20}$")], required= False),
+        Param('seller_name_en', JSON, str, rules=[Pattern(
+            r"^[a-zA-Z0-9àáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]{1,20}$")], required= False),
+        Param('seller_number', JSON, str, rules=[Pattern(r"^[0-9]{11}$|^[0-9]{12}$")], required= False),
+        Param('profile_pic_url', JSON, str, required= False),
+        Param('short_desc', JSON, str, required= False),
+        Param('long_desc', JSON, str, required= False),
+        Param('open_time', JSON, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')], required= False),
+        Param('close_time', JSON, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')], required= False),
+        Param('delivery_policy', JSON, str, required= False),
+        Param('return_policy', JSON, str, required= False),
+        Param('zip_code', JSON, int, required= False),
+        Param('address_1', JSON, str, required= False),
+        Param('address_2', JSON, str, required= False),
+        Param('is_open_weekend', JSON, int, required= False),
+        Param('seller_id', JSON, int, required=True)
+    )
+    def edit_seller(*args):
+        connection = None
+        change_info = {
+            'subcategory_id': args[0],
+            'seller_status_id': args[1],
+            'seller_name_kr': args[2],
+            'seller_name_en': args[3],
+            'seller_number': args[4],
+            'profile_pic_url': args[5],
+            'short_desc': args[6],
+            'long_desc': args[7],
+            'open_time': args[8],
+            'close_time': args[9],
+            'delivery_policy': args[10],
+            'return_policy': args[11],
+            'zip_code': args[12],
+            'address_1': args[13],
+            'address_2': args[14],
+            'is_open_weekend': args[15],
+            'seller_id': args[16]
+        }
+        print(change_info)
+        connection = connect_db()
+        user = g.token_info
+        if connection:
+            account_service = AccountService()
+            try:
+                change_account = account_service.change_seller_info(change_info, user, connection)
+                connection.commit()
+                connection.close()
+                return change_account
+            except Exception as e:
+                connection.rollback()
+                return jsonify({'MESSAGE': f'{e}'}), 400
+
+
+    @account_app.route('change_seller_status', methods=['PATCH'])
+    @login_validator
+    @validate_params(
+        Param('action_id', JSON, str),
+        Param('status_id', JSON, str),
+        Param('seller_id', JSON, str)
+    )
+    def seller_actions(*args):
+        connection = None
+        status = {
+            'action_id': args[0],
+            'status_id': args[1],
+            'seller_id': args[2]
+        }
+        user = g.token_info
+        connection = connect_db()
+        if connection:
+            account_service = AccountService()
+            actions = account_service.change_status(status, user, connection)
+            connection.commit()
+            return jsonify({'status_actions': 'SUCCESS'}), 200
 
 
     # @account_app.route('/password_change', methods=['POST'])
