@@ -4,9 +4,8 @@ import uuid
 from flask                   import request, Blueprint, jsonify, g
 from PIL                     import Image
 
-#from utils                   import login_validator
 from service.product_service import ProductService
-from utils                   import Image_uploader
+from utils                   import login_validator, Image_uploader, Product_excel_downloader
 from db_connector            import connect_db, get_s3_connection
 from flask_request_validator import (
     GET,
@@ -24,7 +23,7 @@ class ProductView:
     product_app = Blueprint('product_app', __name__, url_prefix='/products')
 
     @product_app.route('', methods=['GET'])
-    ##@login_validator
+    @login_validator
     @validate_params(
         Param('started_date', GET, str, required=False,
               rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
@@ -40,8 +39,8 @@ class ProductView:
         Param('is_discount', GET, bool, required=False),
         Param('limit', GET, int, required=False),
         Param('page', GET, int, required=False),
-        Param('account_type_id', GET, int, required=False),#login_validator 완성 후 삭제 예정
-        Param('account_id', GET, int, required=False),  # login_validator 완성 후 삭제 예정
+        #Param('account_type_id', GET, int, required=False),#login_validator 완성 후 삭제 예정
+        #Param('account_id', GET, int, required=False),  # login_validator 완성 후 삭제 예정
         )
     def get_product_list(*args):
         connection = None
@@ -67,13 +66,6 @@ class ProductView:
                 'seller_id' : id or None
             }
         """
-        # 상품을 등록하는 주체가 셀러이면, 자기 토큰을 이용해 본인 상품만 표출
-        if args[13] != 1:
-            account_id = 3
-        else:
-            account_id = args[14]
-        # if auth_type_id != 1:
-        #      account_id = g.account_info['account_id']
 
         #유효성 검사 완료한 쿼리 값 저장
         filter_data = {
@@ -89,8 +81,7 @@ class ProductView:
             'is_discount'           : args[9],
             'limit'                 : args[10],
             'page'                  : args[11],
-            'account_type_id'       : args[12], # validator 완성 후 수정 예정
-            'account_id'            : account_id
+            'account_type_id'       : g.token_info['account_type_id']
         }
 
         try:
@@ -112,12 +103,77 @@ class ProductView:
             except Exception as e:
                 return jsonify({'message': f'{e}'}), 500
 
-
-    @product_app.route('/category', methods=['GET'])
+    @product_app.route('/download', methods=['GET'])
     ##@login_validator
     @validate_params(
-        Param('account_type_id', GET, int, required=False),
-        Param('seller_id', GET, int, required=False),
+        Param('started_date', GET, str, required=False,
+              rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
+        Param('ended_date', GET, str, required=False,
+              rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
+        Param('seller_name', GET, str, required=False),
+        Param('product_name', GET, str, required=False),
+        Param('product_number', GET, str, required=False),
+        Param('product_code', GET, str, required=False),
+        Param('seller_subcategory_id', GET, list, required=False),
+        Param('is_selling', GET, bool, required=False),
+        Param('is_visible', GET, bool, required=False),
+        Param('is_discount', GET, bool, required=False),
+        Param('limit', GET, int, required=False),
+        Param('page', GET, int, required=False),
+        Param('account_type_id', GET, int, required=False),  # login_validator 완성 후 삭제 예정
+        Param('account_id', GET, int, required=False),  # login_validator 완성 후 삭제 예정
+    )
+    @login_validator
+    def product_list_excel(*args):
+        connection = None
+
+
+        filter_data = {
+            'started_date': args[0],
+            'ended_date': args[1],
+            'seller_name': args[2],
+            'product_name': args[3],
+            'product_number': args[4],
+            'product_code': args[5],
+            'seller_subcategory_id': args[6],
+            'is_selling': args[7],
+            'is_visible': args[8],
+            'is_discount': args[9],
+            #'limit': args[10],
+            #'page': args[11],
+            'account_type_id': g.token_info['account_type_id'],
+            'account_id' : g.token_info['account_id']
+        }
+
+        try:
+            connection = connect_db()
+            if connection:
+                product_service = ProductService()
+
+                excel_info= product_service.product_excel(filter_data, connection)
+
+                if filter_data['account_type_id'] == 1:
+                    Product_excel_downloader.master_product_excel_down(excel_info)
+
+                else:
+                    Product_excel_downloader.seller_product_excel_down(excel_info)
+
+                return jsonify({'message':'SUCCESS'}), 200
+            else:
+                return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
+
+        except Exception as e:
+            return jsonify({'message': f'{e}'}), 400
+
+        finally:
+            try:
+                connection.close()
+            except Exception as e:
+                return jsonify({'message': f'{e}'}), 500
+
+    @product_app.route('/category', methods=['GET'])
+    @login_validator
+    @validate_params(
         Param('seller_name', GET, str, required=False))
     def get_main_category(*args):
 
@@ -135,10 +191,10 @@ class ProductView:
         try:
             connection = connect_db()
             if connection:
+
                 filter_data = {
-                    'account_type_id': args[0],
-                    'seller_id'      : args[1] ,
-                    'seller_name'    : args[2]
+                    'account_type_id': g.token_info['account_type_id'],
+                    'seller_name'    : args[0]
                 }
 
                 product_service = ProductService()
@@ -146,7 +202,7 @@ class ProductView:
         except Exception as e:
             return jsonify({'message' : f'{e}'}), 400
         else:
-            return jsonify({'data':main_categories_data}), 200
+            return jsonify(main_categories_data), 200
         finally:
             try:
                 connection.close()
@@ -213,7 +269,7 @@ class ProductView:
     @product_app.route('/')
 
     @product_app.route('/register', methods=['POST'])
-    ##@login_validator
+    @login_validator
     @validate_params(
         Param('is_selling', FORM, int),
         Param('is_visible', FORM, int),
@@ -254,7 +310,7 @@ class ProductView:
             return jsonify({'message': 'value_error'}), 400
 
         filter_data = {
-            'editor_id'               : 2, #디버깅용 하드코딩,g.account['account_id']
+            'editor_id'               : g.token_info['account_id'],
             'is_selling'              : args[0],
             'is_visible'              : args[1],
             'sub_category_id'         : args[2],
@@ -272,34 +328,17 @@ class ProductView:
             'discount_start_datetime' : args[14],
             'discount_end_datetime'   : args[15],
             'min_order'               : args[16],
-            'max_order'               : args[17],
-            'seller_id'               : args[18], #if args[20] else g.token_info['seller_id'],
-            'desc_img_url'            : "image.jpg"
+            'max_order'               : args[17]
         }
+        if args[20] :
+            filter_data['seller_id'] = args[20]
+        else:
+            filter_data['seller_id'] = g.token_info['seller_id']
+
         try:
             connection = connect_db()
 
             if connection:
-
-                #option_list : '{},{}' => None
-                # option_list : '' => None
-                # a = request.form.get('option_list')
-                # print(a)
-                # print(type(a))
-                # b = json.loads(a)
-                # print(b)
-                #
-                # print('________________')
-
-
-                # form data로 list를 보내면 생기는 오류로 인한 후 처리(strip,split)
-                # 이 방법밖에 없는지 여쭤보기
-                # options = request.form.getlist('option_list')
-                # option_list =[]
-                # for option in form_options:
-                #     options = option.strip('[]')
-                #     option_list.append(options.split(','))
-                # filter_data['option_list'] = option_list
 
                 # option_list = '[{"name":"bb","age":29},{"name":"hh","age":20}]' 형태
                 options     = request.form.get('option_list')
@@ -330,20 +369,21 @@ class ProductView:
                 product_images = Image_uploader.upload_product_images(images)
 
                 #상품 이미지를 DB에 Insert하는 함수 실행
-                a = product_service.upload_product_image(product_images, product_id, editor_id, connection)
+                product_service.upload_product_image(product_images, product_id, editor_id, connection)
 
                 #connection.commit()
                 return jsonify({'message': f'{insert_count}products are created'}), 200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
-        except Exception as e:
-            connection.rollback()
-            return jsonify({'message': f'{e}'}), 500
-
         except KeyError:
             db_connection.rollback()
             return jsonify({'message': 'KEY_ERROR'}), 400
+
+        except Exception as e:
+            connection.rollback()
+            # raise e
+            return jsonify({'message': f'{e}'}), 500
 
         finally:
             try:
