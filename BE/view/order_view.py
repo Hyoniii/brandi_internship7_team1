@@ -212,18 +212,13 @@ class OrderView:
         order_service = OrderService()
 
         order_filter = {
-            'order_item_id': args[0],
+            'order_item_id': args[0]
         }
 
-        update_status = {
-            'editor_id':  g.token_info['account_id'],
+        update_order = {
             'order_item_id': args[0],
-            'new_order_status_id': args[1]
-        }
-
-        delivery_info = {
             'editor_id': g.token_info['account_id'],
-            'order_item_id': args[0],
+            'new_order_status_id': args[1],
             'phone_number': args[2],
             'address_1': args[3],
             'address_2': args[4],
@@ -234,14 +229,13 @@ class OrderView:
         # 셀러일 경우 필터에 seller_id 추가
         if g.token_info['account_type_id'] == 2:
             order_filter['seller_id'] = g.token_info['seller_id']
-            update_status['seller_id'] = g.token_info['seller_id']
-            delivery_info['seller_id'] = g.token_info['seller_id']
+            update_order['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
             connection = connect_db()
             # 주문정보 업데이트 후 업데이트된 상세정보 가져오기
-            order_service.update_order_detail(connection, update_status, delivery_info)
+            order_service.update_order_detail(connection, update_order)
             updated_order_detail = order_service.get_order_detail(connection, order_filter)
 
             connection.commit()

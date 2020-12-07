@@ -208,7 +208,7 @@ class OrderDao:
             cursor.execute(query, order_filter)
             return cursor.fetchall()
 
-    def update_delivery_info(self, connection, delivery_info):
+    def update_delivery_info(self, connection, update_order):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
             UPDATE delivery_info
@@ -217,23 +217,23 @@ class OrderDao:
             SET 
             """
 
-            if delivery_info['phone_number']:
+            if update_order['phone_number']:
                 query += """
                 phone_number = %(phone_number)s,
                 """
-            if delivery_info['address_1']:
+            if update_order['address_1']:
                 query += """
                 address_1 = %(address_1)s,
                 """
-            if delivery_info['address_2']:
+            if update_order['address_2']:
                 query += """
                 address_2 = %(address_2)s,
                 """
-            if delivery_info['zip_code']:
+            if update_order['zip_code']:
                 query += """
                 zip_code = %(zip_code)s,
                 """
-            if delivery_info['delivery_instruction']:
+            if update_order['delivery_instruction']:
                 query += """
                 delivery_instruction = %(delivery_instruction)s,
                 """
@@ -243,12 +243,12 @@ class OrderDao:
             WHERE order_items.id = %(order_item_id)s
             """
 
-            if 'seller_id' in delivery_info:
+            if 'seller_id' in update_order:
                 query += """
                 AND order_items.seller_id = %(seller_id)s
                 """
 
-            affected_row = cursor.execute(query, delivery_info)
+            affected_row = cursor.execute(query, update_order)
             if affected_row == 0:
                 raise Exception('Failed to update delivery info')
 

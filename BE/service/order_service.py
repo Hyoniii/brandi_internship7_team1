@@ -94,41 +94,41 @@ class OrderService():
         }
         return order_detail
 
-    def update_order_detail(self, connection, update_status, delivery_info):
+    def update_order_detail(self, connection, update_order):
         # 주문상세정보 업데이트
         # 주문상태 변경하는 dao, 배송지정보 변경하는 dao를 각각 호출함
         order_dao = OrderDao()
 
         # 주문상태 업데이트
-        if update_status['new_order_status_id']:
+        if update_order['new_order_status_id']:
             # 현재 주문 상태와 선택 가능한 상태변경 옵션 확인
-            order_info = order_dao.get_order_info(connection, update_status)
-            update_status['order_status_id'] = order_info['order_list'][0]["order_status_id"]
-            order_status_options = order_dao.get_order_status_options(connection, update_status)
+            order_info = order_dao.get_order_info(connection, update_order)
+            update_order['order_status_id'] = order_info['order_list'][0]["order_status_id"]
+            order_status_options = order_dao.get_order_status_options(connection, update_order)
             ids_available = [status['id'] for status in order_status_options]
 
             # 선택 가능한 옵션이 아닐 경우 raise exception
-            if update_status['new_order_status_id'] not in ids_available:
+            if update_order['new_order_status_id'] not in ids_available:
                 raise Exception('wrong order status action')
 
             # 주문상태 변경, 변경이력 생성
-            order_dao.update_order_status(connection, update_status)
+            order_dao.update_order_status(connection, update_order)
             order_log = [
-                [update_status['order_item_id'], update_status['editor_id'], update_status['new_order_status_id']]
+                [update_order['order_item_id'], update_order['editor_id'], update_order['new_order_status_id']]
             ]
             order_dao.create_order_log(connection, order_log)
 
             # 구매확정 스케줄러(구매확정 상태로 업데이트 후 변경이력 생성)
-            if update_status['new_order_status_id'] == 4:
-                order_item_id = update_status['order_item_id']
+            if update_order['new_order_status_id'] == 4:
+                order_item_id = update_order['order_item_id']
                 order_log = [
-                    [update_status['order_item_id'], update_status['editor_id'], 5]
+                    [update_order['order_item_id'], update_order['editor_id'], 5]
                 ]
                 order_dao.confirm_purchase(connection, order_item_id, order_log)
 
-        if delivery_info['phone_number'] \
-                or delivery_info['address_1'] \
-                or delivery_info['address_2'] \
-                or delivery_info['zip_code'] \
-                or delivery_info['delivery_instruction']:
-            order_dao.update_delivery_info(connection, delivery_info)
+        if update_order['phone_number'] \
+                or update_order['address_1'] \
+                or update_order['address_2'] \
+                or update_order['zip_code'] \
+                or update_order['delivery_instruction']:
+            order_dao.update_delivery_info(connection, update_order)
