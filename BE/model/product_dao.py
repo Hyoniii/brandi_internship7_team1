@@ -83,13 +83,13 @@ class ProductDao:
                 # 등록 기간 시작
                 if filter_data.get('started_date', None):
                     list_from += """
-                     AND P.created_at > %(started_date)s
+                     AND P.created_at >= %(started_date)s
                      """
 
                 # 등록 기간 종료
                 if filter_data.get('ended_date', None):
                     list_from += """
-                    AND P.created_at < %(ended_date)s
+                    AND P.created_at <= %(ended_date)s
                     """
 
                 # 셀러명
@@ -121,7 +121,9 @@ class ProductDao:
                     list_from += """
                     AND S.subcategory_id in %(seller_subcategory_id)s
                     """
-
+                ############################
+                #####is not none 예외처리######
+                ############################
                 # 판매여부
                 if filter_data.get('is_selling', None) is not None:
                     list_from += """
@@ -169,8 +171,6 @@ class ProductDao:
 
                 return {'product_list':product_list,'count':total_count}
 
-                #return {'product_list':product_list,'count':total_count}
-        # 데이터베이스 error
         except Exception as e:
             raise e
 
@@ -263,17 +263,13 @@ class ProductDao:
                     LEFT JOIN
                         product_categories as PC1
                     ON
-                        PC2.category_id = PC1.id    
+                        PC2.category_id = PC1.id
+                    WHERE PC1.id = %(main_category_id)s    
                     """
 
-                if filter_data.get('main_category_id',None):
-                    query += """
-                    WHERE PC1.id = %(main_category_id)s
-                    """
-                    print(query)
                 count = cursor.execute(query,filter_data)
                 if count == 0:
-                    raise Exception("MAIN_CATEGORY_ERROR")
+                    raise Exception("MAIN_CATEGORY_DB_ERROR")
                 filter_categories = cursor.fetchall()
 
                 return filter_categories
@@ -299,7 +295,6 @@ class ProductDao:
 
         except Exception as e:
             raise e
-
 
     def get_size_list(self,connection):
         try:
@@ -373,7 +368,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.execute(query, filter_data)
+                count = cursor.execute(query, filter_data)
+                if count == 0:
+                    raise Exception("PRODUCT_DB_UPLOAD_ERROR")
                 product_id = cursor.lastrowid
                 filter_data['product_id'] = product_id
 
@@ -442,8 +439,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.execute(query, product_data)
-                #product_log = cursor.fetchall()
+                count = cursor.execute(query, product_data)
+                if count == 0:
+                    raise Exception("PRODUCTLOG_DB_UPLOAD_ERROR")
                 product_log = cursor.rowcount
 
                 return product_log
@@ -453,8 +451,6 @@ class ProductDao:
 
         except Exception as e:
             raise e
-
-
 
     def create_options(self, option_list, connection):
         try:
@@ -476,7 +472,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.executemany(query, option_list)
+                count = cursor.executemany(query, option_list)
+                if count == 0:
+                    raise Exception("OPTION_DB_UPLOAD_ERROR")
                 options_count = cursor.rowcount
 
                 return options_count
@@ -507,7 +505,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.executemany(query, product_images)
+                count = cursor.executemany(query, product_images)
+                if count == 0:
+                    raise Exception("IMAGE_DB_UPLOAD_ERROR")
                 product_images = cursor.fetchall()
 
                 return product_images
@@ -652,7 +652,10 @@ class ProductDao:
                 """
 
                 query = list_select + list_from
-                cursor.execute(query, filter_data)
+                count = cursor.execute(query, filter_data)
+                if count == 0:
+                    raise Exception("DATA_FILTERING_ERROR")
+
                 excel_list = cursor.fetchall()
 
                 return excel_list

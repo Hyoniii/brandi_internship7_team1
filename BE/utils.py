@@ -1,6 +1,8 @@
 import os, io, jwt, uuid
 import pymysql
 import xlsxwriter
+import time
+import datetime
 
 from functools    import wraps
 from PIL          import Image
@@ -96,6 +98,7 @@ class Image_uploader:
 
                 except KeyError as e:
                     raise e
+
                 except Exception as e:
                     raise e
 
@@ -104,6 +107,7 @@ class Image_uploader:
 
         except KeyError as e:
             raise e
+
         except Exception as e:
             raise e
 
@@ -194,11 +198,18 @@ class Product_excel_downloader:
 
             data['price'] = int(data['price'])
 
+            data['created_at'] = data['created_at'].strftime('%Y-%m-%d')
+
             if data.get('discount_price') is None:
                 data['discount_price'] = data['price']
 
+
         workbook = xlsxwriter.Workbook('master_product_list.xlsx')
         worksheet = workbook.add_worksheet()
+
+        # file = io.BytesIO()
+        # wb.save(file)
+        # file.seek(0)
 
         columns = ['등록일', '대표이미지', '상품명', '상품코드', '상품번호', '셀러속성', '셀러명', '판매가', '할인가', '판매여부', '진열여부', '할인여부']
 
@@ -207,9 +218,9 @@ class Product_excel_downloader:
 
         row = 1
         col = 0
-
+        #######datetile#############
         for j in excel_info:
-            worksheet.write(row, col, j.get('created_at'))
+            worksheet.write(row, col,     j.get('created_at'))
             worksheet.write(row, col + 1, j.get('desc_img_url'))
             worksheet.write(row, col + 2, j.get('product_name'))
             worksheet.write(row, col + 3, j.get('product_code'))
@@ -249,6 +260,8 @@ class Product_excel_downloader:
                 data['is_discount'] = "미할인"
 
             data['price'] = int(data['price'])
+
+            data['created_at'] = data['created_at'].strftime('%Y-%m-%d')
 
             if data.get('discount_price') is None:
                 data['discount_price'] = data['price']
