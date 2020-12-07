@@ -210,6 +210,8 @@ class ProductView:
             except Exception as e:
                 return jsonify({'message': f'{e}'}), 500
 
+    @product_app.route('/')
+
     @product_app.route('/register', methods=['POST'])
     ##@login_validator
     @validate_params(

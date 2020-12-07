@@ -95,7 +95,7 @@ export default {
       hasErrors,
       email: "",
       pw: "",
-      form: this.$form.createForm(this, { name: "horizontal_login" }),
+      form: this.$form.createForm(this, { name: "horizontalLogin" }),
     };
   },
   mounted() {

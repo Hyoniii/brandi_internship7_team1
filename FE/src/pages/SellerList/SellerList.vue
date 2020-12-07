@@ -9,9 +9,13 @@
       }"
     >
       <div style="margin-bottom: 14px">
-        <a-button type="primary" :disabled="!hasSelected"  @click="start">Reload</a-button>
+        <a-button type="primary" :disabled="!hasSelected" @click="start"
+          >Reload</a-button
+        >
         <span style="margin-left: 8px">
-          <template v-if="hasSelected">{{ `Selected ${selectedRowKeys.length} items` }}</template>
+          <template v-if="hasSelected">{{
+            `Selected ${selectedRowKeys.length} items`
+          }}</template>
         </span>
       </div>
       <a-table
@@ -53,8 +57,14 @@
             size="small"
             style="width: 90px; margin-right: 8px"
             @click="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
-          >Search</a-button>
-          <a-button size="small" style="width: 90px" @click="() => handleReset(clearFilters)">Reset</a-button>
+            >Search</a-button
+          >
+          <a-button
+            size="small"
+            style="width: 90px"
+            @click="() => handleReset(clearFilters)"
+            >Reset</a-button
+          >
         </div>
         <a-icon
           slot="filterIcon"
@@ -62,12 +72,20 @@
           type="search"
           :style="{ color: filtered ? '#108ee9' : undefined }"
         />
-        <template slot="sellerId" slot-scope="text">
+        <template slot="email" slot-scope="text">
           <a :href="sellerDetailsLink" @click="handleSellerDetailsLink">
-            {{
-            text
-            }}
+            {{ text }}
           </a>
+        </template>
+        <template slot="status" slot-scope="sellerStatus">
+          <span :id="sellerStatus.id" :key="sellerStatus.id">
+            {{ sellerStatus.name }}
+          </span>
+        </template>
+        <template slot="sellerType" slot-scope="sellerType">
+          <span :id="sellerType.id" :key="sellerType.id">
+            {{ sellerType.name }}
+          </span>
         </template>
         <span slot="actionButtons" slot-scope="actions">
           <a-tag
@@ -90,51 +108,9 @@
               :id="action.id"
               size="small"
               class="tableButtons"
-            >{{ action.name }}</a-button>
+              >{{ action.name }}</a-button
+            >
           </a-tag>
-          <a-modal v-model="sellerAccepted" title="셀러 태그 / 수수료 선택" on-ok="handleOk">
-            <template slot="footer">
-              <a-button key="back" @click="handleCancel">닫기</a-button>
-              <a-button key="submit" type="primary"  @click="handleOk">입점 승인</a-button>
-            </template>
-            <div class="sellerAcceptForm">
-              <a-form-item label="연령 선택">
-                <a-radio-group v-decorator="['radio-group']" required>
-                  <a-radio v-for="age in ageTarget" :value="age.id" :key="age.id">{{ age.value }}</a-radio>
-                </a-radio-group>
-              </a-form-item>
-              <a-form-item label="스타일 선택" has-feedback>
-                <a-select
-                  v-decorator="
-                    'select',
-                    {
-                      rules: [
-                        {
-                          required: true,
-                          message: '스타일을 선택해주세요!',
-                        },
-                      ],
-                    },
-                  ]"
-                  placeholder="스타일 선택"
-                >
-                  <a-select-option
-                    v-for="style in styleTarget"
-                    :value="style.id"
-                    :key="style.id"
-                  >{{ style.value }}</a-select-option>
-                </a-select>
-              </a-form-item>
-              <a-form-item label="수수료">
-                <a-radio-group v-decorator="['radio-button']">
-                  <a-radio-button v-for="fee in commissionFeesTarget" :value="fee.id" :key="fee.id">
-                    <span class="commissionFeeType">{{ fee.type }}:</span>
-                    수수료 {{ fee.value }}
-                  </a-radio-button>
-                </a-radio-group>
-              </a-form-item>
-            </div>
-          </a-modal>
         </span>
         <template slot="customRender" slot-scope="text, record, index, column">
           <span v-if="searchText && searchedColumn === column.dataIndex">
@@ -147,7 +123,8 @@
                 v-if="fragment.toLowerCase() === searchText.toLowerCase()"
                 :key="i"
                 class="highlight"
-              >{{ fragment }}</mark>
+                >{{ fragment }}</mark
+              >
               <template v-else>{{ fragment }}</template>
             </template>
           </span>
@@ -159,395 +136,10 @@
 </template>
 
 <script>
+import axios from "axios";
 import MainHeader from "../../Components/MainHeader";
 
-const data = [
-  {
-    id: "1",
-    sellerNumber: "22417",
-    name: "gw111",
-    englishLabel: "gyuwon",
-    koreanLabel: "규상점",
-    repName: "담당자",
-    sellerStatus: "입점대기",
-    repPhoneNumber: "010-1111-1234",
-    repEmail: "email@email.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 1,
-        name: "입점 승인",
-      },
-      {
-        id: 2,
-        name: "입점 거절",
-      },
-    ],
-  },
-  {
-    id: "2",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "입점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "3",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 7,
-        name: "휴점 해제",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "4",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 5,
-        name: "퇴점확정 처리",
-      },
-      {
-        id: 6,
-        name: "퇴점철회 처리",
-      },
-    ],
-  },
-  {
-    id: "5",
-    sellerNumber: "22417",
-    name: "gw111",
-    englishLabel: "gyuwon",
-    koreanLabel: "규상점",
-    repName: "담당자",
-    sellerStatus: "입점대기",
-    repPhoneNumber: "010-1111-1234",
-    repEmail: "email@email.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 1,
-        name: "입점 승인",
-      },
-      {
-        id: 2,
-        name: "입점 거절",
-      },
-    ],
-  },
-  {
-    id: "6",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "입점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "7",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 7,
-        name: "휴점 해제",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "8",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 5,
-        name: "퇴점확정 처리",
-      },
-      {
-        id: 6,
-        name: "퇴점철회 처리",
-      },
-    ],
-  },
-  {
-    id: "9",
-    sellerNumber: "22417",
-    name: "gw111",
-    englishLabel: "gyuwon",
-    koreanLabel: "규상점",
-    repName: "담당자",
-    sellerStatus: "입점대기",
-    repPhoneNumber: "010-1111-1234",
-    repEmail: "email@email.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 1,
-        name: "입점 승인",
-      },
-      {
-        id: 2,
-        name: "입점 거절",
-      },
-    ],
-  },
-  {
-    id: "10",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "입점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "11",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 7,
-        name: "휴점 해제",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "12",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 5,
-        name: "퇴점확정 처리",
-      },
-      {
-        id: 6,
-        name: "퇴점철회 처리",
-      },
-    ],
-  },
-  {
-    id: "13",
-    sellerNumber: "22417",
-    name: "gw111",
-    englishLabel: "gyuwon",
-    koreanLabel: "규상점",
-    repName: "담당자",
-    sellerStatus: "입점대기",
-    repPhoneNumber: "010-1111-1234",
-    repEmail: "email@email.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 1,
-        name: "입점 승인",
-      },
-      {
-        id: 2,
-        name: "입점 거절",
-      },
-    ],
-  },
-  {
-    id: "14",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "입점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "15",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 7,
-        name: "휴점 해제",
-      },
-      {
-        id: 4,
-        name: "퇴점신청 처리",
-      },
-    ],
-  },
-  {
-    id: "16",
-    sellerNumber: "2398402983",
-    name: "fsjdkf",
-    englishLabel: "shelby",
-    koreanLabel: "김보보",
-    repName: "담당자2",
-    sellerStatus: "휴점",
-    repPhoneNumber: "010-4021-4932",
-    repEmail: "nblasfd@gmail.com",
-    sellerType: "쇼핑몰",
-    dateCreated: "	2020-11-27 16:56:37",
-    actions: [
-      {
-        id: 3,
-        name: "휴점 신청",
-      },
-      {
-        id: 5,
-        name: "퇴점확정 처리",
-      },
-      {
-        id: 6,
-        name: "퇴점철회 처리",
-      },
-    ],
-  },
-];
-
+// f
 export default {
   name: "sellerlist",
   components: {
@@ -555,7 +147,7 @@ export default {
   },
   data() {
     return {
-      data,
+      data: [],
       sellerDetailsLink: "https://www.brandi.co.kr/",
       searchText: "",
       searchInput: null,
@@ -605,21 +197,18 @@ export default {
       columns: [
         {
           title: "셀러아이디",
-          dataIndex: "name",
-          key: "sellerId",
+          dataIndex: "email",
+          key: "email",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
-            customRender: "sellerId",
+            customRender: "email",
           },
           fixed: "left",
-          width: 140,
+          width: 170,
           sorter: true,
           onFilter: (value, record) =>
-            record.sellerId
-              .toString()
-              .toLowerCase()
-              .includes(value.toLowerCase()),
+            record.email.toString().toLowerCase().includes(value.toLowerCase()),
           onFilterDropdownVisibleChange: (visible) => {
             if (visible) {
               setTimeout(() => {
@@ -728,10 +317,9 @@ export default {
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
-            customRender: "customRender",
+            customRender: "status",
           },
           width: 110,
-
           onFilter: (value, record) =>
             record.sellerStatus
               .toString()
@@ -798,7 +386,7 @@ export default {
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
-            customRender: "customRender",
+            customRender: "sellerType",
           },
           width: 110,
           onFilter: (value, record) =>
@@ -893,10 +481,7 @@ export default {
       }
     },
     handleOk(e) {
-
-
       this.sellerAcceptedBtnLoading = true;
-
       setTimeout(() => {
         this.sellerAccepted = false;
         this.sellerAcceptedBtnLoading = false;
@@ -924,21 +509,44 @@ export default {
       console.log("selectedRowKeys changed: ", selectedRowKeys);
       this.selectedRowKeys = selectedRowKeys;
     },
-
     handleSellerDetailsLink() {},
+    loadTableData() {
+      axios.get("http://localhost:9000/static/seller_data.json").then((res) => {
+        const { data } = res.data;
+        this.data = data;
+      });
+
+      // seller_id: data.id,
+      // join_date: data.dateCreated,
+      // account_email: data.email,
+      // seller_number: data.sellerNumber,
+      // rep_name: data.repName,
+      // rep_email: data.repEmail,
+      // manager_phone: data.repPhoneNumber,
+      // english_label: data.englishLabel,
+      // korean_label: data.koreanLabel,
+      // seller_status: data.sellerStatus.name,
+      // seller_status_id: data.sellerStatus.id,
+      // seller_type: data.sellerType,
+      // service_number: data.repPhoneNumber,
+      // seller_type: data.sellerType.name,
+      // subcategory_id: data.sellerType.id,
+      // account_id: data.accountTypeId,
+      // is_active: data.isActive,
+    },
   },
   computed: {
     hasSelected() {
       return this.selectedRowKeys.length > 0;
     },
   },
+
   mounted() {
-    // this.fetch();
+    this.loadTableData();
   },
 };
 </script>
 
 <style lang="scss">
 @import "../../styles.scss";
-
 </style>
