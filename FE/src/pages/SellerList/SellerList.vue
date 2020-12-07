@@ -139,7 +139,9 @@
 import axios from "axios";
 import MainHeader from "../../Components/MainHeader";
 
-// f
+const sellerListAPI =
+  "http://http://10.251.1.127:5000/account/seller_list?seller_id=2";
+
 export default {
   name: "sellerlist",
   components: {
@@ -456,27 +458,95 @@ export default {
   methods: {
     confirmAction(e) {
       console.log(e.target.id);
-      if (+e.target.id === 1) {
-        this.sellerAccepted = true;
+      //입점승인
+      let acceptEntry = {
+        seller_id: seller_list.id,
+      };
+
+      if (e.target.id == 1) {
+        this.$confirm({
+          title: "Confirm",
+          content: "셀러의 입점을 승인하시겠습니까?",
+          onOk: () => {
+            this.handleOk();
+            axios
+              .post(
+                "http://10.251.1.201:5000/account/signup/seller",
+                acceptEntry
+              )
+              .then((res) => {
+                console.log("== 백앤드에서 오는 응답 메세지 == ", res);
+                if (res) {
+                  alert("입점이 승인되었습니다");
+                } else {
+                  alert("다시 시도해주세용!");
+                }
+              });
+            axios.get(sellerListAPI).then((res) => {
+              console.log(res);
+            });
+          },
+        });
       }
+      //입점거절
       if (+e.target.id === 2) {
         this.$confirm({
           title: "Confirm",
           content: "셀러의 입점을 거절하시겠습니까?",
           onOk: () => {
-            // disable 시키는법 구현중
             this.handleOk();
           },
         });
       }
+      //휴점 신청
+      if (+e.target.id === 3) {
+        this.$confirm({
+          title: "Confirm",
+          content:
+            "휴점처리 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 휴점신청을 하시겠습니까?",
+          onOk: () => {
+            this.handleOk();
+          },
+        });
+      }
+      //퇴점신청 처리
+      if (+e.target.id === 4) {
+        this.$confirm({
+          title: "Confirm",
+          content:
+            "퇴점신청 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 퇴점신청을 하시겠습니까?",
+          onOk: () => {
+            this.handleOk();
+          },
+        });
+      }
+      //휴점해제
+      if (+e.target.id === 7) {
+        this.$confirm({
+          title: "Confirm",
+          content:
+            "휴점해제 시 셀러의 모든 상품이 진열/판매로 전환 되고 상품 관리를 할 수 있습니다. 휴점해제를 하시겠습니까?",
+          onOk: () => {
+            this.handleOk();
+          },
+        });
+      }
+      //퇴점확정 처리
       if (+e.target.id === 5) {
         this.$confirm({
           title: "Confirm",
           content:
             "퇴점 확정 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 퇴점 확정을 하시겠습니까?",
-          onOk: () => {
-            // disable 시키는법 구현중
-          },
+          onOk: () => {},
+        });
+      }
+      //퇴점철회 처리
+      if (+e.target.id === 6) {
+        this.$confirm({
+          title: "Confirm",
+          content:
+            "퇴점철회 시 셀러의 모든 상품이 진열/판매로 전화 되고 상품 관리를 할 수 있습니다. 퇴점철회를 하시겠습니까?",
+          onOk: () => {},
         });
       }
     },
@@ -510,10 +580,20 @@ export default {
       this.selectedRowKeys = selectedRowKeys;
     },
     handleSellerDetailsLink() {},
+
     loadTableData() {
-      axios.get("http://localhost:9000/static/seller_data.json").then((res) => {
-        const { data } = res.data;
-        this.data = data;
+      axios.get(sellerListAPI).then((res) => {
+        console.log(res);
+        const { seller_list } = res.data;
+        console.log(seller_list);
+        this.data = seller_list;
+
+        // for (let key in seller_list) {
+        //   const seller = seller_list[key]
+        //   seller.id = key
+        //   data.push(seller)
+        // }
+        // console.log(data)..
       });
 
       // seller_id: data.id,
