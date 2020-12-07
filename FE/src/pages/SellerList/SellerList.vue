@@ -139,13 +139,9 @@
 import axios from "axios";
 import MainHeader from "../../Components/MainHeader";
 
-<<<<<<< HEAD
 const sellerListAPI =
   "http://http://10.251.1.127:5000/account/seller_list?seller_id=2";
 
-=======
-// f
->>>>>>> main
 export default {
   name: "sellerlist",
   components: {
