@@ -1,0 +1,132 @@
+{
+  "data": [
+    {
+      "id": "1",
+      "sellerNumber": "22417",
+      "email": "gw111",
+      "englishLabel": "gyuwon",
+      "koreanLabel": "규상점",
+      "repName": "담당자",
+      "sellerStatus": {
+        "id": 1,
+        "name": "입점대기"
+      },
+      "repPhoneNumber": "010-1111-1234",
+      "repEmail": "email@email.com",
+      "sellerType": {
+        "id": 1,
+        "name": "쇼핑몰"
+      },
+      "dateCreated": "2020-11-27 16:56:37",
+      "actions": [
+        {
+          "id": 1,
+          "name": "입점 승인"
+        },
+        {
+          "id": 2,
+          "name": "입점 거절"
+        }
+      ],
+      "accountTypeId": 1,
+      "isActive": 1
+    },
+    {
+      "id": "2",
+      "sellerNumber": "2398402983",
+      "email": "fsjdkf",
+      "englishLabel": "shelby",
+      "koreanLabel": "김보보",
+      "repName": "담당자2",
+      "sellerStatus": {
+        "id": 2,
+        "name": "입점"
+      },
+      "repPhoneNumber": "010-4021-4932",
+      "repEmail": "nblasfd@gmail.com",
+      "sellerType": {
+        "id": 1,
+        "name": "쇼핑몰"
+      },
+      "dateCreated": "2020-11-27 16:56:37",
+      "actions": [
+        {
+          "id": 3,
+          "name": "휴점 신청"
+        },
+        {
+          "id": 4,
+          "name": "퇴점신청 처리"
+        }
+      ],
+      "accountType": 1,
+      "isActive": 1
+    },
+    {
+      "id": "3",
+      "sellerNumber": "2398402983",
+      "email": "fsjdkf",
+      "englishLabel": "shelby",
+      "koreanLabel": "김보보",
+      "repName": "담당자2",
+      "sellerStatus": {
+        "id": 3,
+        "name": "휴점"
+      },
+      "repPhoneNumber": "010-4021-4932",
+      "repEmail": "nblasfd@gmail.com",
+      "sellerType": {
+        "id": 1,
+        "name": "쇼핑몰"
+      },
+      "dateCreated": "2020-11-27 16:56:37",
+      "actions": [
+        {
+          "id": 7,
+          "name": "휴점 해제"
+        },
+        {
+          "id": 4,
+          "name": "퇴점신청 처리"
+        }
+      ],
+      "accountType": 1,
+      "isActive": 1
+    },
+    {
+      "id": "4",
+      "sellerNumber": "2398402983",
+      "email": "fsjdkf",
+      "englishLabel": "shelby",
+      "koreanLabel": "김보보",
+      "repName": "담당자2",
+      "sellerStatus": {
+        "id": 4,
+        "name": "퇴점대기"
+      },
+      "repPhoneNumber": "010-4021-4932",
+      "repEmail": "nblasfd@gmail.com",
+      "sellerType": {
+        "id": 1,
+        "name": "쇼핑몰"
+      },
+      "dateCreated": "2020-11-27 16:56:37",
+      "actions": [
+        {
+          "id": 3,
+          "name": "휴점 신청"
+        },
+        {
+          "id": 5,
+          "name": "퇴점확정 처리"
+        },
+        {
+          "id": 6,
+          "name": "퇴점철회 처리"
+        }
+      ],
+      "accountType": 1,
+      "isActive": 1
+    }
+  ]
+}
