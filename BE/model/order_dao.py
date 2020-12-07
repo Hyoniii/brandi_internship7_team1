@@ -6,6 +6,21 @@ class OrderDao:
     def __init__(self):
         pass
 
+    def get_order_actions_by_status(self, connection, order_status_id):
+        # 리스트에서 보여줄 상태처리 버튼
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+            SELECT
+                OA.id, 
+                action
+            FROM order_actions as OA
+            INNER JOIN order_status_actions AS SA ON SA.order_action_id = OA.id
+            WHERE order_status_id = %s
+            """
+            cursor.execute(query, order_status_id)
+            return cursor.fetchall()
+
+
     def get_order_info(self, connection, order_filter):
         # 데이터베이스에서 주문 정보를 필터링하여 가져옴.
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -99,12 +114,12 @@ class OrderDao:
                     """
                 if order_filter['start_date']:
                     condition += """
-                    AND log.created_at > %(start_date)s
+                    AND log.created_at >= %(start_date)s
                     """
 
                 if order_filter['end_date']:
                     condition += """
-                    AND log.created_at < %(end_date)s
+                    AND log.created_at <= %(end_date)s
                     """
 
                 if order_filter['seller_type_id']:
@@ -150,6 +165,9 @@ class OrderDao:
             cursor.execute(query, order_filter)
             total_number = cursor.fetchone()
 
+            if total_number == 0:
+                raise Exception('Failed to fetch order info')
+
             return {"order_list": order_list, "total_number": total_number["cnt"]}
 
     def get_order_logs(self, connection, order_filter):
@@ -164,20 +182,6 @@ class OrderDao:
             ORDER BY created_at DESC             
             """
             cursor.execute(query, order_filter)
-            return cursor.fetchall()
-
-    def get_order_actions_by_status(self, connection, order_status_id):
-        # 리스트에서 보여줄 상태처리 버튼
-        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-            query = """
-            SELECT
-                OA.id, 
-                action
-            FROM order_actions as OA
-            INNER JOIN order_status_actions AS SA ON SA.order_action_id = OA.id
-            WHERE order_status_id = %s
-            """
-            cursor.execute(query, order_status_id)
             return cursor.fetchall()
 
     def get_order_status_by_action(self, connection, update_status):

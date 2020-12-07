@@ -6,19 +6,6 @@ class OrderService():
     
     def __init__(self):
         pass
-    
-    def get_order_list(self, connection, order_filter):
-        order_dao = OrderDao()
-
-        # page와 limit으로 offset을 계산하여 필터에 추가.
-        order_filter['offset'] = (order_filter['page'] * order_filter['limit']) - order_filter['limit']
-
-        # end_date가 있을 경우 해당 날짜의 주문까지 포함해서 필터하기 위해 시간 추가.
-        if order_filter['end_date']:
-            order_filter['end_date'] += " 23:59:59"
-
-        order_info = order_dao.get_order_info(connection, order_filter)
-        return order_info
 
     def get_filter_options(self, connection, account_type_id, order_status_id):
         order_dao = OrderDao()
@@ -38,6 +25,19 @@ class OrderService():
         }
         return filter_options
 
+    def get_order_list(self, connection, order_filter):
+        order_dao = OrderDao()
+
+        # page와 limit으로 offset을 계산하여 필터에 추가.
+        order_filter['offset'] = (order_filter['page'] * order_filter['limit']) - order_filter['limit']
+
+        # end_date가 있을 경우 해당 날짜의 주문까지 포함해서 필터하기 위해 시간 추가.
+        if order_filter['end_date']:
+            order_filter['end_date'] += " 23:59:59"
+
+        order_info = order_dao.get_order_info(connection, order_filter)
+        return order_info
+
     def update_order_status(self, connection, update_status):
         # 여러 아이템의 주문 상태를 한꺼번에 업데이트하고 아이템마다 로그를 생성함.
         order_dao = OrderDao()
@@ -46,10 +46,12 @@ class OrderService():
         new_order_status = order_dao.get_order_status_by_action(connection, update_status)
         update_status['new_order_status_id'] = new_order_status['change_to']
 
+        ##################################
+        ########## 셀러 확인 먼저하기#########
+        ##################################
+
         # 주문상세 업데이트
         number_of_orders_updated = order_dao.update_order_status(connection, update_status)
-        if number_of_orders_updated == 0:
-            raise Exception('Failed to update order status')
 
         # 상태변경 로그 생성
         order_log = [
@@ -76,11 +78,6 @@ class OrderService():
 
         # 주문정보, 주문상태 변경이력 가져오기
         order_info = order_dao.get_order_info(connection, order_filter)
-
-        # 해당하는 주문 정보가 없을 경우 raise exception
-        if order_info['total_number'] == 0:
-            raise Exception('Failed to fetch order info')
-
         order_logs = order_dao.get_order_logs(connection, order_filter)
 
         # 가능한 주문상태 변경 옵션 가져오기
@@ -105,10 +102,10 @@ class OrderService():
             order_info = order_dao.get_order_info(connection, update_order)
             update_order['order_status_id'] = order_info['order_list'][0]["order_status_id"]
             order_status_options = order_dao.get_order_status_options(connection, update_order)
-            ids_available = [status['id'] for status in order_status_options]
+            id_available = [status['id'] for status in order_status_options]
 
             # 선택 가능한 옵션이 아닐 경우 raise exception
-            if update_order['new_order_status_id'] not in ids_available:
+            if update_order['new_order_status_id'] not in id_available:
                 raise Exception('wrong order status action')
 
             # 주문상태 변경, 변경이력 생성
@@ -132,3 +129,6 @@ class OrderService():
                 or update_order['zip_code'] \
                 or update_order['delivery_instruction']:
             order_dao.update_delivery_info(connection, update_order)
+
+        else:
+            raise Exception('Nothing to update')
