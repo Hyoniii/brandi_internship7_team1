@@ -2,6 +2,8 @@ import uuid
 import re
 
 from model.product_dao import ProductDao
+from config            import S3
+from PIL               import Image
 from flask             import jsonify, g
 
 
@@ -40,11 +42,18 @@ class ProductService:
             filter_data['offset'] = (filter_data['page'] * filter_data['limit']) - filter_data['limit']
 
             product_list = product_dao.product_list(filter_data,connection)
-            return product_list
+            
+            products = product_list['product_list']
+            counts   = product_list['count']
+            #Group by로 grouping 해서 중복 값 제거함
+            count    = len(counts)
+
+
+            return {'product_list' : products, 'count' : count}
+
 
         except Exception as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            return jsonify({'error': 'DB_CURSOR_ERROR'}), 500
+            raise e
 
 
     def product_main_category(self, filter_data, connection):
@@ -105,7 +114,7 @@ class ProductService:
         sizes       = product_dao.get_size_list(connection)
         return {'colors':colors,'sizes':sizes}
 
-    def create_product(self,filter_data,connection):
+    def create_product(self, filter_data, option_list, connection):
         product_dao = ProductDao()
         # account_type_id = g.account_info['account_type_id']
 
@@ -115,36 +124,42 @@ class ProductService:
 
         # code,number 생성
         filter_data['code'] = uuid.uuid4().hex[:6].upper()
-        filter_data['number'] = re.sub("[^0-9]", "", str(uuid.uuid4()) )
 
         # insert_product
         product_data = product_dao.create_product(filter_data,connection)
-        print(product_data)
 
         # product_log 생성
         product_log = product_dao.create_product_log(product_data,connection)
-        print(product_log)
-
-
-
 
         # 옵션 생성
         product_id  = product_data['product_id']
-        options = product_data['option_list']
 
-        [option.insert(0, product_id) or option.append(str(options.index(option) + 1)) for option in options]
+        for options in option_list:
+            options['product_id'] = product_id
+            options['number']     = str(product_id) + str(option_list.index(options)+1)
 
-        print(options)
+        create_count = product_dao.create_options(option_list, connection)
+        print(create_count)
 
-        #new_option = product_dao.create_options(options,connection)
-        #print(option_count)
+        return {'create_count' : create_count, 'product_id' : product_id}
 
+    def upload_product_image(self, product_images, product_id, editor_id, connection):
+        product_dao = ProductDao()
 
+        #리스트 안에 있는 이미지 딕셔너리 안에 유효 값 추가
+        for image in product_images:
+            image['product_id'] = product_id
+            image['ordering']   = product_images.index(image) + 1
+            image['editor_id']  = editor_id
+            image['is_deleted'] = 0
 
-
-
+        product_dao.create_images(product_images, connection)
 
         return None
+
+
+
+
 
 
 

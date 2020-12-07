@@ -1,5 +1,4 @@
 from flask import (
-    request,
     Blueprint,
     jsonify
 )
@@ -16,13 +15,11 @@ from flask_request_validator import (
 )
 
 # from utils import login_required
-# from exceptions import errors
 from db_connector import connect_db
 from service.order_service import OrderService
 
 
 class OrderView:
-
     order_app = Blueprint('order_app', __name__, url_prefix='/orders')
 
     @order_app.route('', methods=['GET'])
@@ -30,12 +27,14 @@ class OrderView:
         Param('order_status_id', GET, int, rules=[Enum(1, 2, 3, 4, 5)], required=True),
         Param('order_number', GET, str, rules=[Pattern('^[0-9]{16,}$')], required=False),
         Param('detailed_order_number', GET, str, rules=[Pattern('^[0-9]{17,}$')], required=False),
-        Param('buyer_name', GET, str, required=False),
+        Param('buyer_name', GET, str, rules=[Pattern('[\S]')], required=False),
         Param('phone_number', GET, str, rules=[Pattern('^[0-9]{11}$')], required=False),
-        Param('seller_name', GET, str, required=False),
-        Param('product_name', GET, str, required=False),
-        Param('start_date', GET, str, required=False),
-        Param('end_date', GET, str, required=False),
+        Param('seller_name', GET, str, rules=[Pattern('[\S]')], required=False),
+        Param('product_name', GET, str, rules=[Pattern('[\S]')], required=False),
+        Param('start_date', GET, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')],
+              required=False),
+        Param('end_date', GET, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')],
+              required=False),
         # 셀러속성 다중선택 가능
         Param('seller_type_id', GET, list, rules=[MinLength(1), MaxLength(7)], required=False),
         Param('limit', GET, int, rules=[Enum(10, 20, 50, 100, 150)], required=False),
@@ -44,9 +43,12 @@ class OrderView:
     )
     # @login_required
     def get_order_list(*args):
-        # 주문상태별로 필터하여 주문 리스트 전달하는 엔드포인트
-
+        # 주문상태별 주문 리스트 필터하여 보내주는 엔드포인트
         order_service = OrderService()
+
+        # page parameter에 0이나 음수가 들어올 경우 키에러
+        if args[12] and args[12] <= 0:
+            return jsonify({"key error": "Page cannot be negative"}), 400
 
         order_filter = {
             'order_status_id': args[0],
@@ -72,18 +74,19 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
+            # get_order_list 서비스함수 호출
             order_list = order_service.get_order_list(connection, order_filter)
             return jsonify(order_list), 200
 
         except Exception as e:
-            return jsonify({"message": f"{e}"})
+            return jsonify({"message": f"{e}"}), 400
 
         finally:
             try:
                 if connection:
                     connection.close()
             except Exception as e:
-                return jsonify({"message": f"{e}"})
+                return jsonify({"message": f"{e}"}), 500
 
     @order_app.route('/filter_options/<order_status_id>', methods=['GET'])
     @validate_params(
@@ -91,30 +94,30 @@ class OrderView:
     )
     # @login_required
     def get_filter_options(order_status_id):
-        # 주문관리 페이지에서 셀러속성 리스트와 주문상태변경 버튼 보내주는 엔드포인트
-
+        # 주문관리에 페이지에서 셀러속성 리스트와 주문상태변경 버튼 보내주는 엔드포인트
         order_service = OrderService()
-        account_type_id = 2 # 테스트용 g.token_info['account_type_id']
+        account_type_id = 1  # 나중에 수정: g.token_info['account_type_id']
 
         connection = None
         try:
             connection = connect_db()
+            # get_filter_options 서비스 호출
             filter_options = order_service.get_filter_options(connection, account_type_id, order_status_id)
             return jsonify(filter_options), 200
 
         except Exception as e:
-            return jsonify({"message": f"{e}"})
+            return jsonify({"message": f'{e}'}), 500
 
         finally:
             try:
                 if connection:
                     connection.close()
             except Exception as e:
-                return jsonify({"message": f"{e}"})
+                return jsonify({"message": f'{e}'}), 500
 
     @order_app.route('', methods=['POST'])
     @validate_params(
-        Param('order_item_id', JSON, list, rules=[MinLength(1)], required=True),
+        Param('order_item_id', JSON, list, required=True),
         # 2: 상품준비 3: 배송중
         Param('order_status_id', JSON, int, rules=[Enum(2, 3)], required=True),
         # 1: 배송처리 2: 배송완료처리
@@ -124,11 +127,10 @@ class OrderView:
     def update_order_status(*args):
         # 주문 아이템의 주문 상태를 변경하는 엔드포인트
         # 변경할 아이템의 id를 리스트로 받아서 일괄 업데이트
-
         order_service = OrderService()
 
         update_status = {
-            # 'editor_id': g.token_info['account_id'],
+            'editor_id': 1,  # g.token_info['account_id'],
             'order_item_id': args[0],
             'order_status_id': args[1],
             'order_action_id': args[2]
@@ -141,20 +143,21 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
+            # update_order_status 서비스 호출
             number_of_orders_updated = order_service.update_order_status(connection, update_status)
             connection.commit()
-            return jsonify({"message": f"{number_of_orders_updated} orders successfully updated"}), 201
+            return jsonify({"message": f"{number_of_orders_updated} order(s) successfully updated"}), 201
 
         except Exception as e:
             connection.rollback()
-            return jsonify({"message": f"{e}"})
+            return jsonify({"message": f"{e}"}), 400
 
         finally:
             try:
                 if connection:
                     connection.close()
             except Exception as e:
-                return jsonify({"message": f"{e}"})
+                return jsonify({"message": f"{e}"}), 500
 
     @order_app.route('/<order_item_id>', methods=['GET'])
     @validate_params(
@@ -177,27 +180,27 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
+            # get_order_detail 서비스 호출
             order_detail = order_service.get_order_detail(connection, order_filter)
-
             return jsonify(order_detail), 200
 
         except Exception as e:
-            return jsonify({"message": f"{e}"})
+            return jsonify({"message": f"{e}"}), 400
 
         finally:
             try:
                 if connection:
                     connection.close()
             except Exception as e:
-                return jsonify({"message": f"{e}"})
+                return jsonify({"message": f"{e}"}), 500
 
     @order_app.route('/<order_item_id>', methods=['POST'])
     @validate_params(
         Param('order_item_id', PATH, int, required=True),
-        Param('new_order_status_id', JSON, int, required=False),
+        Param('new_order_status_id', JSON, int, rules=[Enum(2, 3, 4, 5)], required=False),
         Param('phone_number', JSON, str, rules=[Pattern('^[0-9]{11}')], required=False),
-        Param('address_1', JSON, str, required=False),
-        Param('address_2', JSON, str, required=False),
+        Param('address_1', JSON, str, rules=[Pattern('[\S]')], required=False),
+        Param('address_2', JSON, str, rules=[Pattern('[\S]')], required=False),
         Param('zip_code', JSON, str, rules=[Pattern('^[0-9]{5}')], required=False),
         Param('delivery_instruction', JSON, str, required=False)
     )
@@ -212,16 +215,16 @@ class OrderView:
         }
 
         update_status = {
-            'editor_id': 1, #나중에 수정: g.token_info['account_id']
+            'editor_id': 1,  # 나중에 수정: g.token_info['account_id']
             'order_item_id': args[0],
             'new_order_status_id': args[1]
         }
 
         delivery_info = {
-            'editor_id': 1, #나중에 수정: g.token_info['account_id']
+            'editor_id': 1,  # 나중에 수정: g.token_info['account_id']
             'order_item_id': args[0],
             'phone_number': args[2],
-            'address_1':  args[3],
+            'address_1': args[3],
             'address_2': args[4],
             'zip_code': args[5],
             'delivery_instruction': args[6],
@@ -236,7 +239,7 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            # 주문상세 업데이트
+            # update_order_detail 서비스 호출
             order_service.update_order_detail(connection, update_status, delivery_info)
             # 업데이트된 주문정보 가져오기
             updated_order_detail = order_service.get_order_detail(connection, order_filter)
@@ -246,7 +249,7 @@ class OrderView:
 
         except Exception as e:
             connection.rollback()
-            return jsonify({"message": f"{e}"})
+            return jsonify({"message": f"{e}"}), 400
 
         finally:
             try:

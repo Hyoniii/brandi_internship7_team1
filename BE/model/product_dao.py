@@ -26,13 +26,13 @@ class ProductDao:
 
                 list_select = """
                 SELECT 
-                    S2.status as seller_status, 
-                    PO.number,                    
+                    P.id as product_id,
+                    S2.status as seller_status,                   
                     P.created_at as created_at ,
-                    I.img_url as image,
                     P.name as product_name,
                     P.code as product_code,
-                    P.number as product_number,
+                    PO.number as number,
+                    I.img_url as desc_img_url,
                     S3.name as seller_subcategory_name,
                     S.seller_name_kr as seller_name,
                     P.price ,
@@ -44,15 +44,15 @@ class ProductDao:
                 """
                 list_from = """
                 FROM 
-                    products as P
+                    products as P 
                 LEFT JOIN
                     product_options as PO
                 ON
                     PO.product_id = P.id
                 LEFT JOIN
                     product_images as I
-                ON 
-                    P.id = I.product_id
+                ON
+                    I.product_id = P.id
                 LEFT JOIN
                     sellers as S
                 ON 
@@ -70,7 +70,7 @@ class ProductDao:
                 ON
                     A.id = S.account_id
                 WHERE
-                    I.ordering = 1   
+                    I.ordering = 1
                 """
                 #seller일 경우 seller의 product만 표출 , validator 완성 후 수정
                 if filter_data['account_type_id'] != 1:
@@ -94,7 +94,7 @@ class ProductDao:
 
                 # 셀러명
                 if filter_data.get('seller_name', None):
-                    list_fromy += """ 
+                    list_from += """ 
                     AND S.seller_name_kr = %(seller_name)s
                     """
 
@@ -107,7 +107,7 @@ class ProductDao:
                 # 상품번호
                 if filter_data.get('product_number', None):
                     list_from += """
-                    AND P.number = %(product_number)s
+                    AND PO.number = %(product_number)s 
                     """
 
                 # 셀러 속성
@@ -139,8 +139,9 @@ class ProductDao:
                         AND P.is_discount = 0
                         """
 
-                # 등록순 정렬
+                # id 기준으로 중복 값 제외, 등록순 정렬
                 list_from += """
+                GROUP BY P.id
                 ORDER BY P.created_at DESC
                 """
 
@@ -151,6 +152,7 @@ class ProductDao:
 
                 #상품 리스트
                 query = list_select + list_from
+
                 cursor.execute(query,filter_data)
                 product_list = cursor.fetchall()
 
@@ -158,13 +160,13 @@ class ProductDao:
                 query = count_select + list_from
                 cursor.execute(query, filter_data)
                 total_count = cursor.fetchall()
-                return {'product_list':product_list,'count':total_count[0]['count']}
+
+                return {'product_list':product_list,'count':total_count}
 
                 #return {'product_list':product_list,'count':total_count}
         # 데이터베이스 error
         except Exception as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e} finally')
-            return jsonify({'error': 'DB_CURSOR_ERROR'}), 500
+            raise e
 
     def get_seller_id(self,filter_data,connection):
         try:
@@ -182,9 +184,9 @@ class ProductDao:
                 seller_id = cursor.fetchone()
                 return seller_id[0]
 
+
         except Exception as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e} finally')
-            return jsonify({'error': 'DB_CURSOR_ERROR'}), 500
+            raise e
 
     def seller_main_categories(self,filter_data,connection):
         try:
@@ -236,15 +238,9 @@ class ProductDao:
                 if filter_categories:
                     return filter_categories
                 return jsonify({'message': 'SELLER_CATEGORY_DOES_NOT_EXIST'}), 404
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
 
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
     def seller_sub_categories(self, filter_data, connection):
         try:
@@ -271,15 +267,8 @@ class ProductDao:
 
                 return filter_categories
 
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
-
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
     def get_color_list(self,connection):
         try:
@@ -295,15 +284,8 @@ class ProductDao:
                 color_list = cursor.fetchall()
                 return color_list
 
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
-
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
 
     def get_size_list(self,connection):
@@ -320,17 +302,9 @@ class ProductDao:
                 size_list = cursor.fetchall()
                 return size_list
 
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
 
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
-
-
+        except Exception as e:
+            raise e
 
     def get_code_info(self,product_subcategory_id,connection):
         try:
@@ -353,16 +327,8 @@ class ProductDao:
                 code_info = list(cursor.fetchone())
                 return code_info
 
-
-        except KeyError as e:
-            print(f'KEY_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'INVALID_KEY'}), 400
-
-        except Error as e:
-            print(f'DATABASE_CURSOR_ERROR_WITH {e}')
-            connection.rollback()
-            return jsonify({'message': 'DB_CURSOR_ERROR'}), 500
+        except Exception as e:
+            raise e
 
     def create_product(self,filter_data,connection):
         try:
@@ -487,7 +453,8 @@ class ProductDao:
                 """
 
                 cursor.execute(query, product_data)
-                product_log = cursor.fetchall()
+                #product_log = cursor.fetchall()
+                product_log = cursor.rowcount
 
                 return product_log
 
@@ -499,33 +466,61 @@ class ProductDao:
 
 
 
-    def create_options(self,options, connection):
+    def create_options(self, option_list, connection):
         try:
-            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            with connection.cursor() as cursor:
                 query = """
                 INSERT INTO product_options(
                     product_id,
                     color_id,
                     size_id,
                     inventory,
-                    number,
-                    id
+                    number
                 )
                 VALUES(
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s,
-                    %s
+                    %(product_id)s,
+                    %(color)s,
+                    %(size)s,
+                    %(inventory)s,
+                    %(number)s
                 )
                 """
 
-                cursor.executemany(query, options)
-                #options_count = cursor.rowcount
-                options_count = cursor.fetchall()
+                cursor.executemany(query, option_list)
+                options_count = cursor.rowcount
 
                 return options_count
+
+        except KeyError as e:
+            raise e
+
+        except Exception as e:
+            raise e
+
+    def create_images(self, product_images, connection):
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+                query = """
+                INSERT INTO product_images(
+                    product_id,
+                    editor_id,
+                    img_url,
+                    ordering,
+                    is_deleted
+                )
+                VALUES(
+                    %(product_id)s,
+                    %(editor_id)s,
+                    %(image_url)s,
+                    %(ordering)s,
+                    %(is_deleted)s
+                )
+                """
+
+                cursor.executemany(query, product_images)
+                product_images = cursor.fetchall()
+
+                return product_images
 
         except KeyError as e:
             raise e

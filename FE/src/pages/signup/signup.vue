@@ -359,7 +359,7 @@ export default {
         console.log(signupData, "=================")
 
         axios.post(+signupData.account_type_id === 1 ?signupSellerAPI: signupMasterAPI, signupData)
-        .then(res=> {
+        .then(res => {
         console.log("백앤드에서 오는 응답 메세지: ", res);
         if (res) {
           alert("회원가입 성공");

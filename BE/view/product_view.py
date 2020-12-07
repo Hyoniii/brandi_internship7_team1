@@ -1,7 +1,13 @@
+import json, io
+import uuid
+
 from flask                   import request, Blueprint, jsonify, g
+from PIL                     import Image
+
 #from utils                   import login_validator
 from service.product_service import ProductService
-from db_connector            import connect_db
+from utils                   import Image_uploader
+from db_connector            import connect_db, get_s3_connection
 from flask_request_validator import (
     GET,
     FORM,
@@ -26,7 +32,7 @@ class ProductView:
               rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
         Param('seller_name', GET, str, required=False),
         Param('product_name', GET, str, required=False),
-        Param('product_number', GET, int, required=False),
+        Param('product_number', GET, str, required=False),
         Param('product_code', GET, str, required=False),
         Param('seller_subcategory_id', GET, list, required=False),
         Param('is_selling', GET, bool, required=False),
@@ -93,7 +99,7 @@ class ProductView:
             if connection:
                 product_service = ProductService()
                 products        = product_service.get_product_list( filter_data, connection )
-                return jsonify({'data':products}),200
+                return jsonify(products),200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
@@ -114,6 +120,7 @@ class ProductView:
         Param('seller_id', GET, int, required=False),
         Param('seller_name', GET, str, required=False))
     def get_main_category(*args):
+
         """ 상품 분류별 main 카테고리 표출 엔드포인트
         - master이면 seller검색
         - seller이면 validator 본인 id
@@ -123,11 +130,7 @@ class ProductView:
                  {  "main_category_id": 8,
                     "main_category_name": "주얼리"}
             400: 데이터베이스 연결 에러
-            500: server error
-
-        History:
-            2020-11-30 : 초기 생성
-        """
+            500: server error"""
         connection = None
         try:
             connection = connect_db()
@@ -207,40 +210,41 @@ class ProductView:
             except Exception as e:
                 return jsonify({'message': f'{e}'}), 500
 
+    @product_app.route('/')
+
     @product_app.route('/register', methods=['POST'])
     ##@login_validator
     @validate_params(
-        Param('is_selling', JSON, int),
-        Param('is_visible', JSON, int),
-        Param('sub_category_id', JSON, int, required=False),
-        Param('product_name', JSON, str,
+        Param('is_selling', FORM, int),
+        Param('is_visible', FORM, int),
+        Param('sub_category_id', FORM, int, required=False),
+        Param('product_name', FORM, str,
               rules=[Pattern(r"[^\"\']")]),
-        Param('is_information_notice', JSON, int),
-        Param('manufacturer', JSON, str, required=False),
-        Param('manufacture_date', JSON, str, required=False, rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
-        Param('made_in', JSON, str, required=False),
-        Param('short_description', JSON, str, required=False),
-        Param('is_inventory_management', JSON, int),
-        Param('inventory', JSON, int, required=False),
-        Param('price', JSON, int),
-        Param('discount_rate', JSON, float, required=False),
-        Param('is_discount_period', JSON, int),
-        Param('discount_start_time', JSON, str, required=False),
-        Param('discount_end_time', JSON, str, required=False),
-        Param('min_order', JSON, int),
-        Param('max_order', JSON, int),
-        Param('seller_id', JSON, int, required=False),
-        Param('option_list', JSON, list),
+        Param('is_information_notice', FORM, int),
+        Param('manufacturer', FORM, str, required=False),
+        Param('manufacture_date', FORM, str, required=False, rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
+        Param('made_in', FORM, str, required=False),
+        Param('short_description', FORM, str, required=False),
+        Param('is_inventory_management', FORM, int),
+        Param('inventory', FORM, int, required=False),
+        Param('price', FORM, int),
+        Param('discount_rate', FORM, float, required=False),
+        Param('is_discount_period', FORM, int),
+        Param('discount_start_time', FORM, str, required=False),
+        Param('discount_end_time', FORM, str, required=False),
+        Param('min_order', FORM, int),
+        Param('max_order', FORM, int),
+        Param('seller_id', FORM, int, required=False),
       # integer parameter 범위 지정을 위한 검증
-        Param('is_selling', JSON, str,
+        Param('is_selling', FORM, str,
               rules=[Pattern(r'^([0-1])$')]),
-        Param('is_visible', JSON, str,
+        Param('is_visible', FORM, str,
               rules=[Pattern(r'^([0-1])$')]),
-        Param('sub_category_id', JSON, str,
+        Param('sub_category_id', FORM, str,
               rules=[Pattern(r'^([0-9]|[0-9][0-9]|[1][0][0-9]|[1][1][0-4])$')]),
-        Param('max_order', JSON, str,
+        Param('max_order', FORM, str,
               rules=[Pattern(r'^([1-9]|[1-2][0-9])$')]),
-        Param('min_order', JSON, str,
+        Param('min_order', FORM, str,
               rules=[Pattern(r'^([1-9]|[1-2][0-9])$')])
               )
     def create_product(*args):
@@ -270,17 +274,66 @@ class ProductView:
             'min_order'               : args[16],
             'max_order'               : args[17],
             'seller_id'               : args[18], #if args[20] else g.token_info['seller_id'],
-            'desc_img_url'            : "image.jpg",
-            'option_list'             : args[19]
+            'desc_img_url'            : "image.jpg"
         }
         try:
             connection = connect_db()
 
             if connection:
+
+                #option_list : '{},{}' => None
+                # option_list : '' => None
+                # a = request.form.get('option_list')
+                # print(a)
+                # print(type(a))
+                # b = json.loads(a)
+                # print(b)
+                #
+                # print('________________')
+
+
+                # form data로 list를 보내면 생기는 오류로 인한 후 처리(strip,split)
+                # 이 방법밖에 없는지 여쭤보기
+                # options = request.form.getlist('option_list')
+                # option_list =[]
+                # for option in form_options:
+                #     options = option.strip('[]')
+                #     option_list.append(options.split(','))
+                # filter_data['option_list'] = option_list
+
+                # option_list = '[{"name":"bb","age":29},{"name":"hh","age":20}]' 형태
+                options     = request.form.get('option_list')
+                option_list = json.loads(options)
+
+                #image 저장을 위한 S3 connection instance 생성
+                """
+                images : File Request(List)
+                [
+                    { 'product_image_<int>' : <FileStorage: {filename} ({content_type})>}
+                ]
+                """
+                images = request.files
+
+                desc_image     = request.files.get('desc_image')
+                desc_image_url = Image_uploader.upload_desc_images(desc_image)
+
+                filter_data['desc_img_url'] = desc_image_url
+
                 product_service = ProductService()
-                product_service.create_product(filter_data, connection)
-                connection.commit()
-                return jsonify({'message' : 'SUCCESS'}), 200
+                create_info     = product_service.create_product(filter_data, option_list, connection)
+
+                product_id   = create_info['product_id']
+                editor_id    = filter_data['editor_id']
+                insert_count = create_info['create_count']
+
+                #상품 이미지 URL화, S3에 올리기
+                product_images = Image_uploader.upload_product_images(images)
+
+                #상품 이미지를 DB에 Insert하는 함수 실행
+                a = product_service.upload_product_image(product_images, product_id, editor_id, connection)
+
+                #connection.commit()
+                return jsonify({'message': f'{insert_count}products are created'}), 200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
@@ -290,7 +343,7 @@ class ProductView:
 
         except KeyError:
             db_connection.rollback()
-            return jsonify({'message' 'KEY_ERROR'}), 400
+            return jsonify({'message': 'KEY_ERROR'}), 400
 
         finally:
             try:
