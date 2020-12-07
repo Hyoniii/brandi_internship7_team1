@@ -27,10 +27,10 @@ class OrderView:
         Param('order_status_id', GET, int, rules=[Enum(1, 2, 3, 4, 5)], required=True),
         Param('order_number', GET, str, rules=[Pattern('^[0-9]{16,}$')], required=False),
         Param('detailed_order_number', GET, str, rules=[Pattern('^[0-9]{17,}$')], required=False),
-        Param('buyer_name', GET, str, required=False),
+        Param('buyer_name', GET, str, rules=[Pattern('[\S]')], required=False),
         Param('phone_number', GET, str, rules=[Pattern('^[0-9]{11}$')], required=False),
-        Param('seller_name', GET, str, required=False),
-        Param('product_name', GET, str, required=False),
+        Param('seller_name', GET, str, rules=[Pattern('[\S]')], required=False),
+        Param('product_name', GET, str, rules=[Pattern('[\S]')], required=False),
         Param('start_date', GET, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')],
               required=False),
         Param('end_date', GET, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')],
@@ -117,7 +117,7 @@ class OrderView:
 
     @order_app.route('', methods=['POST'])
     @validate_params(
-        Param('order_item_id', JSON, list, rules=[MinLength(1)], required=True),
+        Param('order_item_id', JSON, list, required=True),
         # 2: 상품준비 3: 배송중
         Param('order_status_id', JSON, int, rules=[Enum(2, 3)], required=True),
         # 1: 배송처리 2: 배송완료처리
@@ -197,11 +197,10 @@ class OrderView:
     @order_app.route('/<order_item_id>', methods=['POST'])
     @validate_params(
         Param('order_item_id', PATH, int, required=True),
-        Param('order_status_id', JSON, int, rules=[Enum(1, 2, 3, 4)], required=True),
         Param('new_order_status_id', JSON, int, rules=[Enum(2, 3, 4, 5)], required=False),
         Param('phone_number', JSON, str, rules=[Pattern('^[0-9]{11}')], required=False),
-        Param('address_1', JSON, str, required=False),
-        Param('address_2', JSON, str, required=False),
+        Param('address_1', JSON, str, rules=[Pattern('[\S]')], required=False),
+        Param('address_2', JSON, str, rules=[Pattern('[\S]')], required=False),
         Param('zip_code', JSON, str, rules=[Pattern('^[0-9]{5}')], required=False),
         Param('delivery_instruction', JSON, str, required=False)
     )
@@ -218,18 +217,17 @@ class OrderView:
         update_status = {
             'editor_id': 1,  # 나중에 수정: g.token_info['account_id']
             'order_item_id': args[0],
-            'order_status_id': args[1],
-            'new_order_status_id': args[2]
+            'new_order_status_id': args[1]
         }
 
         delivery_info = {
             'editor_id': 1,  # 나중에 수정: g.token_info['account_id']
             'order_item_id': args[0],
-            'phone_number': args[3],
-            'address_1': args[4],
-            'address_2': args[5],
-            'zip_code': args[6],
-            'delivery_instruction': args[7],
+            'phone_number': args[2],
+            'address_1': args[3],
+            'address_2': args[4],
+            'zip_code': args[5],
+            'delivery_instruction': args[6],
         }
 
         # 셀러일 경우 필터에 seller_id 추가
