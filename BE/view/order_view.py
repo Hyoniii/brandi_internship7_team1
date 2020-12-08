@@ -31,13 +31,12 @@ class OrderView:
     def get_filter_options(order_status_id):
         # 주문관리에 페이지에서 셀러속성 리스트와 주문상태변경 버튼 보내주는 엔드포인트
         order_service = OrderService()
-        account_type_id = g.token_info['account_type_id']
 
         connection = None
         try:
             connection = connect_db()
             # get_filter_options 서비스 호출
-            filter_options = order_service.get_filter_options(connection, account_type_id, order_status_id)
+            filter_options = order_service.get_filter_options(connection, order_status_id)
             return jsonify(filter_options), 200
 
         except Exception as e:
@@ -138,8 +137,8 @@ class OrderView:
         }
 
         # 셀러일 경우 필터에 seller_id 추가
-        if g.token_info['account_type_id'] == 2:
-            update_status['seller_id'] = g.token_info['seller_id']
+        #if g.token_info['account_type_id'] == 2:
+        #    update_status['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
@@ -226,8 +225,9 @@ class OrderView:
             'delivery_instruction': args[6],
         }
         #############################################
-        ###### g객체 쓰는법 다시생각해보기#################
+        #### g객체 써서 셀러 validation 하는법???? #######
         #############################################
+
         # 셀러일 경우 필터에 seller_id 추가
         if g.token_info['account_type_id'] == 2:
             order_filter['seller_id'] = g.token_info['seller_id']

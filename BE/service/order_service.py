@@ -9,13 +9,13 @@ class OrderService():
     def __init__(self):
         pass
 
-    def get_filter_options(self, connection, account_type_id, order_status_id):
+    def get_filter_options(self, connection, order_status_id):
         order_dao = OrderDao()
         account_dao = AccountDao()
         seller_types = None
 
         # 마스터일 경우 셀러속성 리스트도 함께 보내줌.
-        if account_type_id == 1:
+        if g.token_info['account_type_id'] == 1:
             seller_types = account_dao.get_seller_types(connection)
 
         # 주문상태 변경 버튼 가져오기
@@ -44,13 +44,16 @@ class OrderService():
         # 여러 아이템의 주문 상태를 한꺼번에 업데이트하고 아이템마다 로그를 생성함.
         order_dao = OrderDao()
 
+        # 주문상세의 셀러와 업데이트 요청한 셀러가 동일한지 확인
+        order_item_id = update_status['order_item_id']
+        seller_validation = order_dao.seller_validation(connection, order_item_id)
+        for order in seller_validation:
+            if order['seller_id'] != g.token_info['seller_id']:
+                raise Exception('Invalid seller')
+
         # 주문상태-액션 중간테이블에서 액션에 해당하는 새로운 주문상태 id를 가져옴
         new_order_status = order_dao.get_order_status_by_action(connection, update_status)
         update_status['new_order_status_id'] = new_order_status['change_to']
-
-        ##################################
-        ########## 셀러 확인 먼저하기#########
-        ##################################
 
         # 주문상세 업데이트
         number_of_orders_updated = order_dao.update_order_status(connection, update_status)

@@ -355,8 +355,8 @@ class OrderDao:
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
             SELECT
-                O.id,
-                S.id
+                O.id as order_item_id,
+                S.id as seller_id
             FROM
                 order_items
             LEFT JOIN sellers ON order_items.seller_id = sellers.id
@@ -366,11 +366,18 @@ class OrderDao:
                 query += """
                 WHERE order_items.id IN %(order_item_id)s
                 """
+                cursor.execute(query, order_item_id)
+                # 주문 id 중 하나라도 찾을 수 없을 경우:
+                if len(order_item_id) != cursor.rowcount:
+                    raise Exception('Could not find order item')
 
-            if type(order_item_id) == int:
+            elif type(order_item_id) == int:
                 query += """
                 WHERE order_items.id = %(order_item_id)s
                 """
+                cursor.execute(query, order_item_id)
+                # 주문 id를 찾을 수 없는 경우:
+                if cursor.rowcount == 0:
+                    raise Exception('Could not find order item')
 
-            cursor.execute(query, order_item_id)
             return cursor.fetchall()
