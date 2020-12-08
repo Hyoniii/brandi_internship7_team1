@@ -1,16 +1,11 @@
-from flask      import Flask, jsonify, g
+from flask      import Flask
 from flask_cors import CORS
 from flask.json import JSONEncoder
 from decimal    import Decimal
 from datetime   import datetime
 
-from view    import ProductView, OrderView, AccountView
+from view    import ProductView, OrderView, AccountView, SellerView
 
-# g.acoount_info = {
-#     'account_id':1,
-#     'account_type_id':1,
-#     'seller_id': None
-# }
 
 class CustomJSONEncoder(JSONEncoder):
     """
@@ -57,5 +52,6 @@ def create_app(test_config=None):
     app.register_blueprint(ProductView.product_app)
     app.register_blueprint(OrderView.order_app)
     app.register_blueprint(AccountView.account_app)
+    app.register_blueprint(SellerView.seller_app)
 
     return app
