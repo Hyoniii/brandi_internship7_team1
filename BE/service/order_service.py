@@ -1,3 +1,5 @@
+from flask import g
+
 from model.order_dao import OrderDao
 from model.account_dao import AccountDao
 
