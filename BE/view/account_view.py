@@ -55,6 +55,8 @@ class AccountView:
             except Exception as e:
                 connection.rollback()
                 return jsonify({'MESSAGE': f'{e}'}), 400
+            finally:
+                connection.close()
 
     @account_app.route('signup/seller', methods=['POST'])
     @validate_params(
@@ -163,6 +165,8 @@ class AccountView:
 
         except Exception as e:
             return jsonify({'MESSAGE': f'{e}'}), 400
+        finally:
+            connection.close()
 
     @account_app.route('edit', methods=['PATCH'])
     @login_validator
@@ -196,11 +200,12 @@ class AccountView:
             try:
                 change_account = account_service.change_account_info(change_info, user, connection)
                 connection.commit()
-                connection.close()
                 return change_account
             except Exception as e:
                 connection.rollback()
                 return jsonify({'MESSAGE': f'{e}'}), 400
+            finally:
+                connection.close()
 
     @account_app.route('edit_seller', methods=['PATCH'])
     @login_validator
@@ -245,7 +250,6 @@ class AccountView:
             'is_open_weekend': args[15],
             'seller_id': args[16]
         }
-        print(change_info)
         connection = connect_db()
         user = g.token_info
         if connection:
@@ -253,11 +257,12 @@ class AccountView:
             try:
                 change_account = account_service.change_seller_info(change_info, user, connection)
                 connection.commit()
-                connection.close()
                 return change_account
             except Exception as e:
                 connection.rollback()
                 return jsonify({'MESSAGE': f'{e}'}), 400
+            finally:
+                connection.close()
 
 
     @account_app.route('change_seller_status', methods=['PATCH'])
@@ -277,38 +282,13 @@ class AccountView:
         user = g.token_info
         connection = connect_db()
         if connection:
-            account_service = AccountService()
-            actions = account_service.change_status(status, user, connection)
-            connection.commit()
-            return jsonify({'status_actions': 'SUCCESS'}), 200
-
-
-    # @account_app.route('/password_change', methods=['POST'])
-    # def change_password():
-    #     try:
-    #         brandiDB = connect_db()
-    #         data = request.json
-    #         return brandiDB
-    #     except Exception as e:
-    #         return jsonify ({'message' : f'{e}'}, 400)
-
-    #     finally:
-    #         if brandiDB:
-    #             brandiDB.close()
-
-    # def route_seller_endpoints(account_service):
-
-    #     account_app = Blueprint('_', __name__, url_prefix='/account')
-
-    #     @account_app.route('/signin', methods=['POST'])
-    #     def signin():
-    #         try:
-    #             brandiDB = connect_db()
-    #             data = request.json
-    #             return brandiDB
-    #         except Exception as e:
-    #             return jsonify ({'message' : f'{e}'}, 400)
-
-    #         finally:
-    #             if brandiDB:
-    #                 brandiDB.close()
+            try:
+                account_service = AccountService()
+                actions = account_service.change_status(status, user, connection)
+                connection.commit()
+                return jsonify({'status_actions': 'SUCCESS'}), 200
+            except Exception as e:
+                connection.rollback()
+                return jsonify({'MESSAGE': f'{e}'}), 400
+            finally:
+                connection.close()
