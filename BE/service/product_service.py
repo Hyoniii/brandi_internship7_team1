@@ -73,7 +73,6 @@ class ProductService:
         # seller이면 seller_id 가진다.
         if filter_data['account_type_id'] != 1:
             filter_data['seller_id'] = g.token_info['seller_id']
-        print("~~~~~~~",filter_data)
 
         # master, query string에 담긴 셀러로 탐색
         if filter_data.get('seller_name'):
@@ -103,7 +102,7 @@ class ProductService:
         product_dao = ProductDao()
 
         # min,max order 범위 설정
-        if filter_data['min_order'] > filter_data['max_order']:
+        if filter_data['min_order']  > filter_data['max_order']:
             filter_data['min_order'] = filter_data['max_order']
 
         # code,number 생성
@@ -145,25 +144,24 @@ class ProductService:
         product_dao = ProductDao()
 
         try:
-
             # 기간 정의
             if filter_data['started_date'] and filter_data['ended_date']:
-                if filter_data['ended_date'] < filter_data['started_date']:
+                if filter_data['ended_date']  < filter_data['started_date']:
                     filter_data['ended_date'] = filter_data['started_date']
 
             # 두 값이 안들어 왔을 경우 default
             if not filter_data['started_date']:
                 filter_data['started_date'] = '2016-05-24'
             if not filter_data['ended_date']:
-                filter_data['ended_date'] = '2025-05-24'
+                filter_data['ended_date']   = '2025-05-24'
 
             # 기간 데이터 변경
             filter_data['started_date'] += ' 00:00:00'
-            filter_data['ended_date'] += ' 23:59:59'
+            filter_data['ended_date']   += ' 23:59:59'
 
             excel_info = product_dao.product_excel_info(filter_data, connection)
 
-            return  excel_info
+            return excel_info
 
         except Exception as e:
             raise e

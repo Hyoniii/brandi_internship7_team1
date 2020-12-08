@@ -14,6 +14,7 @@ from flask_request_validator import (
     PATH,
     Param,
     Pattern,
+    Enum,
     validate_params
 )
 
@@ -34,13 +35,11 @@ class ProductView:
         Param('product_number', GET, str, required=False),
         Param('product_code', GET, str, required=False),
         Param('seller_subcategory_id', GET, list, required=False),
-        Param('is_selling', GET, bool, required=False),
-        Param('is_visible', GET, bool, required=False),
-        Param('is_discount', GET, bool, required=False),
-        Param('limit', GET, int, required=False),
+        Param('is_selling', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('is_visible', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('is_discount', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('limit', GET, int, rules=[Enum(10, 20, 50)], required=False),
         Param('page', GET, int, required=False),
-        #Param('account_type_id', GET, int, required=False),#login_validator 완성 후 삭제 예정
-        #Param('account_id', GET, int, required=False),  # login_validator 완성 후 삭제 예정
         )
     def get_product_list(*args):
         connection = None
@@ -104,7 +103,7 @@ class ProductView:
                 return jsonify({'message': f'{e}'}), 500
 
     @product_app.route('/download', methods=['GET'])
-    ##@login_validator
+    @login_validator
     @validate_params(
         Param('started_date', GET, str, required=False,
               rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
@@ -115,18 +114,14 @@ class ProductView:
         Param('product_number', GET, str, required=False),
         Param('product_code', GET, str, required=False),
         Param('seller_subcategory_id', GET, list, required=False),
-        Param('is_selling', GET, bool, required=False),
-        Param('is_visible', GET, bool, required=False),
-        Param('is_discount', GET, bool, required=False),
+        Param('is_selling', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('is_visible', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('is_discount', GET, bool, rules=[Enum(0, 1)], required=False),
         Param('limit', GET, int, required=False),
-        Param('page', GET, int, required=False),
-        Param('account_type_id', GET, int, required=False),  # login_validator 완성 후 삭제 예정
-        Param('account_id', GET, int, required=False),  # login_validator 완성 후 삭제 예정
+        Param('page', GET, int, required=False)
     )
-    @login_validator
     def product_list_excel(*args):
         connection = None
-
 
         filter_data = {
             'started_date': args[0],
@@ -139,8 +134,6 @@ class ProductView:
             'is_selling': args[7],
             'is_visible': args[8],
             'is_discount': args[9],
-            #'limit': args[10],
-            #'page': args[11],
             'account_type_id': g.token_info['account_type_id'],
             'account_id' : g.token_info['account_id']
         }
@@ -156,7 +149,7 @@ class ProductView:
                     Product_excel_downloader.master_product_excel_down(excel_info)
 
                 else:
-                    Product_excel_downloader.seller_product_excel_down(excel_info)
+                    excel_file = Product_excel_downloader.seller_product_excel_down(excel_info)
 
                 return jsonify({'message':'SUCCESS'}), 200
             else:
@@ -222,6 +215,10 @@ class ProductView:
                 main_category_id(int): 1차 카테고리 인덱스 번호
         """
         connection = None
+
+        if args[0] is None:
+            return jsonify({'message': 'MAIN_CATEGORY_ID_ERROR'}), 400
+
         try:
             connection = connect_db()
 
@@ -266,36 +263,32 @@ class ProductView:
             except Exception as e:
                 return jsonify({'message': f'{e}'}), 500
 
-    @product_app.route('/')
-
     @product_app.route('/register', methods=['POST'])
     @login_validator
     @validate_params(
-        Param('is_selling', FORM, int),
-        Param('is_visible', FORM, int),
+        Param('is_selling', FORM, int, rules=[Enum(0, 1)]),
+        Param('is_visible', FORM, int, rules=[Enum(0, 1)]),
         Param('sub_category_id', FORM, int, required=False),
         Param('product_name', FORM, str,
               rules=[Pattern(r"[^\"\']")]),
-        Param('is_information_notice', FORM, int),
+        Param('is_information_notice', FORM, int, rules=[Enum(0, 1)]),
         Param('manufacturer', FORM, str, required=False),
         Param('manufacture_date', FORM, str, required=False, rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
         Param('made_in', FORM, str, required=False),
         Param('short_description', FORM, str, required=False),
-        Param('is_inventory_management', FORM, int),
+        Param('is_inventory_management', FORM, int, rules=[Enum(0, 1)]),
         Param('inventory', FORM, int, required=False),
         Param('price', FORM, int),
         Param('discount_rate', FORM, float, required=False),
-        Param('is_discount_period', FORM, int),
+        Param('is_discount_period', FORM, int, rules=[Enum(0, 1)]),
         Param('discount_start_time', FORM, str, required=False),
         Param('discount_end_time', FORM, str, required=False),
         Param('min_order', FORM, int),
         Param('max_order', FORM, int),
         Param('seller_id', FORM, int, required=False),
       # integer parameter 범위 지정을 위한 검증
-        Param('is_selling', FORM, str,
-              rules=[Pattern(r'^([0-1])$')]),
-        Param('is_visible', FORM, str,
-              rules=[Pattern(r'^([0-1])$')]),
+        Param('is_selling', FORM, str, rules=[Pattern(r'^([0-1])$')]),
+        Param('is_visible', FORM, str, rules=[Pattern(r'^([0-1])$')]),
         Param('sub_category_id', FORM, str,
               rules=[Pattern(r'^([0-9]|[0-9][0-9]|[1][0][0-9]|[1][1][0-4])$')]),
         Param('max_order', FORM, str,
@@ -306,8 +299,9 @@ class ProductView:
     def create_product(*args):
         connection = None
 
+        # min_order, max_order 예외처리
         if args[16] > 19 or args[17] > 19:
-            return jsonify({'message': 'value_error'}), 400
+            return jsonify({'message': 'ORDER_VALUE_ERROR'}), 400
 
         filter_data = {
             'editor_id'               : g.token_info['account_id'],
@@ -340,7 +334,7 @@ class ProductView:
 
             if connection:
 
-                # option_list = '[{"name":"bb","age":29},{"name":"hh","age":20}]' 형태
+                # option_list = '[{"name":"bb","age":29},{"name":"hh","age":20}]'
                 options     = request.form.get('option_list')
                 option_list = json.loads(options)
 
