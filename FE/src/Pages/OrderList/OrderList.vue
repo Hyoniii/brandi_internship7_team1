@@ -25,7 +25,7 @@ import axios from 'axios';
 
 const columns = [
   {
-    title: "등록상태",
+    title: "등",
     dataIndex: "name",
     scopedSlots: { customRender: "name" },
   },
@@ -179,4 +179,6 @@ export default {
 
 <style lang="css">
 @import "../../styles.scss";
+
+
 </style>
