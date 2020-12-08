@@ -2,17 +2,21 @@
   <div id="ProductList">
     <a-layout-content
       :style="{
-        background: '#fff',
+        // background: '#fff',
         padding: '24px',
         margin: 0,
       }"
     >
       <div style="margin-bottom: 14px">
         <a-button type="primary">Primary</a-button>
-        <a-input ref="userNameInput" v-model="userName" placeholder="Basic usage">
+        <a-input
+          ref="userNameInput"
+          v-model="userName"
+          placeholder="Basic usage"
+        >
           <a-icon slot="prefix" type="user" />
           <a-tooltip slot="suffix" title="Extra information">
-            <a-icon type="info-circle" style="color: rgba(0,0,0,.45)" />
+            <a-icon type="info-circle" style="color: rgba(0, 0, 0, 0.45)" />
           </a-tooltip>
         </a-input>
       </div>
@@ -29,7 +33,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 const columns = [
   {
@@ -158,7 +162,7 @@ export default {
       searchInput: null,
       searchedColumn: "",
       selectedProducts: [],
-      userName: '',
+      userName: "",
     };
   },
   method: {
