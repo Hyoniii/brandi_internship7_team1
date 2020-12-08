@@ -10,7 +10,6 @@
           :v-if="this.$route.path == '/main'"
           style="border: 1px solid rgb(235, 237, 240)"
           title="Title"
-          :breadcrumb="{ props: { routes } }"
           sub-title="This is a
         subtitle"
         />
@@ -22,13 +21,14 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 import MainTopNav from "../../Components/MainTopNav";
 import MainSideNav from "../../Components/MainSideNav";
 import MainFooter from "../../Components/MainFooter";
 import SellerList from "../SellerList/SellerList";
 export default {
   name: "mainpage",
-
   components: {
     "main-top-nav": MainTopNav,
     "main-footer": MainFooter,
@@ -63,17 +63,14 @@ export default {
 
 <style lang="scss">
 @import "../../styles.scss";
-
 #Main {
   display: flex;
   flex-direction: column;
   height: 100vh;
-
   .mainContainer {
     display: flex;
     height: 100vh;
     font-size: 13px;
-
     .routerViewContainer {
       .routerView {
       }

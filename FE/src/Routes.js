@@ -4,6 +4,7 @@ import Main from "./Pages/Main/Main.vue";
 import SellerList from "./Pages/SellerList/SellerList.vue";
 import OrderList from "./Pages/OrderList/OrderList.vue";
 import ProductList from "./Pages/ProductList/ProductList.vue";
+import Home from "./Pages/Home/Home.vue";
 
 // Vue.use(Router);
 
@@ -23,6 +24,11 @@ export default [
     name: "mainpage",
     component: Main,
     children: [
+      {
+        path: "home",
+        name: "home",
+        component: Home,
+      },
       {
         path: "sellerlist",
         name: "sellerlist",

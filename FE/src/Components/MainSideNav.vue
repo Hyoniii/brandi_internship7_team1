@@ -71,7 +71,6 @@ export default {
 
 <style lang="scss">
 @import "../styles.scss";
-
 #MainSideNav {
   height: 100%;
 }
