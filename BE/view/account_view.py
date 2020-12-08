@@ -85,7 +85,7 @@ class AccountView:
                 'subcategory_id': args[7],
                 'seller_status_id': 1
             }
-
+            print(account_info)
             connection = connect_db()
             account_service = AccountService()
             account_service.signup_seller(account_info, connection)
@@ -94,7 +94,7 @@ class AccountView:
             return jsonify({'MESSAGE': 'SUCCESS'}), 200
         except Exception as e:
             connection.rollback()
-            return jsonify({'MESSAGE': f'{e}'}), 500
+            return jsonify({'MESSAGE': f'{e}'}), 400
         finally:
                 connection.close()
 
