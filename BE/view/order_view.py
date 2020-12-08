@@ -29,7 +29,7 @@ class OrderView:
     )
     @login_validator
     def get_filter_options(order_status_id):
-        # 주문관리에 페이지에서 셀러속성 리스트와 주문상태변경 버튼 보내주는 엔드포인트
+        # 주문관리 페이지에서 셀러속성 리스트와 주문상태 변경 버튼 보내주는 엔드포인트
         order_service = OrderService()
 
         connection = None
@@ -40,7 +40,7 @@ class OrderView:
             return jsonify(filter_options), 200
 
         except Exception as e:
-            return jsonify({"message": f'{e}'}), 500
+            return jsonify({"message": f'{e}'}), 400
 
         finally:
             try:
@@ -125,8 +125,7 @@ class OrderView:
     )
     @login_validator
     def update_order_status(*args):
-        # 주문 아이템의 주문 상태를 변경하는 엔드포인트
-        # 변경할 아이템의 id를 리스트로 받아서 일괄 업데이트
+        # 주문 id를 리스트로 받아서 일괄적으로 주문 상태를 업데이트하는 엔드포인트
         order_service = OrderService()
 
         update_status = {
@@ -136,14 +135,9 @@ class OrderView:
             'order_action_id': args[2]
         }
 
-        # 셀러일 경우 필터에 seller_id 추가
-        #if g.token_info['account_type_id'] == 2:
-        #    update_status['seller_id'] = g.token_info['seller_id']
-
         connection = None
         try:
             connection = connect_db()
-            # update_order_status 서비스 호출
             number_of_orders_updated = order_service.update_order_status(connection, update_status)
             connection.commit()
             return jsonify({"message": f"{number_of_orders_updated} order(s) successfully updated"}), 201
@@ -180,7 +174,6 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            # get_order_detail 서비스 호출
             order_detail = order_service.get_order_detail(connection, order_filter)
             return jsonify(order_detail), 200
 
@@ -224,14 +217,10 @@ class OrderView:
             'zip_code': args[5],
             'delivery_instruction': args[6],
         }
-        #############################################
-        #### g객체 써서 셀러 validation 하는법???? #######
-        #############################################
 
         # 셀러일 경우 필터에 seller_id 추가
         if g.token_info['account_type_id'] == 2:
             order_filter['seller_id'] = g.token_info['seller_id']
-            update_order['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
