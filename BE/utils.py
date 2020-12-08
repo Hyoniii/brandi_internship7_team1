@@ -1,9 +1,13 @@
 import os, io, jwt, uuid
 import pymysql
+import xlsxwriter
+import time
+import datetime
 
-from functools import wraps
+from functools    import wraps
 from PIL          import Image
-from flask        import request, jsonify, g
+from flask        import request, jsonify, g, send_file
+
 from db_connector import connect_db, get_s3_connection
 from mysql.connector.errors import Error
 from config       import SECRET_KEY, ALGORITHM
@@ -44,7 +48,7 @@ def login_validator(func):
                                 g.token_info = {
                                     'account_id'      : account_id,
                                     'account_type_id' : account['account_type_id'],
-                                    'seller_id'       : None}
+                                    'seller_id'       : account['seller_id']}
                                 return func(*args, **kwargs)
                             return jsonify({'MESSAGE': 'account_not_active'}), 400
                         return jsonify({'MESSAGE': 'account_nonexistant'}), 404
@@ -94,6 +98,7 @@ class Image_uploader:
 
                 except KeyError as e:
                     raise e
+
                 except Exception as e:
                     raise e
 
@@ -102,6 +107,7 @@ class Image_uploader:
 
         except KeyError as e:
             raise e
+
         except Exception as e:
             raise e
 
@@ -163,6 +169,132 @@ class Image_uploader:
 
         except Exception as e:
             raise e
+
+
+
+
+class Product_excel_downloader:
+    def __init__(self):
+        pass
+
+    def master_product_excel_down(excel_info):
+        null = 0
+        for data in excel_info:
+
+            if data['is_selling'] == 1:
+                data['is_selling'] = "판매"
+            else:
+                data['is_selling'] = "미판매"
+
+            if data['is_visible'] == 1:
+                data['is_visible'] = "진열"
+            else:
+                data['is_visible'] = "미진열"
+
+            if data['is_discount'] == 1:
+                data['is_discount'] = "할인"
+            else:
+                data['is_discount'] = "미할인"
+
+            data['price'] = int(data['price'])
+
+            data['created_at'] = data['created_at'].strftime('%Y-%m-%d')
+
+            if data.get('discount_price') is None:
+                data['discount_price'] = data['price']
+
+
+        workbook = xlsxwriter.Workbook('master_product_list.xlsx')
+        worksheet = workbook.add_worksheet()
+
+        # file = io.BytesIO()
+        # wb.save(file)
+        # file.seek(0)
+
+        columns = ['등록일', '대표이미지', '상품명', '상품코드', '상품번호', '셀러속성', '셀러명', '판매가', '할인가', '판매여부', '진열여부', '할인여부']
+
+        for column in columns:
+            worksheet.write(0, columns.index(column), column)
+
+        row = 1
+        col = 0
+        #######datetile#############
+        for j in excel_info:
+            worksheet.write(row, col,     j.get('created_at'))
+            worksheet.write(row, col + 1, j.get('desc_img_url'))
+            worksheet.write(row, col + 2, j.get('product_name'))
+            worksheet.write(row, col + 3, j.get('product_code'))
+            worksheet.write(row, col + 4, j.get('number'))
+            worksheet.write(row, col + 5, j.get('seller_subcategory_name'))
+            worksheet.write(row, col + 6, j.get('seller_name'))
+            worksheet.write(row, col + 7, j.get('seller_status'))
+            worksheet.write(row, col + 8, j.get('price'))
+            worksheet.write(row, col + 9, j.get('discount_price'))
+            worksheet.write(row, col + 10, j.get('is_selling'))
+            worksheet.write(row, col + 11, j.get('is_visible'))
+            worksheet.write(row, col + 12, j.get('is_discount'))
+
+            row += 1
+
+        workbook.close()
+        return send_file('master_product_list.xlsx')
+
+
+    def seller_product_excel_down(excel_info):
+        null = 0
+        for data in excel_info:
+
+            if data['is_selling'] == 1:
+                data['is_selling'] = "판매"
+            else:
+                data['is_selling'] = "미판매"
+
+            if data['is_visible'] == 1:
+                data['is_visible'] = "진열"
+            else:
+                data['is_visible'] = "미진열"
+
+            if data['is_discount'] == 1:
+                data['is_discount'] = "할인"
+            else:
+                data['is_discount'] = "미할인"
+
+            data['price'] = int(data['price'])
+
+            data['created_at'] = data['created_at'].strftime('%Y-%m-%d')
+
+            if data.get('discount_price') is None:
+                data['discount_price'] = data['price']
+
+        workbook = xlsxwriter.Workbook('seller_product_list.xlsx')
+        worksheet = workbook.add_worksheet()
+
+        columns = ['등록일', '대표이미지', '상품명', '상품코드', '상품번호', '판매가', '할인가', '판매여부', '진열여부', '할인여부']
+
+        for column in columns:
+            worksheet.write(0, columns.index(column), column)
+
+        row = 1
+        col = 0
+
+        for j in excel_info:
+            worksheet.write(row, col, j.get('created_at'))
+            worksheet.write(row, col + 1, j.get('desc_img_url'))
+            worksheet.write(row, col + 2, j.get('product_name'))
+            worksheet.write(row, col + 3, j.get('product_code'))
+            worksheet.write(row, col + 4, j.get('number'))
+            worksheet.write(row, col + 5, j.get('price'))
+            worksheet.write(row, col + 6, j.get('discount_price'))
+            worksheet.write(row, col + 7, j.get('is_selling'))
+            worksheet.write(row, col + 8, j.get('is_visible'))
+            worksheet.write(row, col + 9, j.get('is_discount'))
+
+            row += 1
+
+
+        workbook.close()
+        return send_file('seller_product_list.xlsx')
+
 
 
 

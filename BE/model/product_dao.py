@@ -83,13 +83,13 @@ class ProductDao:
                 # 등록 기간 시작
                 if filter_data.get('started_date', None):
                     list_from += """
-                     AND P.created_at > %(started_date)s
+                     AND P.created_at >= %(started_date)s
                      """
 
                 # 등록 기간 종료
                 if filter_data.get('ended_date', None):
                     list_from += """
-                    AND P.created_at < %(ended_date)s
+                    AND P.created_at <= %(ended_date)s
                     """
 
                 # 셀러명
@@ -110,12 +110,20 @@ class ProductDao:
                     AND PO.number = %(product_number)s 
                     """
 
+                # 상품코드
+                if filter_data.get('product_code', None):
+                    list_from += """
+                    AND P.code = %(product_code)s 
+                    """
+
                 # 셀러 속성
                 if filter_data.get('seller_subcategory_id', None):
                     list_from += """
                     AND S.subcategory_id in %(seller_subcategory_id)s
                     """
-
+                ############################
+                #####is not none 예외처리######
+                ############################
                 # 판매여부
                 if filter_data.get('is_selling', None) is not None:
                     list_from += """
@@ -163,8 +171,6 @@ class ProductDao:
 
                 return {'product_list':product_list,'count':total_count}
 
-                #return {'product_list':product_list,'count':total_count}
-        # 데이터베이스 error
         except Exception as e:
             raise e
 
@@ -180,7 +186,9 @@ class ProductDao:
                         S.seller_name_kr = %(seller_name)s
                 """
 
-                cursor.execute(query, filter_data)
+                count = cursor.execute(query, filter_data)
+                if count == 0:
+                    raise Exception("SELLER_NAME_ERROR")
                 seller_id = cursor.fetchone()
                 return seller_id[0]
 
@@ -217,22 +225,23 @@ class ProductDao:
                         sellers as S
                     ON
                         S.subcategory_id = SC2.id
-                    WHERE S.id = %(seller_id)s
                 """
 
-                # # master, query string에 담긴 셀러로 탐색
-                # if filter_data['account_type_id'] == 1:
-                #     query += """
-                #     WHERE S.seller_name_kr = %(seller_name)s
-                #     """
-                #
-                # # seller,디버깅용 하드코딩
-                # elif filter_data['account_type_id'] == 2:
-                #     query += """
-                #     WHERE S.id = %(seller_id)s
-                #     """
+                # master, query string에 담긴 셀러로 탐색
+                if filter_data['account_type_id'] == 1:
+                    query += """
+                    WHERE S.seller_name_kr = %(seller_name)s
+                    """
 
-                cursor.execute(query,filter_data)
+                # seller
+                else:
+                    query += """
+                    WHERE S.id = %(seller_id)s
+                    """
+
+                count = cursor.execute(query,filter_data)
+                if count == 0:
+                    raise Exception("SELLER_INFO_ERROR")
                 filter_categories = cursor.fetchall()
 
                 if filter_categories:
@@ -254,15 +263,13 @@ class ProductDao:
                     LEFT JOIN
                         product_categories as PC1
                     ON
-                        PC2.category_id = PC1.id    
+                        PC2.category_id = PC1.id
+                    WHERE PC1.id = %(main_category_id)s    
                     """
 
-                if filter_data.get('main_category_id',None):
-                    query += """
-                    WHERE PC1.id = %(main_category_id)s
-                    """
-                    print(query)
-                cursor.execute(query,filter_data)
+                count = cursor.execute(query,filter_data)
+                if count == 0:
+                    raise Exception("MAIN_CATEGORY_DB_ERROR")
                 filter_categories = cursor.fetchall()
 
                 return filter_categories
@@ -280,13 +287,14 @@ class ProductDao:
                 FROM
                     product_colors
                 """
-                cursor.execute(query)
+                count = cursor.execute(query)
+                if count == 0:
+                    raise Exception("COLOR_LIST_ERROR")
                 color_list = cursor.fetchall()
                 return color_list
 
         except Exception as e:
             raise e
-
 
     def get_size_list(self,connection):
         try:
@@ -298,34 +306,11 @@ class ProductDao:
                 FROM
                     product_sizes
                 """
-                cursor.execute(query)
+                count = cursor.execute(query)
+                if count == 0:
+                    raise Exception("SIZE_LIST_ERROR")
                 size_list = cursor.fetchall()
                 return size_list
-
-
-        except Exception as e:
-            raise e
-
-    def get_code_info(self,product_subcategory_id,connection):
-        try:
-            with connection.cursor() as cursor:
-                query = """
-                SELECT
-                    PC2.id as sub_id,
-                    PC1.id as main_id
-                FROM
-                    product_sub_categories as PC2
-                    
-                LEFT JOIN
-                    product_categories as PC1
-                ON
-                    PC1.id = PC2.category_id
-                WHERE
-                    PC2.id = %s
-                """
-                cursor.execute(query,product_subcategory_id)
-                code_info = list(cursor.fetchone())
-                return code_info
 
         except Exception as e:
             raise e
@@ -383,7 +368,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.execute(query, filter_data)
+                count = cursor.execute(query, filter_data)
+                if count == 0:
+                    raise Exception("PRODUCT_DB_UPLOAD_ERROR")
                 product_id = cursor.lastrowid
                 filter_data['product_id'] = product_id
 
@@ -452,8 +439,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.execute(query, product_data)
-                #product_log = cursor.fetchall()
+                count = cursor.execute(query, product_data)
+                if count == 0:
+                    raise Exception("PRODUCTLOG_DB_UPLOAD_ERROR")
                 product_log = cursor.rowcount
 
                 return product_log
@@ -463,8 +451,6 @@ class ProductDao:
 
         except Exception as e:
             raise e
-
-
 
     def create_options(self, option_list, connection):
         try:
@@ -486,7 +472,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.executemany(query, option_list)
+                count = cursor.executemany(query, option_list)
+                if count == 0:
+                    raise Exception("OPTION_DB_UPLOAD_ERROR")
                 options_count = cursor.rowcount
 
                 return options_count
@@ -517,7 +505,9 @@ class ProductDao:
                 )
                 """
 
-                cursor.executemany(query, product_images)
+                count = cursor.executemany(query, product_images)
+                if count == 0:
+                    raise Exception("IMAGE_DB_UPLOAD_ERROR")
                 product_images = cursor.fetchall()
 
                 return product_images
@@ -525,6 +515,152 @@ class ProductDao:
         except KeyError as e:
             raise e
 
+        except Exception as e:
+            raise e
+
+
+    def product_excel_info(self, filter_data, connection):
+
+        try:
+            with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+
+                list_select = """
+                SELECT 
+                    P.id as product_id,
+                    S2.status as seller_status,                   
+                    P.created_at as created_at ,
+                    P.name as product_name,
+                    P.code as product_code,
+                    PO.number as number,
+                    I.img_url as desc_img_url,
+                    S3.name as seller_subcategory_name,
+                    S.seller_name_kr as seller_name,
+                    P.price ,
+                    FLOOR(P.price*(100/P.discount_rate)) as discount_price,
+                    P.is_selling as is_selling,
+                    P.is_visible as is_visible,
+                    P.is_discount as is_discount,
+                    A.id as account_id 
+                """
+                list_from = """
+                FROM 
+                    products as P 
+                LEFT JOIN
+                    product_options as PO
+                ON
+                    PO.product_id = P.id
+                LEFT JOIN
+                    product_images as I
+                ON
+                    I.product_id = P.id
+                LEFT JOIN
+                    sellers as S
+                ON 
+                    S.id = P.seller_id
+                LEFT JOIN
+                    seller_statuses as S2
+                ON
+                    S2.id = S.seller_status_id
+                LEFT JOIN
+                    seller_subcategories as S3
+                ON
+                    S3.id = S.subcategory_id
+                LEFT JOIN
+                    accounts as A
+                ON
+                    A.id = S.account_id
+                WHERE
+                    I.ordering = 1
+                """
+                #seller일 경우 seller의 product만 표출 , validator 완성 후 수정
+                if filter_data['account_type_id'] != 1:
+                    list_from += """
+                    AND A.id = %(account_id)s
+                    """
+                # if g.account_info.get('seller_id'):
+                #     query += "AND P.seller_id = g.account_info['seller_id']"
+
+                # 등록 기간 시작
+                if filter_data.get('started_date', None):
+                    list_from += """
+                     AND P.created_at > %(started_date)s
+                     """
+
+                # 등록 기간 종료
+                if filter_data.get('ended_date', None):
+                    list_from += """
+                    AND P.created_at < %(ended_date)s
+                    """
+
+                # 셀러명
+                if filter_data.get('seller_name', None):
+                    list_from += """ 
+                    AND S.seller_name_kr = %(seller_name)s
+                    """
+
+                # 상품명
+                if filter_data.get('product_name', None):
+                    list_from += """
+                    AND P.name = %(product_name)s
+                    """
+
+                # 상품번호
+                if filter_data.get('product_number', None):
+                    list_from += """
+                    AND PO.number = %(product_number)s 
+                    """
+
+                # 상품코드
+                if filter_data.get('product_code', None):
+                    list_from += """
+                    AND P.code = %(product_code)s 
+                    """
+
+                # 셀러 속성
+                if filter_data.get('seller_subcategory_id', None):
+                    list_from += """
+                    AND S.subcategory_id in %(seller_subcategory_id)s
+                    """
+
+                # 판매여부
+                if filter_data.get('is_selling', None) is not None:
+                    list_from += """
+                    AND P.is_selling = %(is_selling)s
+                    """
+
+                # 진열여부
+                if filter_data.get('is_visible', None) is not None:
+                    list_from += """
+                    AND P.is_visible = %(is_visible)s
+                    """
+
+                # 할인여부
+                if filter_data.get('is_discount', None) is not None:
+                    if filter_data['is_discount'] == 1:
+                        list_from += """
+                        AND P.is_discount = 1
+                        """
+                    elif filter_data['is_discount'] == 0:
+                        list_from += """
+                        AND P.is_discount = 0
+                        """
+
+                # id 기준으로 중복 값 제외, 등록순 정렬
+                list_from += """
+                GROUP BY P.id
+                ORDER BY P.created_at DESC
+                """
+
+                query = list_select + list_from
+                count = cursor.execute(query, filter_data)
+                if count == 0:
+                    raise Exception("DATA_FILTERING_ERROR")
+
+                excel_list = cursor.fetchall()
+
+                return excel_list
+
+        # 데이터베이스 error
         except Exception as e:
             raise e
 

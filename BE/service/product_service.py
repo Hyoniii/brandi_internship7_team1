@@ -7,7 +7,6 @@ from PIL               import Image
 from flask             import jsonify, g
 
 
-
 class ProductService:
     def __init__(self):
         pass
@@ -15,6 +14,10 @@ class ProductService:
     def get_product_list(self, filter_data, connection):
         product_dao = ProductDao()
         try:
+            # 상품을 등록하는 주체가 셀러이면, 자기 토큰을 이용해 본인 상품만 표출
+            if filter_data['account_type_id'] != 1:
+                  filter_data['account_id'] = g.token_info['account_id']
+
             # 기간 정의
             if filter_data['started_date'] and filter_data['ended_date']:
                 if filter_data['ended_date'] < filter_data['started_date']:
@@ -45,12 +48,11 @@ class ProductService:
             
             products = product_list['product_list']
             counts   = product_list['count']
+
             #Group by로 grouping 해서 중복 값 제거함
             count    = len(counts)
 
-
             return {'product_list' : products, 'count' : count}
-
 
         except Exception as e:
             raise e
@@ -67,30 +69,12 @@ class ProductService:
             200:셀러에 따른 상품 main 카테고리 목록"""
 
         product_dao = ProductDao()
-        """ 
-        g.account_info = {
-                        'account_id'      : account_id,
-                        'account_type_id' : account['account_type_id'],
-                        'seller_id'       : None
-                        }
-        ------수정 예정------
-        # 상품을 등록하는 주체가 마스터이면, query string 에 담긴 셀러 어카운트 넘버로 셀러 선택해서 filter
-        if account_type_id == 1:
-            #account_id = account_info['account_id']
 
-        # 상품을 등록하는 주체가 셀러이면, 토큰 이용해서 filter
-        elif account_type_id == 2:
-            # account_id = g.account_info['account_id']
-            
-        넘겨주는 정보 인자도 바꿔야 함
-        """
+        # seller이면 seller_id 가진다.
+        if filter_data['account_type_id'] != 1:
+            filter_data['seller_id'] = g.token_info['seller_id']
 
-        # #seller,디버깅용 하드코딩
-        # elif filter_data['account_type_id'] == 2:
-        #     filter_data['account_id'] = 3
-        #     seller_categories = product_dao.seller_main_categories(filter_data, connection)
-
-        # #master, query string에 담긴 셀러로 탐색
+        # master, query string에 담긴 셀러로 탐색
         if filter_data.get('seller_name'):
             seller_id                = product_dao.get_seller_id(filter_data,connection)
             filter_data['seller_id'] = seller_id
@@ -116,10 +100,9 @@ class ProductService:
 
     def create_product(self, filter_data, option_list, connection):
         product_dao = ProductDao()
-        # account_type_id = g.account_info['account_type_id']
 
         # min,max order 범위 설정
-        if filter_data['min_order'] > filter_data['max_order']:
+        if filter_data['min_order']  > filter_data['max_order']:
             filter_data['min_order'] = filter_data['max_order']
 
         # code,number 생성
@@ -156,6 +139,33 @@ class ProductService:
         product_dao.create_images(product_images, connection)
 
         return None
+
+    def product_excel(self, filter_data, connection):
+        product_dao = ProductDao()
+
+        try:
+            # 기간 정의
+            if filter_data['started_date'] and filter_data['ended_date']:
+                if filter_data['ended_date']  < filter_data['started_date']:
+                    filter_data['ended_date'] = filter_data['started_date']
+
+            # 두 값이 안들어 왔을 경우 default
+            if not filter_data['started_date']:
+                filter_data['started_date'] = '2016-05-24'
+            if not filter_data['ended_date']:
+                filter_data['ended_date']   = '2025-05-24'
+
+            # 기간 데이터 변경
+            filter_data['started_date'] += ' 00:00:00'
+            filter_data['ended_date']   += ' 23:59:59'
+
+            excel_info = product_dao.product_excel_info(filter_data, connection)
+
+            return excel_info
+
+        except Exception as e:
+            raise e
+
 
 
 
