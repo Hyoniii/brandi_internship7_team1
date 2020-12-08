@@ -1,10 +1,12 @@
 import uuid
+import xlsxwriter
 import re
 
+from utils             import Product_excel_downloader
 from model.product_dao import ProductDao
 from config            import S3
 from PIL               import Image
-from flask             import jsonify, g
+from flask             import jsonify, g, send_file
 
 
 class ProductService:
@@ -159,9 +161,60 @@ class ProductService:
             filter_data['started_date'] += ' 00:00:00'
             filter_data['ended_date']   += ' 23:59:59'
 
-            excel_info = product_dao.product_excel_info(filter_data, connection)
+            filter_excel_info = product_dao.product_excel_info(filter_data, connection)
 
-            return excel_info
+            setting_info = Product_excel_downloader.get_product_excel_info(filter_excel_info)
+
+            unique_name = uuid.uuid4().hex[:4].upper()
+            file_name   = f'product_list_{unique_name}.xlsx'
+            columns     = setting_info['columns']
+            excel_info  = setting_info['excel_info']
+
+            workbook    = xlsxwriter.Workbook(file_name)
+            worksheet   = workbook.add_worksheet()
+
+            for column in columns:
+                worksheet.write(0, columns.index(column), column)
+
+            row = 1
+            col = 0
+
+            if g.token_info['account_type_id'] == 1:
+                for j in excel_info:
+                    worksheet.write(row, col, j.get('created_at'))
+                    worksheet.write(row, col + 1, j.get('desc_img_url'))
+                    worksheet.write(row, col + 2, j.get('product_name'))
+                    worksheet.write(row, col + 3, j.get('product_code'))
+                    worksheet.write(row, col + 4, j.get('number'))
+                    worksheet.write(row, col + 5, j.get('seller_subcategory_name'))
+                    worksheet.write(row, col + 6, j.get('seller_name'))
+                    worksheet.write(row, col + 7, j.get('seller_status'))
+                    worksheet.write(row, col + 8, j.get('price'))
+                    worksheet.write(row, col + 9, j.get('discount_price'))
+                    worksheet.write(row, col + 10, j.get('is_selling'))
+                    worksheet.write(row, col + 11, j.get('is_visible'))
+                    worksheet.write(row, col + 12, j.get('is_discount'))
+
+                    row += 1
+            else:
+                for j in excel_info:
+                    worksheet.write(row, col, j.get('created_at'))
+                    worksheet.write(row, col + 1, j.get('desc_img_url'))
+                    worksheet.write(row, col + 2, j.get('product_name'))
+                    worksheet.write(row, col + 3, j.get('product_code'))
+                    worksheet.write(row, col + 4, j.get('number'))
+                    worksheet.write(row, col + 5, j.get('price'))
+                    worksheet.write(row, col + 6, j.get('discount_price'))
+                    worksheet.write(row, col + 7, j.get('is_selling'))
+                    worksheet.write(row, col + 8, j.get('is_visible'))
+                    worksheet.write(row, col + 9, j.get('is_discount'))
+
+                    row += 1
+
+
+            workbook.close()
+
+            return send_file(file_name)
 
         except Exception as e:
             raise e

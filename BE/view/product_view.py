@@ -18,8 +18,6 @@ from flask_request_validator import (
     validate_params
 )
 
-
-
 class ProductView:
     product_app = Blueprint('product_app', __name__, url_prefix='/products')
 
@@ -95,68 +93,6 @@ class ProductView:
 
         except Exception as e:
             return jsonify({'message' : f'{e}'}), 400
-
-        finally:
-            try:
-                connection.close()
-            except Exception as e:
-                return jsonify({'message': f'{e}'}), 500
-
-    @product_app.route('/download', methods=['GET'])
-    @login_validator
-    @validate_params(
-        Param('started_date', GET, str, required=False,
-              rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
-        Param('ended_date', GET, str, required=False,
-              rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
-        Param('seller_name', GET, str, required=False),
-        Param('product_name', GET, str, required=False),
-        Param('product_number', GET, str, required=False),
-        Param('product_code', GET, str, required=False),
-        Param('seller_subcategory_id', GET, list, required=False),
-        Param('is_selling', GET, bool, rules=[Enum(0, 1)], required=False),
-        Param('is_visible', GET, bool, rules=[Enum(0, 1)], required=False),
-        Param('is_discount', GET, bool, rules=[Enum(0, 1)], required=False),
-        Param('limit', GET, int, required=False),
-        Param('page', GET, int, required=False)
-    )
-    def product_list_excel(*args):
-        connection = None
-
-        filter_data = {
-            'started_date': args[0],
-            'ended_date': args[1],
-            'seller_name': args[2],
-            'product_name': args[3],
-            'product_number': args[4],
-            'product_code': args[5],
-            'seller_subcategory_id': args[6],
-            'is_selling': args[7],
-            'is_visible': args[8],
-            'is_discount': args[9],
-            'account_type_id': g.token_info['account_type_id'],
-            'account_id' : g.token_info['account_id']
-        }
-
-        try:
-            connection = connect_db()
-            if connection:
-                product_service = ProductService()
-
-                excel_info= product_service.product_excel(filter_data, connection)
-
-                if filter_data['account_type_id'] == 1:
-                    Product_excel_downloader.master_product_excel_down(excel_info)
-
-                else:
-                    excel_file = Product_excel_downloader.seller_product_excel_down(excel_info)
-
-                return jsonify({'message':'SUCCESS'}), 200
-            else:
-                return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
-
-        except Exception as e:
-            return jsonify({'message': f'{e}'}), 400
 
         finally:
             try:
@@ -300,7 +236,7 @@ class ProductView:
         connection = None
 
         # min_order, max_order 예외처리
-        if args[16] > 19 or args[17] > 19:
+        if args[16] > 20 or args[17] > 20:
             return jsonify({'message': 'ORDER_VALUE_ERROR'}), 400
 
         filter_data = {
@@ -385,5 +321,61 @@ class ProductView:
             except Exception as e:
                 return jsonify({'message': f'{e}'}), 500
 
+
+    @product_app.route('/download', methods=['GET'])
+    @login_validator
+    @validate_params(
+        Param('started_date', GET, str, required=False,
+              rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
+        Param('ended_date', GET, str, required=False,
+              rules=[Pattern(r"^\d\d\d\d-(0?[1-9]|1[0-2])-(0?[1-9]|[12][0-9]|3[01])$")]),
+        Param('seller_name', GET, str, required=False),
+        Param('product_name', GET, str, required=False),
+        Param('product_number', GET, str, required=False),
+        Param('product_code', GET, str, required=False),
+        Param('seller_subcategory_id', GET, list, required=False),
+        Param('is_selling', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('is_visible', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('is_discount', GET, bool, rules=[Enum(0, 1)], required=False),
+        Param('limit', GET, int, required=False),
+        Param('page', GET, int, required=False)
+    )
+    def product_list_excel(*args):
+        connection = None
+
+        filter_data = {
+            'started_date': args[0],
+            'ended_date': args[1],
+            'seller_name': args[2],
+            'product_name': args[3],
+            'product_number': args[4],
+            'product_code': args[5],
+            'seller_subcategory_id': args[6],
+            'is_selling': args[7],
+            'is_visible': args[8],
+            'is_discount': args[9],
+            'account_type_id': g.token_info['account_type_id'],
+            'account_id' : g.token_info['account_id']
+        }
+
+        try:
+            connection = connect_db()
+            if connection:
+                product_service = ProductService()
+
+                product_service.product_excel(filter_data, connection)
+
+                return jsonify({'message':'SUCCESS'}), 200
+            else:
+                return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
+
+        except Exception as e:
+            return jsonify({'message': f'{e}'}), 400
+
+        finally:
+            try:
+                connection.close()
+            except Exception as e:
+                return jsonify({'message': f'{e}'}), 500
 
 
