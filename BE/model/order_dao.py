@@ -274,7 +274,6 @@ class OrderDao:
                 WHERE id = %(order_item_id)s
                 """
 
-            # 셀러일 경우 셀러id 확인
             if 'seller_id' in update_status:
                 query += """
                 AND seller_id = %(seller_id)s
@@ -314,7 +313,8 @@ class OrderDao:
         # 배송완료 상태에서 일정시간 뒤 구매확정 상태로 전환하는 스케줄러.
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
-            CREATE EVENT confirm_purchase
+            CREATE EVENT confirm_purchase"""
+            """
             ON SCHEDULE AT current_timestamp + interval 5 minute
             DO
                 UPDATE 
@@ -369,7 +369,7 @@ class OrderDao:
                 cursor.execute(query, order_item_id)
                 # 주문 id 중 하나라도 찾을 수 없을 경우:
                 if len(order_item_id) != cursor.rowcount:
-                    raise Exception('Could not find order item')
+                    raise Exception('Could not find order')
 
             elif type(order_item_id) == int:
                 query += """
@@ -378,6 +378,6 @@ class OrderDao:
                 cursor.execute(query, order_item_id)
                 # 주문 id를 찾을 수 없는 경우:
                 if cursor.rowcount == 0:
-                    raise Exception('Could not find order item')
+                    raise Exception('Could not find order')
 
             return cursor.fetchall()

@@ -39,7 +39,7 @@ class OrderView:
             return jsonify(filter_options), 200
 
         except Exception as e:
-            return jsonify({"message": f'{e}'}), 500
+            return jsonify({"message": f'{e}'}), 400
 
         finally:
             try:
@@ -93,10 +93,6 @@ class OrderView:
             'page': args[12] if args[12] else 1
         }
 
-        # 셀러일 경우 필터에 seller_id 추가
-        if g.token_info['account_type_id'] == 2:
-            order_filter['seller_id'] = g.token_info['seller_id']
-
         connection = None
         try:
             connection = connect_db()
@@ -134,14 +130,9 @@ class OrderView:
             'order_action_id': args[2]
         }
 
-        # 셀러일 경우 필터에 seller_id 추가
-        if g.token_info['account_type_id'] == 2:
-            update_status['seller_id'] = g.token_info['seller_id']
-
         connection = None
         try:
             connection = connect_db()
-            # update_order_status 서비스 호출
             number_of_orders_updated = order_service.update_order_status(connection, update_status)
             connection.commit()
             return jsonify({"message": f"{number_of_orders_updated} order(s) successfully updated"}), 201
@@ -221,14 +212,10 @@ class OrderView:
             'zip_code': args[5],
             'delivery_instruction': args[6],
         }
-        #############################################
-        #### 셀러 validation 방법 변경하기  #######
-        #############################################
 
         # 셀러일 경우 필터에 seller_id 추가
         if g.token_info['account_type_id'] == 2:
             order_filter['seller_id'] = g.token_info['seller_id']
-            update_order['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:

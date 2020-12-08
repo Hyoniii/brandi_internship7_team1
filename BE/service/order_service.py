@@ -44,12 +44,15 @@ class OrderService():
         # 여러 아이템의 주문 상태를 한꺼번에 업데이트하고 아이템마다 로그를 생성함.
         order_dao = OrderDao()
 
-        # 주문상세의 셀러와 업데이트 요청한 셀러가 동일한지 확인
-        order_item_id = update_status['order_item_id']
-        seller_validation = order_dao.seller_validation(connection, order_item_id)
-        for order in seller_validation:
-            if order['seller_id'] != g.token_info['seller_id']:
-                raise Exception('Invalid seller')
+        # 셀러일 경우: 주문 셀러와 업데이트 요청한 셀러가 동일한 셀러인지 확인
+        if g.token_info['account_type_id'] == 2:
+            order_item_id = update_status['order_item_id']
+            seller_validation = order_dao.seller_validation(connection, order_item_id)
+            for order in seller_validation:
+                if order['seller_id'] != g.token_info['seller_id']:
+                    raise Exception('Unauthorized seller')
+                else:
+                    update_status['seller_id'] = g.token_info['seller_id']
 
         # 주문상태-액션 중간테이블에서 액션에 해당하는 새로운 주문상태 id를 가져옴
         new_order_status = order_dao.get_order_status_by_action(connection, update_status)
@@ -64,15 +67,6 @@ class OrderService():
             for i in update_status['order_item_id']
         ]
         order_dao.create_order_log(connection, order_log)
-
-        # 구매확정 스케줄러
-        if update_status['new_order_status_id'] == 4:
-            order_item_id = update_status['order_item_id']
-            order_log = [
-                [i, update_status['editor_id'], 5]
-                for i in update_status['order_item_id']
-            ]
-            order_dao.confirm_purchase(connection, order_item_id, order_log)
 
         return number_of_orders_updated
 
@@ -101,6 +95,15 @@ class OrderService():
         # 주문상태 변경하는 dao, 배송지정보 변경하는 dao를 각각 호출함
         order_dao = OrderDao()
 
+        # 셀러일 경우: 주문 셀러와 업데이트 요청한 셀러가 동일한지 확인
+        if g.token_info['account_type_id'] == 2:
+            order_item_id = update_order['order_item_id']
+            seller_validation = order_dao.seller_validation(connection, order_item_id)
+            if seller_validation['seller_id'] != update_order['seller_id']:
+                raise Exception('Unauthorized seller')
+            else:
+                update_order['seller_id'] = g.token_info['seller_id']
+
         # 주문상태 업데이트
         if update_order['new_order_status_id']:
             # 현재 주문 상태와 선택 가능한 상태변경 옵션 확인
@@ -119,14 +122,6 @@ class OrderService():
                 [update_order['order_item_id'], update_order['editor_id'], update_order['new_order_status_id']]
             ]
             order_dao.create_order_log(connection, order_log)
-
-            # 구매확정 스케줄러(구매확정 상태로 업데이트 후 변경이력 생성)
-            if update_order['new_order_status_id'] == 4:
-                order_item_id = update_order['order_item_id']
-                order_log = [
-                    [update_order['order_item_id'], update_order['editor_id'], 5]
-                ]
-                order_dao.confirm_purchase(connection, order_item_id, order_log)
 
         if update_order['phone_number'] \
                 or update_order['address_1'] \
