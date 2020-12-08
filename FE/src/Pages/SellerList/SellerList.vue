@@ -80,7 +80,6 @@
           <a-tag
             v-for="action in actions"
             :key="action.action_id"
-            @click="handleColorChange"
             :color="
               action.action_name === '입점 승인'
                 ? 'blue'
@@ -106,9 +105,7 @@
         <template slot="customRender" slot-scope="text, record, index, column">
           <span v-if="searchText && searchedColumn === column.dataIndex">
             <template
-              v-for="(fragment, i) in text
-                .toString()
-                .split(new RegExp(`(?<=${searchText})|(?=${searchText})`, 'i'))"
+              v-for="(fragment, i) in text.toString().split(new RegExp(`(?<=${searchText})|(?=${searchText})`, 'i'))"
             >
               <mark
                 v-if="fragment.toLowerCase() === searchText.toLowerCase()"
@@ -129,9 +126,9 @@
 import axios from "axios";
 import MainHeader from "../../Components/MainHeader";
 
-const sellerListAPI = "http://192.168.7.21:5000/account/seller_list";
+const sellerListAPI = "http://10.251.1.127:5000/account/seller_list";
 const actionStatusAPI =
-  "http://192.168.7.21:5000/account/change_seller_status";
+  "http://10.251.1.127:5000/account/change_seller_status";
 
 export default {
   name: "sellerlist",
@@ -199,7 +196,7 @@ export default {
             filterIcon: "filterIcon",
             customRender: "account_email",
           },
-          width: 170,
+          width: 185,
           onFilter: (value, record) =>
             record.account_email
               .toString()
@@ -427,21 +424,24 @@ export default {
   },
   methods: {
     postQuery(action, status, seller) {
-      const queryBody = {
+      const paramsBody = {
         seller_id: seller,
         action_id: action,
         status_id: status,
       };
 
-      const queryHeader = {
+      const paramsHeader = {
         headers: {
           AUTHORIZATION:
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50X2lkIjoxMjcsImV4cGlyYXRpb24iOiIyMDIwLTEyLTAyIDA2OjA5OjIwLjIzNTU0OCJ9.wug1dOSu9ZjcQXN5xwp35kAtr-N1wrDX0P7D7d2r9bo",
         },
       };
 
-      axios.post(actionStatusAPI, queryBody, queryHeader).then((res) => {
-        if (res.status === 200) return alert("성공");
+      axios.patch(actionStatusAPI, paramsBody, paramsHeader).then((res) => {
+        if (res.status === 200) {
+          alert("성공");
+          this.loadTableData();
+        } 
       });
     },
 
@@ -451,7 +451,7 @@ export default {
       const { seller } = e.target.dataset;
 
       //입점승인
-      console.log(id, name, seller);
+      console.log("action_id", id, "status_id", name, "seller_id",seller);
       if (id == 1) {
         this.$confirm({
           title: "Confirm",
@@ -459,7 +459,6 @@ export default {
           onOk: () => {
             this.handleOk();
             this.postQuery(id, name, seller);
-            this.loadTableData();
           },
         });
       }
@@ -470,6 +469,7 @@ export default {
           content: "셀러의 입점을 거절하시겠습니까?",
           onOk: () => {
             this.handleOk();
+                        this.postQuery(id, name, seller);
           },
         });
       }
@@ -481,6 +481,7 @@ export default {
             "휴점처리 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 휴점신청을 하시겠습니까?",
           onOk: () => {
             this.handleOk();
+                        this.postQuery(id, name, seller);
           },
         });
       }
@@ -492,6 +493,7 @@ export default {
             "퇴점신청 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 퇴점신청을 하시겠습니까?",
           onOk: () => {
             this.handleOk();
+                        this.postQuery(id, name, seller);
           },
         });
       }
@@ -503,6 +505,7 @@ export default {
             "휴점해제 시 셀러의 모든 상품이 진열/판매로 전환 되고 상품 관리를 할 수 있습니다. 휴점해제를 하시겠습니까?",
           onOk: () => {
             this.handleOk();
+                        this.postQuery(id, name, seller);
           },
         });
       }
@@ -512,7 +515,9 @@ export default {
           title: "Confirm",
           content:
             "퇴점 확정 시 셀러의 모든 상품이 미진열/미판매로 전환 되고 상품 관리를 할 수 없게 됩니다. 퇴점 확정을 하시겠습니까?",
-          onOk: () => {},
+          onOk: () => {
+                        this.postQuery(id, name, seller);
+          },
         });
       }
       //퇴점철회 처리
@@ -521,7 +526,9 @@ export default {
           title: "Confirm",
           content:
             "퇴점철회 시 셀러의 모든 상품이 진열/판매로 전화 되고 상품 관리를 할 수 있습니다. 퇴점철회를 하시겠습니까?",
-          onOk: () => {},
+          onOk: () => {
+                          this.postQuery(id, name, seller);
+          },
         });
       }
     },
@@ -555,18 +562,18 @@ export default {
       this.selectedRowKeys = selectedRowKeys;
     },
     handleSellerDetailsLink() {
-      
+      //셀러 상세/수정 페이지 연결
     },
 
     loadTableData() {
-      const queryHeader = {
+      const paramsHeader = {
         headers: {
           AUTHORIZATION:
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50X2lkIjoxMjcsImV4cGlyYXRpb24iOiIyMDIwLTEyLTAyIDA2OjA5OjIwLjIzNTU0OCJ9.wug1dOSu9ZjcQXN5xwp35kAtr-N1wrDX0P7D7d2r9bo",
         },
       };
 
-      axios.get(sellerListAPI, queryHeader).then((res) => {
+      axios.get(sellerListAPI, paramsHeader).then((res) => {
         const { seller_list } = res.data;
         seller_list.forEach((info) => {
           info.actions.forEach((action) => {
@@ -583,7 +590,7 @@ export default {
     },
   },
 
-  mounted() {
+  created() {
     this.loadTableData();
   },
 };
