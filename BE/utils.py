@@ -31,14 +31,14 @@ def login_validator(func):
                                 SELECT
                                     accounts.account_type_id,
                                     accounts.is_active,
-                                    accounts.id,
+                                    accounts.account_id,
                                     sellers.id as seller_id
                                 FROM
                                     accounts
                                 LEFT JOIN
-                                    sellers ON sellers.account_id = accounts.id
+                                    sellers ON sellers.account_id = accounts.account_id
                                 WHERE
-                                    accounts.id = %(account_id)s
+                                    accounts.account_id = %(account_id)s
                             """
                             cursor.execute(query, {'account_id': account_id})
                             account = cursor.fetchone()

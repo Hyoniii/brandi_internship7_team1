@@ -25,22 +25,22 @@ class ProductDao:
                 """
 
                 list_select = """
-                SELECT 
-                    P.id as product_id,
-                    S2.status as seller_status,                   
+                SELECT
+                    P.id as product_id,                  
                     P.created_at as created_at ,
                     P.name as product_name,
                     P.code as product_code,
-                    PO.number as number,
-                    I.img_url as desc_img_url,
-                    S3.name as seller_subcategory_name,
-                    S.seller_name_kr as seller_name,
                     P.price ,
                     FLOOR(P.price*(100/P.discount_rate)) as discount_price,
                     P.is_selling as is_selling,
                     P.is_visible as is_visible,
                     P.is_discount as is_discount,
-                    A.id as account_id 
+                    PO.number as number,
+                    I.img_url as desc_img_url,
+                    S3.name as seller_subcategory_name,
+                    S2.status as seller_status, 
+                    S.seller_name_kr as seller_name,
+                    A.account_id as account_id 
                 """
                 list_from = """
                 FROM 
@@ -68,14 +68,16 @@ class ProductDao:
                 LEFT JOIN
                     accounts as A
                 ON
-                    A.id = S.account_id
+                    A.account_id = S.account_id
                 WHERE
                     I.ordering = 1
+                AND
+                    PO.number = (SELECT PO.number FROM product_options as PO WHERE P.id = PO.product_id HAVING MIN(PO.number))
                 """
                 #seller일 경우 seller의 product만 표출 , validator 완성 후 수정
                 if filter_data['account_type_id'] != 1:
                     list_from += """
-                    AND A.id = %(account_id)s
+                    AND A.account_id = %(account_id)s
                     """
                 # if g.account_info.get('seller_id'):
                 #     query += "AND P.seller_id = g.account_info['seller_id']"
@@ -121,9 +123,7 @@ class ProductDao:
                     list_from += """
                     AND S.subcategory_id in %(seller_subcategory_id)s
                     """
-                ############################
-                #####is not none 예외처리######
-                ############################
+
                 # 판매여부
                 if filter_data.get('is_selling', None) is not None:
                     list_from += """
@@ -147,10 +147,9 @@ class ProductDao:
                         AND P.is_discount = 0
                         """
 
-                # id 기준으로 중복 값 제외, 등록순 정렬
+                # 등록순 정렬
                 list_from += """
-                GROUP BY P.id
-                ORDER BY P.created_at DESC
+                ORDER BY P.created_at DESC 
                 """
 
                 #pagination
@@ -160,14 +159,14 @@ class ProductDao:
 
                 #상품 리스트
                 query = list_select + list_from
-
                 cursor.execute(query,filter_data)
                 product_list = cursor.fetchall()
+                print(product_list)
 
                 #count
                 query = count_select + list_from
                 cursor.execute(query, filter_data)
-                total_count = cursor.fetchall()
+                total_count = cursor.fetchall()[0]['count']
 
                 return {'product_list':product_list,'count':total_count}
 
@@ -540,7 +539,7 @@ class ProductDao:
                     P.is_selling as is_selling,
                     P.is_visible as is_visible,
                     P.is_discount as is_discount,
-                    A.id as account_id 
+                    A.account_id as account_id 
                 """
                 list_from = """
                 FROM 
@@ -568,14 +567,16 @@ class ProductDao:
                 LEFT JOIN
                     accounts as A
                 ON
-                    A.id = S.account_id
+                    A.account_id = S.account_id
                 WHERE
                     I.ordering = 1
+                AND
+                    PO.number = (SELECT PO.number FROM product_options as PO WHERE P.id = PO.product_id HAVING MIN(PO.number))
                 """
                 #seller일 경우 seller의 product만 표출 , validator 완성 후 수정
                 if filter_data['account_type_id'] != 1:
                     list_from += """
-                    AND A.id = %(account_id)s
+                    AND A.account_id = %(account_id)s
                     """
                 # if g.account_info.get('seller_id'):
                 #     query += "AND P.seller_id = g.account_info['seller_id']"
@@ -645,9 +646,8 @@ class ProductDao:
                         AND P.is_discount = 0
                         """
 
-                # id 기준으로 중복 값 제외, 등록순 정렬
+                # 등록순 정렬
                 list_from += """
-                GROUP BY P.id
                 ORDER BY P.created_at DESC
                 """
 
