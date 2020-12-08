@@ -379,5 +379,4 @@ class OrderDao:
                 # 주문 id를 찾을 수 없는 경우:
                 if cursor.rowcount == 0:
                     raise Exception('Could not find order')
-
             return cursor.fetchall()

@@ -108,7 +108,7 @@ class AccountView:
             token = account_service.signin(login_data, connection)
             return token
         except Exception as e:
-            return jsonify ({'MESSAGE' : f'{e}'}), 400
+            return jsonify({'MESSAGE': f'{e}'}), 400
         finally:
             if connection:
                 connection.close()
@@ -284,7 +284,7 @@ class AccountView:
         if connection:
             try:
                 account_service = AccountService()
-                actions = account_service.change_status(status, user, connection)
+                account_service.change_status(status, user, connection)
                 connection.commit()
                 return jsonify({'status_actions': 'SUCCESS'}), 200
             except Exception as e:

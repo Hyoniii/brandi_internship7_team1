@@ -31,6 +31,7 @@ class OrderView:
     def get_filter_options(order_status_id):
         # 주문관리 페이지에서 셀러속성 리스트와 주문상태 변경 버튼 보내주는 엔드포인트
         order_service = OrderService()
+
         connection = None
         try:
             connection = connect_db()
@@ -92,6 +93,10 @@ class OrderView:
             'order_by': args[11] if args[11] else 'desc',
             'page': args[12] if args[12] else 1
         }
+
+        # 셀러일 경우 필터에 seller_id 추가
+        if g.token_info['account_type_id'] == 2:
+            order_filter['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:

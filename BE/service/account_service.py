@@ -92,6 +92,8 @@ class AccountService:
         if account_type_id != 1:
             raise Exception('NO_AUTH')
         seller_list = account_dao.list_seller(filter_info, connection)
+        if not seller_list:
+            raise Exception('NO_MATCHES')
         for items in seller_list:
             status = {'status_id': items['seller_status_id']}
             actions = account_dao.get_seller_actions(status, connection)
@@ -105,7 +107,7 @@ class AccountService:
             change_info['password'] = bcrypt_password
         change = account_dao.update_account_info(change_info, connection)
         if not change:
-            raise Exception('NOTHING_CHANGED')
+            raise Exception('NO_CHANGE')
         get_account_info = account_dao.get_account_info(change_info, connection)
         get_account_info['editor_id'] = user['account_id']
         get_account_info["account_id"] = get_account_info.pop("id")

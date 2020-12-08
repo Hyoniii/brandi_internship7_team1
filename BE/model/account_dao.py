@@ -265,7 +265,8 @@ class AccountDao:
                 SET
             """
             if change_info['subcategory_id']:
-                query += 'subcategory_id = %(subcategory_id)s,'
+                query += """
+                subcategory_id = %(subcategory_id)s,"""
             if change_info['seller_status_id']:
                 query += 'seller_status_id = %(seller_status)s,'
             if change_info['seller_name_kr']:
