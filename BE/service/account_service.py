@@ -21,12 +21,11 @@ class AccountService:
         account_info['password'] = bcrypt_password
 
         signed_up_id = account_dao.create_account(account_info, connection)
-        account_info['account_id']= signed_up_id
+        account_info['account_id'] = signed_up_id
         account_info['editor_id'] = signed_up_id
         account_info['is_active'] = 1
         account_dao.create_account_log(account_info, connection)
         return signed_up_id
-
 
     def signup_seller(self, account_info, connection):
         account_dao = AccountDao()
@@ -62,7 +61,6 @@ class AccountService:
         account_info['address_2'] = ''
         account_info['is_open_weekend'] = ''
 
-
         account_dao.create_account_log(account_info, connection)
 
         signed_up_seller = account_dao.create_seller(account_info, connection)
@@ -71,8 +69,6 @@ class AccountService:
         account_dao.create_seller_log(account_info, connection)
 
         return signed_up_seller
-
-
 
     def signin(self, login_info, connection):
         account_dao = AccountDao()
@@ -96,7 +92,6 @@ class AccountService:
         if account_type_id != 1:
             raise Exception('NO_AUTH')
         seller_list = account_dao.list_seller(filter_info, connection)
-        print(filter_info)
         for items in seller_list:
             status = {'status_id': items['seller_status_id']}
             actions = account_dao.get_seller_actions(status, connection)
@@ -135,6 +130,8 @@ class AccountService:
     def change_status(self, status, user, connection):
         account_dao = AccountDao()
         actions = account_dao.get_seller_actions_two(status, connection)
+        if not actions:
+            raise Exception('Invalid action for status')
         new_status_id = actions[0]['new_status_id']
         seller_id = status['seller_id']
         change_info = {'id': seller_id, 'seller_status': new_status_id}
@@ -145,41 +142,3 @@ class AccountService:
         account_info['editor_id'] = user['account_id']
         account_dao.create_seller_log(account_info, connection)
         return actions
-
-    #     """
-    #     1. Open DB 
-    #     2. create_account
-    #     3. return message
-    #     4. close DB 
-    #     """
-    #     ###needs get_user, create_user
-    #     return account_dao.find_user()
-    # def change_password(self, user_info, connection):
-    #     """
-    #     1. Open DB
-    #     2. Verify login token
-    #     3. Get account info (verify existence)
-    #     4. Change account info
-    #     5. Return message
-    #     6. Close DB
-    #     """
-    # def get_account_log(self, user_filter, connection):
-    #     """
-    #     1. Open DB
-    #     2. Check login_token
-    #     3.
-
-    #     """
-    #     ###needs get_account_log
-    # def get_seller_log(self, user_filter, connection):
-    #     ###needs get_seller_log
-    # def get_account_info(self, user_filter, connection):
-    #     ###needs
-    #     ###get_seller_actions, log_info, change_seller_info
-    # def count_seller
-    # def image_saver
-    # def count_total_products
-    # def count_shown_products
-    # def count_delivered_products
-    # def products_sold_by_seller
-    # def revenue_made_by_seller

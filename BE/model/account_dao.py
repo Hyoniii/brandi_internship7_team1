@@ -507,7 +507,7 @@ class AccountDao:
             if filter_info['manager_name']:
                 query += """
                 AND
-                    manager.name = %(manager_name)s
+                    managers.name = %(manager_name)s
                 """
             if filter_info['seller_status']:
                 query += """
