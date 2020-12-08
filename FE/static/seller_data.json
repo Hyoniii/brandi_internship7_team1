@@ -1,132 +1,60 @@
 {
-  "data": [
+  "seller_list": [
     {
-      "id": "1",
-      "sellerNumber": "22417",
-      "email": "gw111",
-      "englishLabel": "gyuwon",
-      "koreanLabel": "규상점",
-      "repName": "담당자",
-      "sellerStatus": {
-        "id": 1,
-        "name": "입점대기"
-      },
-      "repPhoneNumber": "010-1111-1234",
-      "repEmail": "email@email.com",
-      "sellerType": {
-        "id": 1,
-        "name": "쇼핑몰"
-      },
-      "dateCreated": "2020-11-27 16:56:37",
+      "account_email": "seller@brandi.com",
+      "account_id": 2,
       "actions": [
         {
-          "id": 1,
-          "name": "입점 승인"
+          "action_id": 3,
+          "action_name": "휴점 신청",
+          "status_id": 2,
+          "status_name": "입점"
         },
         {
-          "id": 2,
-          "name": "입점 거절"
+          "action_id": 4,
+          "action_name": "퇴점신청 처리",
+          "status_id": 2,
+          "status_name": "입점"
         }
       ],
-      "accountTypeId": 1,
-      "isActive": 1
+      "english_label": "brandi shop",
+      "is_active": 1,
+      "join_date": "2020-11-24 12:58:04",
+      "korean_label": "브랜디샵",
+      "manager_email": "qdfe@gmail.com",
+      "manager_name": "니아",
+      "manager_phone": "01031017205",
+      "seller_id": 1,
+      "seller_number": "01012341234",
+      "seller_status": "입점",
+      "seller_status_id": 2,
+      "subcategory_id": 1,
+      "subcategory_name": "쇼핑몰"
     },
     {
-      "id": "2",
-      "sellerNumber": "2398402983",
-      "email": "fsjdkf",
-      "englishLabel": "shelby",
-      "koreanLabel": "김보보",
-      "repName": "담당자2",
-      "sellerStatus": {
-        "id": 2,
-        "name": "입점"
-      },
-      "repPhoneNumber": "010-4021-4932",
-      "repEmail": "nblasfd@gmail.com",
-      "sellerType": {
-        "id": 1,
-        "name": "쇼핑몰"
-      },
-      "dateCreated": "2020-11-27 16:56:37",
+      "account_email": "seller@brandi.com",
+      "account_id": 2,
       "actions": [
         {
-          "id": 3,
-          "name": "휴점 신청"
-        },
-        {
-          "id": 4,
-          "name": "퇴점신청 처리"
+          "action_id": 3,
+          "action_name": "휴점 신청",
+          "status_id": 2,
+          "status_name": "입점"
         }
       ],
-      "accountType": 1,
-      "isActive": 1
-    },
-    {
-      "id": "3",
-      "sellerNumber": "2398402983",
-      "email": "fsjdkf",
-      "englishLabel": "shelby",
-      "koreanLabel": "김보보",
-      "repName": "담당자2",
-      "sellerStatus": {
-        "id": 3,
-        "name": "휴점"
-      },
-      "repPhoneNumber": "010-4021-4932",
-      "repEmail": "nblasfd@gmail.com",
-      "sellerType": {
-        "id": 1,
-        "name": "쇼핑몰"
-      },
-      "dateCreated": "2020-11-27 16:56:37",
-      "actions": [
-        {
-          "id": 7,
-          "name": "휴점 해제"
-        },
-        {
-          "id": 4,
-          "name": "퇴점신청 처리"
-        }
-      ],
-      "accountType": 1,
-      "isActive": 1
-    },
-    {
-      "id": "4",
-      "sellerNumber": "2398402983",
-      "email": "fsjdkf",
-      "englishLabel": "shelby",
-      "koreanLabel": "김보보",
-      "repName": "담당자2",
-      "sellerStatus": {
-        "id": 4,
-        "name": "퇴점대기"
-      },
-      "repPhoneNumber": "010-4021-4932",
-      "repEmail": "nblasfd@gmail.com",
-      "sellerType": {
-        "id": 1,
-        "name": "쇼핑몰"
-      },
-      "dateCreated": "2020-11-27 16:56:37",
-      "actions": [
-        {
-          "id": 3,
-          "name": "휴점 신청"
-        },
-        {
-          "id": 5,
-          "name": "퇴점확정 처리"
-        },
-        {
-          "id": 6,
-          "name": "퇴점철회 처리"
-        }
-      ],
-      "accountType": 1,
-      "isActive": 1
+      "english_label": "brandi shop",
+      "is_active": 1,
+      "join_date": "2020-11-24 12:58:04",
+      "korean_label": "브랜디샵",
+      "manager_email": "qdfe@gmail.com",
+      "manager_name": "니아",
+      "manager_phone": "01031017205",
+      "seller_id": 1,
+      "seller_number": "01012341234",
+      "seller_status": "입점",
+      "seller_status_id": 2,
+      "subcategory_id": 1,
+      "subcategory_name": "쇼핑몰"
     }
   ]
 }

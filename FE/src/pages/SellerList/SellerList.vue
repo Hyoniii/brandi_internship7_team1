@@ -9,13 +9,13 @@
       }"
     >
       <div style="margin-bottom: 14px">
-        <a-button type="primary" :disabled="!hasSelected" @click="start"
-          >Reload</a-button
-        >
+        <a-button type="primary" :disabled="!hasSelected" @click="start">Reload</a-button>
         <span style="margin-left: 8px">
-          <template v-if="hasSelected">{{
+          <template v-if="hasSelected">
+            {{
             `Selected ${selectedRowKeys.length} items`
-          }}</template>
+            }}
+          </template>
         </span>
       </div>
       <a-table
@@ -57,14 +57,8 @@
             size="small"
             style="width: 90px; margin-right: 8px"
             @click="() => handleSearch(selectedKeys, confirm, column.dataIndex)"
-            >Search</a-button
-          >
-          <a-button
-            size="small"
-            style="width: 90px"
-            @click="() => handleReset(clearFilters)"
-            >Reset</a-button
-          >
+          >Search</a-button>
+          <a-button size="small" style="width: 90px" @click="() => handleReset(clearFilters)">Reset</a-button>
         </div>
         <a-icon
           slot="filterIcon"
@@ -72,44 +66,41 @@
           type="search"
           :style="{ color: filtered ? '#108ee9' : undefined }"
         />
-        <template slot="email" slot-scope="text">
-          <a :href="sellerDetailsLink" @click="handleSellerDetailsLink">
-            {{ text }}
-          </a>
+        <!-- ================= data row ==================  -->
+        <template slot="account_email" slot-scope="text">
+          <a :href="sellerDetailsLink" @click="handleSellerDetailsLink">{{ text }}</a>
         </template>
-        <template slot="status" slot-scope="sellerStatus">
-          <span :id="sellerStatus.id" :key="sellerStatus.id">
-            {{ sellerStatus.name }}
-          </span>
+        <template slot="status" slot-scope="text">
+          <span :id="seller_status_id" :key="seller_status_id">{{ text }}</span>
         </template>
-        <template slot="sellerType" slot-scope="sellerType">
-          <span :id="sellerType.id" :key="sellerType.id">
-            {{ sellerType.name }}
-          </span>
+        <template slot="sellertype" slot-scope="text">
+          <span :id="subcategory_id" :key="subcategory_id">{{ text }}</span>
         </template>
         <span slot="actionButtons" slot-scope="actions">
           <a-tag
             v-for="action in actions"
-            :key="action.id"
+            :key="action.action_id"
+            @click="handleColorChange"
             :color="
-              action.name === '입점 승인'
+              action.action_name === '입점 승인'
                 ? 'blue'
-                : action.name === '입점 거절' ||
-                  action.name === '퇴점신청 처리' ||
-                  action.name === '퇴점확정 처리'
+                : action.action_name === '입점 거절' ||
+                  action.action_name === '퇴점신청 처리' ||
+                  action.action_name === '퇴점확정 처리'
                 ? 'red'
-                : action.name === '휴점 신청'
+                : action.action_name === '휴점 신청'
                 ? 'yellow'
                 : 'green'
             "
           >
             <a-button
               @click="confirmAction"
-              :id="action.id"
+              :id="action.action_id"
+              :name="action.status_id"
+              :data-seller="action.seller_id"
               size="small"
               class="tableButtons"
-              >{{ action.name }}</a-button
-            >
+            >{{ action.action_name }}</a-button>
           </a-tag>
         </span>
         <template slot="customRender" slot-scope="text, record, index, column">
@@ -123,8 +114,7 @@
                 v-if="fragment.toLowerCase() === searchText.toLowerCase()"
                 :key="i"
                 class="highlight"
-                >{{ fragment }}</mark
-              >
+              >{{ fragment }}</mark>
               <template v-else>{{ fragment }}</template>
             </template>
           </span>
@@ -139,8 +129,9 @@
 import axios from "axios";
 import MainHeader from "../../Components/MainHeader";
 
-const sellerListAPI =
-  "http://http://10.251.1.127:5000/account/seller_list?seller_id=2";
+const sellerListAPI = "http://192.168.7.21:5000/account/seller_list";
+const actionStatusAPI =
+  "http://192.168.7.21:5000/account/change_seller_status";
 
 export default {
   name: "sellerlist",
@@ -157,27 +148,6 @@ export default {
       selectedRowKeys: [],
       sellerAccepted: false,
       sellerAcceptedBtnLoading: false,
-      ageTarget: [
-        { id: 1, value: "10대" },
-        { id: 2, value: "20대초반" },
-        { id: 3, value: "20대중반" },
-        { id: 4, value: "20대후반" },
-        { id: 5, value: "30대" },
-        { id: 6, value: "연령대선택안함" },
-      ],
-      styleTarget: [
-        { id: 1, value: "심플베이직" },
-        { id: 2, value: "러블리" },
-        { id: 3, value: "페미닌" },
-        { id: 4, value: "캐주얼" },
-        { id: 5, value: "섹시글램" },
-        { id: 6, value: "스타일선택안함" },
-      ],
-      commissionFeesTarget: [
-        { id: 1, type: "A안", value: "9%" },
-        { id: 2, type: "C안", value: "9%" },
-        { id: 3, type: "E안", value: "13%" },
-      ],
       pagination: {
         defaultCurrent: 1, // Default current page number
         defaultPageSize: 10, // The default size of the data displayed on the current page
@@ -198,40 +168,17 @@ export default {
       },
       columns: [
         {
-          title: "셀러아이디",
-          dataIndex: "email",
-          key: "email",
-          scopedSlots: {
-            filterDropdown: "filterDropdown",
-            filterIcon: "filterIcon",
-            customRender: "email",
-          },
-          fixed: "left",
-          width: 170,
-          sorter: true,
-          onFilter: (value, record) =>
-            record.email.toString().toLowerCase().includes(value.toLowerCase()),
-          onFilterDropdownVisibleChange: (visible) => {
-            if (visible) {
-              setTimeout(() => {
-                this.searchInput.focus();
-              });
-            }
-          },
-        },
-        {
           title: "번호",
-          dataIndex: "sellerNumber",
-          key: "sellerNumber",
+          dataIndex: "account_id",
+          key: "account_id",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
             customRender: "customRender",
           },
-          width: 130,
-          sorter: true,
+          width: 100,
           onFilter: (value, record) =>
-            record.sellerNumber
+            record.account_id
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -244,17 +191,40 @@ export default {
           },
         },
         {
+          title: "셀러아이디",
+          dataIndex: "account_email",
+          key: "account_email",
+          scopedSlots: {
+            filterDropdown: "filterDropdown",
+            filterIcon: "filterIcon",
+            customRender: "account_email",
+          },
+          width: 170,
+          onFilter: (value, record) =>
+            record.account_email
+              .toString()
+              .toLowerCase()
+              .includes(value.toLowerCase()),
+          onFilterDropdownVisibleChange: (visible) => {
+            if (visible) {
+              setTimeout(() => {
+                this.searchInput.focus();
+              });
+            }
+          },
+        },
+        {
           title: "영문이름",
-          dataIndex: "englishLabel",
-          key: "englishLabel",
+          dataIndex: "english_label",
+          key: "english_label",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
             customRender: "customRender",
           },
-          width: 100,
+          width: 120,
           onFilter: (value, record) =>
-            record.englishLabel
+            record.english_label
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -268,16 +238,16 @@ export default {
         },
         {
           title: "한글이름",
-          dataIndex: "koreanLabel",
-          key: "koreanLabel",
+          dataIndex: "korean_label",
+          key: "korean_label",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
             customRender: "customRender",
           },
-          width: 100,
+          width: 120,
           onFilter: (value, record) =>
-            record.koreanLabel
+            record.korean_label
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -291,8 +261,8 @@ export default {
         },
         {
           title: "담당자이름",
-          dataIndex: "repName",
-          key: "repName",
+          dataIndex: "manager_name",
+          key: "manager_name",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
@@ -300,7 +270,7 @@ export default {
           },
           width: 120,
           onFilter: (value, record) =>
-            record.repName
+            record.manager_name
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -314,16 +284,16 @@ export default {
         },
         {
           title: "셀러상태",
-          dataIndex: "sellerStatus",
-          key: "sellerStatus",
+          dataIndex: "seller_status",
+          key: "seller_status_id",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
             customRender: "status",
           },
-          width: 110,
+          width: 120,
           onFilter: (value, record) =>
-            record.sellerStatus
+            record.seller_status
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -337,16 +307,16 @@ export default {
         },
         {
           title: "담당자연락처",
-          dataIndex: "repPhoneNumber",
-          key: "repPhoneNumber",
+          dataIndex: "manager_phone",
+          key: "manager_phone",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
             customRender: "customRender",
           },
-          width: 150,
+          width: 120,
           onFilter: (value, record) =>
-            record.repPhoneNumber
+            record.manager_phone
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -360,16 +330,16 @@ export default {
         },
         {
           title: "담당자이메일",
-          dataIndex: "repEmail",
-          key: "repEmail",
+          dataIndex: "manager_email",
+          key: "manager_email",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
             customRender: "customRender",
           },
-          width: 170,
+          width: 140,
           onFilter: (value, record) =>
-            record.repEmail
+            record.manager_email
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -383,16 +353,16 @@ export default {
         },
         {
           title: "셀러속성",
-          dataIndex: "sellerType",
-          key: "sellerType",
+          dataIndex: "subcategory_name",
+          key: "subcategory_id",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
-            customRender: "sellerType",
+            customRender: "sellertype",
           },
-          width: 110,
+          width: 120,
           onFilter: (value, record) =>
-            record.sellerType
+            record.subcategory_name
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -406,17 +376,17 @@ export default {
         },
         {
           title: "등록일시",
-          dataIndex: "dateCreated",
-          key: "dateCreated",
+          dataIndex: "join_date",
+          key: "join_date",
           scopedSlots: {
             filterDropdown: "filterDropdown",
             filterIcon: "filterIcon",
             customRender: "customRender",
           },
-          width: 180,
+          width: 160,
           sorter: true,
           onFilter: (value, record) =>
-            record.dateCreated
+            record.join_date
               .toString()
               .toLowerCase()
               .includes(value.toLowerCase()),
@@ -438,7 +408,7 @@ export default {
             customRender: "actionButtons",
           },
           fixed: "right",
-          width: 350,
+          width: 300,
           onFilter: (value, record) =>
             record.actions
               .toString()
@@ -456,40 +426,45 @@ export default {
     };
   },
   methods: {
-    confirmAction(e) {
-      console.log(e.target.id);
-      //입점승인
-      let acceptEntry = {
-        seller_id: seller_list.id,
+    postQuery(action, status, seller) {
+      const queryBody = {
+        seller_id: seller,
+        action_id: action,
+        status_id: status,
       };
 
-      if (e.target.id == 1) {
+      const queryHeader = {
+        headers: {
+          AUTHORIZATION:
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50X2lkIjoxMjcsImV4cGlyYXRpb24iOiIyMDIwLTEyLTAyIDA2OjA5OjIwLjIzNTU0OCJ9.wug1dOSu9ZjcQXN5xwp35kAtr-N1wrDX0P7D7d2r9bo",
+        },
+      };
+
+      axios.post(actionStatusAPI, queryBody, queryHeader).then((res) => {
+        if (res.status === 200) return alert("성공");
+      });
+    },
+
+    confirmAction(e) {
+      console.log(e.target.dataset.seller, "sdfkljskdfjlsdf");
+      const { id, name } = e.target;
+      const { seller } = e.target.dataset;
+
+      //입점승인
+      console.log(id, name, seller);
+      if (id == 1) {
         this.$confirm({
           title: "Confirm",
           content: "셀러의 입점을 승인하시겠습니까?",
           onOk: () => {
             this.handleOk();
-            axios
-              .post(
-                "http://10.251.1.201:5000/account/signup/seller",
-                acceptEntry
-              )
-              .then((res) => {
-                console.log("== 백앤드에서 오는 응답 메세지 == ", res);
-                if (res) {
-                  alert("입점이 승인되었습니다");
-                } else {
-                  alert("다시 시도해주세용!");
-                }
-              });
-            axios.get(sellerListAPI).then((res) => {
-              console.log(res);
-            });
+            this.postQuery(id, name, seller);
+            this.loadTableData();
           },
         });
       }
       //입점거절
-      if (+e.target.id === 2) {
+      if (+id === 2) {
         this.$confirm({
           title: "Confirm",
           content: "셀러의 입점을 거절하시겠습니까?",
@@ -499,7 +474,7 @@ export default {
         });
       }
       //휴점 신청
-      if (+e.target.id === 3) {
+      if (+id === 3) {
         this.$confirm({
           title: "Confirm",
           content:
@@ -510,7 +485,7 @@ export default {
         });
       }
       //퇴점신청 처리
-      if (+e.target.id === 4) {
+      if (+id === 4) {
         this.$confirm({
           title: "Confirm",
           content:
@@ -521,7 +496,7 @@ export default {
         });
       }
       //휴점해제
-      if (+e.target.id === 7) {
+      if (+id === 7) {
         this.$confirm({
           title: "Confirm",
           content:
@@ -532,7 +507,7 @@ export default {
         });
       }
       //퇴점확정 처리
-      if (+e.target.id === 5) {
+      if (+id === 5) {
         this.$confirm({
           title: "Confirm",
           content:
@@ -541,7 +516,7 @@ export default {
         });
       }
       //퇴점철회 처리
-      if (+e.target.id === 6) {
+      if (+id === 6) {
         this.$confirm({
           title: "Confirm",
           content:
@@ -579,40 +554,27 @@ export default {
       console.log("selectedRowKeys changed: ", selectedRowKeys);
       this.selectedRowKeys = selectedRowKeys;
     },
-    handleSellerDetailsLink() {},
+    handleSellerDetailsLink() {
+      
+    },
 
     loadTableData() {
-      axios.get(sellerListAPI).then((res) => {
-        console.log(res);
+      const queryHeader = {
+        headers: {
+          AUTHORIZATION:
+            "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhY2NvdW50X2lkIjoxMjcsImV4cGlyYXRpb24iOiIyMDIwLTEyLTAyIDA2OjA5OjIwLjIzNTU0OCJ9.wug1dOSu9ZjcQXN5xwp35kAtr-N1wrDX0P7D7d2r9bo",
+        },
+      };
+
+      axios.get(sellerListAPI, queryHeader).then((res) => {
         const { seller_list } = res.data;
-        console.log(seller_list);
+        seller_list.forEach((info) => {
+          info.actions.forEach((action) => {
+            action["seller_id"] = info.seller_id;
+          });
+        });
         this.data = seller_list;
-
-        // for (let key in seller_list) {
-        //   const seller = seller_list[key]
-        //   seller.id = key
-        //   data.push(seller)
-        // }
-        // console.log(data)..
       });
-
-      // seller_id: data.id,
-      // join_date: data.dateCreated,
-      // account_email: data.email,
-      // seller_number: data.sellerNumber,
-      // rep_name: data.repName,
-      // rep_email: data.repEmail,
-      // manager_phone: data.repPhoneNumber,
-      // english_label: data.englishLabel,
-      // korean_label: data.koreanLabel,
-      // seller_status: data.sellerStatus.name,
-      // seller_status_id: data.sellerStatus.id,
-      // seller_type: data.sellerType,
-      // service_number: data.repPhoneNumber,
-      // seller_type: data.sellerType.name,
-      // subcategory_id: data.sellerType.id,
-      // account_id: data.accountTypeId,
-      // is_active: data.isActive,
     },
   },
   computed: {
