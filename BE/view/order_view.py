@@ -29,9 +29,8 @@ class OrderView:
     )
     @login_validator
     def get_filter_options(order_status_id):
-        # 주문관리에 페이지에서 셀러속성 리스트와 주문상태변경 버튼 보내주는 엔드포인트
+        # 주문관리 페이지에서 셀러속성 리스트와 주문상태 변경 버튼 보내주는 엔드포인트
         order_service = OrderService()
-
         connection = None
         try:
             connection = connect_db()
@@ -125,8 +124,7 @@ class OrderView:
     )
     @login_validator
     def update_order_status(*args):
-        # 주문 아이템의 주문 상태를 변경하는 엔드포인트
-        # 변경할 아이템의 id를 리스트로 받아서 일괄 업데이트
+        # 주문 id를 리스트로 받아서 일괄적으로 주문 상태를 업데이트하는 엔드포인트
         order_service = OrderService()
 
         update_status = {
@@ -137,8 +135,8 @@ class OrderView:
         }
 
         # 셀러일 경우 필터에 seller_id 추가
-        #if g.token_info['account_type_id'] == 2:
-        #    update_status['seller_id'] = g.token_info['seller_id']
+        if g.token_info['account_type_id'] == 2:
+            update_status['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
@@ -180,7 +178,6 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            # get_order_detail 서비스 호출
             order_detail = order_service.get_order_detail(connection, order_filter)
             return jsonify(order_detail), 200
 
