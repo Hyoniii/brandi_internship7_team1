@@ -54,7 +54,7 @@ def login_validator(func):
                         return jsonify({'MESSAGE': 'account_nonexistant'}), 404
 
                     except Error as e:
-                        return Jsonify({'MESSAGE': 'DB_error'}), 400
+                        return jsonify({'MESSAGE': 'DB_error'}), 400
 
             except jwt.InvalidTokenError:
                 return jsonify({'MESSAGE': 'invalid_token'}), 401
