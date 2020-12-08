@@ -1,8 +1,7 @@
 import json, io
-import uuid
+import datetime
 
 from flask                   import request, Blueprint, jsonify, g
-from PIL                     import Image
 
 from service.product_service import ProductService
 from utils                   import login_validator, Image_uploader, Product_excel_downloader
@@ -282,9 +281,10 @@ class ProductView:
                 ]
                 """
                 images = request.files
+                image_bucket_dir = datetime.datetime.now().strftime('%Y-%m-%d')
 
                 desc_image     = request.files.get('desc_image')
-                desc_image_url = Image_uploader.upload_desc_images(desc_image)
+                desc_image_url = Image_uploader.upload_desc_images(desc_image,image_bucket_dir)
 
                 filter_data['desc_img_url'] = desc_image_url
 
@@ -296,7 +296,7 @@ class ProductView:
                 insert_count = create_info['create_count']
 
                 #상품 이미지 URL화, S3에 올리기
-                product_images = Image_uploader.upload_product_images(images)
+                product_images = Image_uploader.upload_product_images(images,image_bucket_dir)
 
                 #상품 이미지를 DB에 Insert하는 함수 실행
                 product_service.upload_product_image(product_images, product_id, editor_id, connection)

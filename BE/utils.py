@@ -67,7 +67,7 @@ class Image_uploader:
     def __init__(self):
         pass
 
-    def upload_desc_images(desc_images):
+    def upload_desc_images(desc_images,image_bucket_dir):
 
         s3_connection = None
 
@@ -79,7 +79,7 @@ class Image_uploader:
                 width, height = image.size
 
                 if width < 1000:
-                    image = Image.new("RGB", (1000, height))
+                    image = image.resize((1000,height))
 
                 buffer = io.BytesIO()
                 image.save(buffer, "JPEG")
@@ -91,7 +91,7 @@ class Image_uploader:
                     s3_connection.put_object(
                         Body        = buffer,
                         Bucket      = 'brandi-intern01',
-                        Key         = filename,
+                        Key         = f'{image_bucket_dir}/{filename}',
                         ContentType = 'image/jpeg'
                     )
 
@@ -113,46 +113,50 @@ class Image_uploader:
         return image_url
 
 
-    def upload_product_images(images):
+    def upload_product_images(images,image_bucket_dir):
 
         s3_connection = get_s3_connection()
 
         product_images = []
 
         try:
+            # 대표사진 미등록 예외처리
+            if 'product_image_1' not in images:
+                raise Exception('THUMBNAIL_IMAGE_IS_REQUIRED')
+
+            # 상품사진 미정렬 예외처리
             for num in range(1, 6):
-
-                # 대표사진 미등록 예외처리
-                if 'product_image_1' not in images:
-                    raise Exception('THUMBNAIL_IMAGE_IS_REQUIRED')
-
-                # 상품사진 미정렬 예외처리
                 if num > 2:
                     if (f'product_image_{num}' in images) and (f'product_image_{num - 1}' not in images):
                         raise Exception('IMAGE_CAN_ONLY_REGISTER_IN_ORDER')
 
-                # 상품사진 있는 경우 product_images Dictionary에 저장
+            # 상품사진 있는 경우 product_images에 저장
+            for num in range(1, 6):
                 if images.get(f'product_image_{num}'):
-                    # 파일이 Image가 아닌 경우 Exception 발생
                     image         = Image.open(images[f'product_image_{num}'])
                     width, height = image.size
 
                     # 사이즈가 너무 작은 경우 예외처리
                     if width < 640 or height < 720:
-                        image = Image.new("RGB", (640,720))
-                        #raise Exception('IMAGE_SIZE_IS_TOO_SMALL')
+                        image_set = image.resize((640,720))
 
-                    buffer = io.BytesIO()
-                    image.save(buffer, "JPEG")
-                    buffer.seek(0)
+                        buffer = io.BytesIO()
+                        image_set.save(buffer, "JPEG")
+                        buffer.seek(0)
 
-                    filename = f'product_image_{num}'
+                    else:
+                        buffer = io.BytesIO()
+                        image.save(buffer, "JPEG")
+                        buffer.seek(0)
+
+                    unique_name = uuid.uuid4().hex[:4].upper()
+                    filename = f'product_image_{num}_{unique_name}'
 
                     try:
                         s3_connection.put_object(
                             Body        = buffer,
                             Bucket      ='brandi-intern01',
-                            Key         = filename,
+                            Key         = f'{image_bucket_dir}/{filename}',
                             ContentType ='image/jpeg'
                         )
 
