@@ -20,13 +20,12 @@ class OrderDao:
             cursor.execute(query, order_status_id)
             return cursor.fetchall()
 
-
     def get_order_info(self, connection, order_filter):
         # 데이터베이스에서 주문 정보를 필터링하여 가져옴.
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             count = """
-            SELECT 
-                count(item.detailed_order_number) AS cnt
+            SELECT
+                count(*) AS cnt
             """
 
             data = """
@@ -57,7 +56,7 @@ class OrderDao:
                 buyer.delivery_instruction
             """
 
-            condition = """
+            filter = """    
             FROM order_items AS item
             INNER JOIN order_tickets AS ticket ON item.order_ticket_id = ticket.id
             INNER JOIN order_logs AS log ON (log.order_item_id = item.id AND log.order_status_id = item.order_status_id)
@@ -73,68 +72,68 @@ class OrderDao:
             # 주문 리스트에서 보낸 요청일 경우(주문 "상태" id가 있을때)
             if 'order_status_id' in order_filter:
 
-                condition += """
+                filter += """
                 WHERE item.order_status_id = %(order_status_id)s
                 """
 
                 # 셀러일 경우 셀러 아이디 확인
                 if 'seller_id' in order_filter:
-                    condition += """
+                    filter += """
                     AND item.seller_id = %(seller_id)s
                     """
 
                 if order_filter['order_number']:
-                    condition += """
+                    filter += """
                     AND ticket.order_number = %(order_number)s
                     """
 
                 if order_filter['detailed_order_number']:
-                    condition += """
+                    filter += """
                     AND item.detailed_order_number = %(detailed_order_number)s
                     """
 
                 if order_filter['buyer_name']:
-                    condition += """
+                    filter += """
                     AND buyer.buyer_name = %(buyer_name)s
                     """
 
                 if order_filter['phone_number']:
-                    condition += """
+                    filter += """
                     AND buyer.phone_number = %(phone_number)s
                     """
 
                 if order_filter['seller_name']:
-                    condition += """
+                    filter += """
                     AND (seller_name_kr LIKE %(seller_name)s or seller_name_en Like %(seller_name)s)
                     """
 
                 if order_filter['product_name']:
-                    condition += """
+                    filter += """
                     AND products.name = %(product_name)s
                     """
                 if order_filter['start_date']:
-                    condition += """
+                    filter += """
                     AND log.created_at >= %(start_date)s
                     """
 
                 if order_filter['end_date']:
-                    condition += """
+                    filter += """
                     AND log.created_at <= %(end_date)s
                     """
 
                 if order_filter['seller_type_id']:
-                    condition += """
+                    filter += """
                     AND sellers.subcategory_id IN %(seller_type_id)s
                     """
 
                 if order_filter['order_by'] == 'desc':
-                    condition += """
-                    ORDER BY updated_at DESC
+                    filter += """
+                    ORDER BY log.created_at DESC
                     """
 
                 elif order_filter['order_by'] == 'asc':
-                    condition += """
-                    ORDER BY updated_at ASC
+                    filter += """
+                    ORDER BY log.created_at ASC
                     """
 
                 pagination = """
@@ -143,32 +142,27 @@ class OrderDao:
 
             # 주문 상세에서 보낸 요청일 경우(주문 "상세" id가 있을때)
             else:
-                condition += """
+                filter += """
                 WHERE item.id = %(order_item_id)s
                 """
 
                 # 셀러일 경우 셀러 아이디 확인
                 if 'seller_id' in order_filter:
-                    condition += """
+                    filter += """
                     AND item.seller_id = %(seller_id)s
                     """
 
                 pagination = ""
 
-            # 주문 정보 가져오는 쿼리문
-            query = data + condition + pagination
+            query = data + filter + pagination
             cursor.execute(query, order_filter)
             order_list = cursor.fetchall()
 
-            # 주문 갯수 가져오는 쿼리문
-            query = count + condition
+            query = count + filter
             cursor.execute(query, order_filter)
             total_number = cursor.fetchone()
 
-            if total_number == 0:
-                raise Exception('Failed to fetch order info')
-
-            return {"order_list": order_list, "total_number": total_number["cnt"]}
+            return {"order_list": order_list, "total_number": total_number['cnt']}
 
     def get_order_logs(self, connection, order_filter):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -193,8 +187,8 @@ class OrderDao:
             WHERE order_action_id = %(order_action_id)s
             AND order_status_id = %(order_status_id)s
             """
-            new_order_status = cursor.execute(query, update_status)
-            if new_order_status == 0:
+            affected_row = cursor.execute(query, update_status)
+            if affected_row == 0:
                 raise Exception('Wrong order status action')
             return cursor.fetchone()
 
@@ -286,7 +280,7 @@ class OrderDao:
             affected_row = cursor.execute(query, update_status)
             if affected_row == 0:
                 raise Exception('Failed to update order status')
-            return cursor.rowcount
+            return affected_row
 
     def create_order_log(self, connection, order_log):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
@@ -307,76 +301,31 @@ class OrderDao:
             affected_row = cursor.executemany(query, order_log)
             if affected_row == 0:
                 raise Exception('Failed to create order log')
-            return cursor.rowcount
+            return affected_row
 
-    def confirm_purchase(self, connection, order_item_id, order_log):
-        # 배송완료 상태에서 일정시간 뒤 구매확정 상태로 전환하는 스케줄러.
-        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
-            query = """
-            CREATE EVENT confirm_purchase"""
-            """
-            ON SCHEDULE AT current_timestamp + interval 5 minute
-            DO
-                UPDATE 
-                    order_items
-                SET 
-                    order_status_id = 5
-            """
-
-            if type(order_item_id) == list:
-                query += """
-                WHERE id IN %s
-                """
-
-            if type(order_item_id) == int:
-                query += """
-                WHERE id = %s
-                """
-            cursor.execute(query, order_item_id)
-
-            query = """
-            CREATE EVENT confirm_purchase_log
-            ON SCHEDULE AT current_timestamp + interval 5 minute
-            DO
-                INSERT INTO order_logs(
-                    order_item_id,
-                    editor_id,
-                    order_status_id
-                )
-                VALUES (
-                    %s,
-                    %s,
-                    %s
-                )
-            """
-            cursor.executemany(query, order_log)
-
-    def seller_validation(self, connection, order_item_id):
+    def seller_validation(self, connection, update_order):
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
             SELECT
-                O.id as order_item_id,
-                S.id as seller_id
+                order_items.id as order_item_id,
+                sellers.id as seller_id
             FROM
                 order_items
-            LEFT JOIN sellers ON order_items.seller_id = sellers.id
+            INNER JOIN sellers ON order_items.seller_id = sellers.id
             """
-
-            if type(order_item_id) == list:
+            if type(update_order['order_item_id']) == list:
                 query += """
                 WHERE order_items.id IN %(order_item_id)s
                 """
-                cursor.execute(query, order_item_id)
-                # 주문 id 중 하나라도 찾을 수 없을 경우:
-                if len(order_item_id) != cursor.rowcount:
-                    raise Exception('Could not find order')
 
-            elif type(order_item_id) == int:
+            elif type(update_order['order_item_id']) == int:
                 query += """
                 WHERE order_items.id = %(order_item_id)s
                 """
-                cursor.execute(query, order_item_id)
-                # 주문 id를 찾을 수 없는 경우:
-                if cursor.rowcount == 0:
-                    raise Exception('Could not find order')
+
+            affected_row = cursor.execute(query, update_order)
+            if affected_row == 0:
+                raise Exception('Could not find order')
+            if type(update_order['order_item_id']) == list and affected_row != len(update_order['order_item_id']):
+                raise Exception('Could not find order')
             return cursor.fetchall()
