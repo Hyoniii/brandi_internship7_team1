@@ -10,33 +10,36 @@
         <span>홈</span>
       </a-menu-item>
       <a-sub-menu key="sub2">
-        <span slot="title"> <a-icon type="shopping-cart" />주문관리</span>
+        <span slot="title">
+          <a-icon type="shopping-cart" />주문관리
+        </span>
         <a-menu-item
           v-for="section in orderMenuSections"
           style="font-size: 13px"
           :key="section.key"
           :id="section.id"
-          >{{ section.value }}</a-menu-item
-        >
+        >{{ section.value }}</a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="sub3">
-        <span slot="title"> <a-icon type="skin" />상품관리 </span>
+        <span slot="title">
+          <a-icon type="skin" />상품관리
+        </span>
         <a-menu-item
           v-for="section in productMenuSections"
           style="font-size: 13px"
           :key="section.key"
           :id="section.id"
-          >{{ section.value }}</a-menu-item
-        >
+        >{{ section.value }}</a-menu-item>
       </a-sub-menu>
       <a-sub-menu key="sub4">
-        <span slot="title"> <a-icon type="user" />회원관리 </span>
+        <span slot="title">
+          <a-icon type="user" />회원관리
+        </span>
         <a-menu-item
           style="font-size: 13px"
           :key="sellerSection.key"
           :id="sellerSection.id"
-          >{{ sellerSection.value }}</a-menu-item
-        >
+        >{{ sellerSection.value }}</a-menu-item>
       </a-sub-menu>
     </a-menu>
   </a-layout-sider>
@@ -71,7 +74,6 @@ export default {
 
 <style lang="scss">
 @import "../styles.scss";
-
 #MainSideNav {
   height: 100%;
 }

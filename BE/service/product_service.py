@@ -1,10 +1,12 @@
 import uuid
+import xlsxwriter
 import re
 
+from utils             import Product_excel_downloader
 from model.product_dao import ProductDao
 from config            import S3
 from PIL               import Image
-from flask             import jsonify, g
+from flask             import jsonify, g, send_file
 
 
 class ProductService:
@@ -47,10 +49,7 @@ class ProductService:
             product_list = product_dao.product_list(filter_data,connection)
             
             products = product_list['product_list']
-            counts   = product_list['count']
-
-            #Group by로 grouping 해서 중복 값 제거함
-            count    = len(counts)
+            count    = product_list['count']
 
             return {'product_list' : products, 'count' : count}
 
@@ -73,7 +72,6 @@ class ProductService:
         # seller이면 seller_id 가진다.
         if filter_data['account_type_id'] != 1:
             filter_data['seller_id'] = g.token_info['seller_id']
-        print("~~~~~~~",filter_data)
 
         # master, query string에 담긴 셀러로 탐색
         if filter_data.get('seller_name'):
@@ -103,7 +101,7 @@ class ProductService:
         product_dao = ProductDao()
 
         # min,max order 범위 설정
-        if filter_data['min_order'] > filter_data['max_order']:
+        if filter_data['min_order']  > filter_data['max_order']:
             filter_data['min_order'] = filter_data['max_order']
 
         # code,number 생성
@@ -145,25 +143,75 @@ class ProductService:
         product_dao = ProductDao()
 
         try:
-
             # 기간 정의
             if filter_data['started_date'] and filter_data['ended_date']:
-                if filter_data['ended_date'] < filter_data['started_date']:
+                if filter_data['ended_date']  < filter_data['started_date']:
                     filter_data['ended_date'] = filter_data['started_date']
 
             # 두 값이 안들어 왔을 경우 default
             if not filter_data['started_date']:
                 filter_data['started_date'] = '2016-05-24'
             if not filter_data['ended_date']:
-                filter_data['ended_date'] = '2025-05-24'
+                filter_data['ended_date']   = '2025-05-24'
 
             # 기간 데이터 변경
             filter_data['started_date'] += ' 00:00:00'
-            filter_data['ended_date'] += ' 23:59:59'
+            filter_data['ended_date']   += ' 23:59:59'
 
-            excel_info = product_dao.product_excel_info(filter_data, connection)
+            filter_excel_info = product_dao.product_excel_info(filter_data, connection)
 
-            return  excel_info
+            setting_info = Product_excel_downloader.get_product_excel_info(filter_excel_info)
+
+            unique_name = uuid.uuid4().hex[:4].upper()
+            file_name   = f'product_list_{unique_name}.xlsx'
+            columns     = setting_info['columns']
+            excel_info  = setting_info['excel_info']
+
+            workbook    = xlsxwriter.Workbook(file_name)
+            worksheet   = workbook.add_worksheet()
+
+            for column in columns:
+                worksheet.write(0, columns.index(column), column)
+
+            row = 1
+            col = 0
+
+            if g.token_info['account_type_id'] == 1:
+                for j in excel_info:
+                    worksheet.write(row, col, j.get('created_at'))
+                    worksheet.write(row, col + 1, j.get('desc_img_url'))
+                    worksheet.write(row, col + 2, j.get('product_name'))
+                    worksheet.write(row, col + 3, j.get('product_code'))
+                    worksheet.write(row, col + 4, j.get('number'))
+                    worksheet.write(row, col + 5, j.get('seller_subcategory_name'))
+                    worksheet.write(row, col + 6, j.get('seller_name'))
+                    worksheet.write(row, col + 7, j.get('seller_status'))
+                    worksheet.write(row, col + 8, j.get('price'))
+                    worksheet.write(row, col + 9, j.get('discount_price'))
+                    worksheet.write(row, col + 10, j.get('is_selling'))
+                    worksheet.write(row, col + 11, j.get('is_visible'))
+                    worksheet.write(row, col + 12, j.get('is_discount'))
+
+                    row += 1
+            else:
+                for j in excel_info:
+                    worksheet.write(row, col, j.get('created_at'))
+                    worksheet.write(row, col + 1, j.get('desc_img_url'))
+                    worksheet.write(row, col + 2, j.get('product_name'))
+                    worksheet.write(row, col + 3, j.get('product_code'))
+                    worksheet.write(row, col + 4, j.get('number'))
+                    worksheet.write(row, col + 5, j.get('price'))
+                    worksheet.write(row, col + 6, j.get('discount_price'))
+                    worksheet.write(row, col + 7, j.get('is_selling'))
+                    worksheet.write(row, col + 8, j.get('is_visible'))
+                    worksheet.write(row, col + 9, j.get('is_discount'))
+
+                    row += 1
+
+
+            workbook.close()
+
+            return send_file(file_name)
 
         except Exception as e:
             raise e

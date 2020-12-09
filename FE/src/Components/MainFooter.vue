@@ -22,15 +22,12 @@ export default {
 
 <style lang="scss">
 @import "../styles.scss";
-
 #MainFooter {
   padding: 10px 20px 10px 20px;
   background-color: $default-grey-background;
-
   .footerWrapper {
     float: left;
     display: block;
-
     .footerBodyOne,
     .footerBodyTwo {
       color: $default-grey-text-onblack;
