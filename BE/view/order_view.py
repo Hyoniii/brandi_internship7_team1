@@ -15,8 +15,8 @@ from flask_request_validator import (
     MaxLength
 )
 
-from utils import login_validator
-from db_connector import connect_db
+from utils                 import login_validator
+from db_connector          import connect_db
 from service.order_service import OrderService
 
 
@@ -35,7 +35,6 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            # get_filter_options 서비스 호출
             filter_options = order_service.get_filter_options(connection, order_status_id)
             return jsonify(filter_options), 200
 
@@ -78,20 +77,20 @@ class OrderView:
             return jsonify({"key error": "Page cannot be negative"}), 400
 
         order_filter = {
-            'order_status_id': args[0],
-            'order_number': args[1],
+            'order_status_id'      : args[0],
+            'order_number'         : args[1],
             'detailed_order_number': args[2],
-            'buyer_name': args[3],
-            'phone_number': args[4],
-            'seller_name': args[5],
-            'product_name': args[6],
-            'start_date': args[7],
-            'end_date': args[8],
-            'seller_type_id': args[9],
+            'buyer_name'           : args[3],
+            'phone_number'         : args[4],
+            'seller_name'          : args[5],
+            'product_name'         : args[6],
+            'start_date'           : args[7],
+            'end_date'             : args[8],
+            'seller_type_id'       : args[9],
             # 디폴트값: 최신주문일순, 50개씩 보기
-            'limit': args[10] if args[10] else 50,
-            'order_by': args[11] if args[11] else 'desc',
-            'page': args[12] if args[12] else 1
+            'limit'                : args[10] if args[10] else 50,
+            'order_by'             : args[11] if args[11] else 'desc',
+            'page'                 : args[12] if args[12] else 1
         }
 
         # 셀러일 경우 필터에 seller_id 추가
@@ -101,7 +100,6 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            # get_order_list 서비스함수 호출
             order_list = order_service.get_order_list(connection, order_filter)
             return jsonify(order_list), 200
 
@@ -119,7 +117,7 @@ class OrderView:
     @validate_params(
         Param('order_item_id', JSON, list, required=True),
         # 2: 상품준비 3: 배송중
-        Param('order_status_id', JSON, int, rules=[Enum(2, 3)], required=True),
+        Param('order_status_id', GET, int, rules=[Enum(2, 3)], required=True),
         # 1: 배송처리 2: 배송완료처리
         Param('order_action_id', JSON, int, rules=[Enum(1, 2)], required=True)
     )
@@ -129,8 +127,8 @@ class OrderView:
         order_service = OrderService()
 
         update_status = {
-            'editor_id': g.token_info['account_id'],
-            'order_item_id': args[0],
+            'editor_id'      : g.token_info['account_id'],
+            'order_item_id'  : args[0],
             'order_status_id': args[1],
             'order_action_id': args[2]
         }
@@ -167,9 +165,9 @@ class OrderView:
             'order_item_id': order_item_id
         }
 
-        # 셀러일 경우 필터에 seller_id 추가
-        if g.token_info['account_type_id'] == 2:
-            order_filter['seller_id'] = g.token_info['seller_id']
+        # # 셀러일 경우 필터에 seller_id 추가
+        # if g.token_info['account_type_id'] == 2:
+        #     order_filter['seller_id'] = g.token_info['seller_id']
 
         connection = None
         try:
@@ -199,7 +197,7 @@ class OrderView:
     )
     @login_validator
     def update_order_detail(*args):
-        # 주문 상세정보(주문상태, 연락처, 배송지 정보)를 업데이트하는 엔드포인트
+        # 주문 상세정보(주문상태, 연락처, 배송지 정보)를 업데이트하고 업데이트된 정보를 리턴
 
         order_service = OrderService()
 
@@ -208,13 +206,13 @@ class OrderView:
         }
 
         update_order = {
-            'order_item_id': args[0],
-            'editor_id': g.token_info['account_id'],
-            'new_order_status_id': args[1],
-            'phone_number': args[2],
-            'address_1': args[3],
-            'address_2': args[4],
-            'zip_code': args[5],
+            'editor_id'           : g.token_info['account_id'],
+            'order_item_id'       : args[0],
+            'new_order_status_id' : args[1],
+            'phone_number'        : args[2],
+            'address_1'           : args[3],
+            'address_2'           : args[4],
+            'zip_code'            : args[5],
             'delivery_instruction': args[6],
         }
 
@@ -225,10 +223,8 @@ class OrderView:
         connection = None
         try:
             connection = connect_db()
-            # 주문정보 업데이트 후 업데이트된 상세정보 가져오기
             order_service.update_order_detail(connection, update_order)
             updated_order_detail = order_service.get_order_detail(connection, order_filter)
-
             connection.commit()
             return jsonify({"updated_order_detail": updated_order_detail}), 201
 

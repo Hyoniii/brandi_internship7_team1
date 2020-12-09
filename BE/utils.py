@@ -3,6 +3,7 @@ import pymysql
 import time
 import datetime
 
+
 from functools    import wraps
 from PIL          import Image
 from flask        import request, jsonify, g
@@ -154,9 +155,6 @@ class Image_uploader:
         except Exception as e:
             raise e
 
-
-
-
 class Product_excel_downloader:
     def __init__(self):
         pass
@@ -193,8 +191,6 @@ class Product_excel_downloader:
             columns = ['등록일', '대표이미지', '상품명', '상품코드', '상품번호', '판매가', '할인가', '판매여부', '진열여부', '할인여부']
 
         return ({'columns':columns, 'excel_info': excel_info})
-
-
 
 
 
