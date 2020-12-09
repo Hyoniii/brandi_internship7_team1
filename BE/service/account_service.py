@@ -78,7 +78,10 @@ class AccountService:
             if account['is_active'] == 0:
                 raise Exception('ACCOUNT_NOT_ACTIVE')
             if bcrypt.checkpw(login_info['password'].encode('utf-8'), account['password'].encode('utf-8')):
-                token = jwt.encode({'account_id': account['id'], 'expiration': str(datetime.utcnow() + timedelta(hours=1))}, SECRET_KEY, algorithm=ALGORITHM)
+                token = jwt.encode({'account_id': account['account_id'],
+                                    'expiration': str(datetime.utcnow() + timedelta(hours=1))},
+                                    SECRET_KEY,
+                                    algorithm=ALGORITHM)
                 return jsonify({'AUTHORIZATION': token}), 200
             else:
                 raise Exception('CHECK_LOGIN')
@@ -102,6 +105,8 @@ class AccountService:
 
     def change_account_info(self, change_info, user, connection):
         account_dao = AccountDao()
+        if change_info['id'] != user['account_id'] and user['account_type_id'] == 2:
+            raise Exception('NO_AUTH')
         if change_info['password']:
             bcrypt_password = bcrypt.hashpw(change_info['password'].encode('utf-8'), bcrypt.gensalt())
             change_info['password'] = bcrypt_password
@@ -110,10 +115,7 @@ class AccountService:
             raise Exception('NO_CHANGE')
         get_account_info = account_dao.get_account_info(change_info, connection)
         get_account_info['editor_id'] = user['account_id']
-        get_account_info["account_id"] = get_account_info.pop("id")
         account_dao.create_account_log(get_account_info, connection)
-        if change_info['id'] != user['account_id'] and user['account_type_id'] == 2:
-            raise Exception('NO_AUTH')
         return jsonify({'MESSAGE': 'SUCCESS'}), 200
 
     def change_seller_info(self, change_info, user, connection):

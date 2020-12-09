@@ -12,7 +12,7 @@ class AccountDao:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
                 query = """
                 SELECT
-                    id,
+                    account_id,
                     account_type_id,
                     email,
                     password,
@@ -37,7 +37,7 @@ class AccountDao:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
                 query = """
                 SELECT
-                    id,
+                    account_id,
                     email,
                     account_type_id,
                     password,
@@ -46,7 +46,7 @@ class AccountDao:
                 FROM
                     accounts
                 WHERE
-                    id = %(id)s     
+                    account_id = %(id)s     
                 """
                 cursor.execute(query, account_info)
                 got_account_info = cursor.fetchone()
@@ -61,13 +61,13 @@ class AccountDao:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
                 query = """
                     SELECT
-                        id,
+                        account_id,
                         email,
                         password
                     FROM
                         accounts
                     WHERE
-                        id = %(id)s
+                        account_id = %(account_id)s
                     """
 
                 cursor.execute(query, account_info)
@@ -229,20 +229,24 @@ class AccountDao:
                     SET
                 """
                 if change_info['email']:
-                    query += 'email = %(email)s,'
+                    query += """
+                        email = %(email)s,"""
                 if change_info['password']:
-                    query += "password = %(password)s,"
+                    query += """
+                        password = %(password)s,"""
                 if change_info['name']:
-                    query += "name = %(name)s,"
+                    query += """
+                        name = %(name)s,"""
                 if change_info['is_active']:
-                    query += "is_active = %(is_active)s,"
+                    query += """
+                        is_active = %(is_active)s,"""
                 if change_info['account_type_id']:
-                    query += "account_type_id = %(account_type_id)s,"
-                query = query[:-1]
-                query += """
+                    query += """
+                        account_type_id = %(account_type_id)s,"""
+                query +="""
+                        updated_at = now()
                     WHERE
-                        id = %(id)s
-                    """
+                        account_id = %(id)s"""
                 update_account_info_check = cursor.execute(query, change_info)
                 if not update_account_info_check:
                     raise Exception("update fail")
@@ -266,38 +270,54 @@ class AccountDao:
             """
             if change_info['subcategory_id']:
                 query += """
-                subcategory_id = %(subcategory_id)s,"""
+                    subcategory_id = %(subcategory_id)s,"""
             if change_info['seller_status_id']:
-                query += 'seller_status_id = %(seller_status)s,'
+                query += """
+                seller_status_id = %(seller_status)s,"""
             if change_info['seller_name_kr']:
-                query += 'seller_name_kr = %(seller_name_kr)s,'
+                query += """
+                seller_name_kr = %(seller_name_kr)s,"""
             if change_info['seller_name_en']:
-                query += 'seller_name_en = %(seller_name_en)s,'
+                query += """
+                seller_name_en = %(seller_name_en)s,"""
             if change_info['seller_number']:
-                query += 'service_number = %(seller_number)s,'
+                query += """
+                service_number = %(seller_number)s,"""
             if change_info['profile_pic_url']:
-                query += 'profile_pic_url = %(profile_pic_url)s,'
+                query += """
+                profile_pic_url = %(profile_pic_url)s,"""
             if change_info['short_desc']:
-                query += 'short_desc = %(short_desc)s,'
+                query += """
+                short_desc = %(short_desc)s,"""
             if change_info['long_desc']:
-                query += 'long_desc = %(email)s,'
+                query += """
+                long_desc = %(email)s,"""
             if change_info['open_time']:
-                query += 'open_time = %(open_time)s,'
+                query += """
+                open_time = %(open_time)s,"""
             if change_info['close_time']:
-                query += 'close_time = %(close_time)s,'
+                query += """
+                close_time = %(close_time)s,"""
             if change_info['delivery_policy']:
-                query += 'delivery_policy = %(delivery_policy)s,'
+                query += """
+                delivery_policy = %(delivery_policy)s,"""
             if change_info['return_policy']:
-                query += 'return_policy= %(return_policy)s,'
+                query += """
+                return_policy= %(return_policy)s,"""
             if change_info['zip_code']:
-                query += 'zip_code = %(zip_code)s,'
+                query += """
+                zip_code = %(zip_code)s,"""
             if change_info['address_1']:
-                query += 'address_1 = %(address_1)s,'
+                query += """
+                address_1 = %(address_1)s,"""
             if change_info['address_2']:
-                query += 'address_2 = %(address_2)s,'
+                query += """
+                address_2 = %(address_2)s,"""
             if change_info['is_open_weekend']:
-                query += 'is_open_weekend = %(is_open_weekend)s,'
-            query = query[:-1]
+                query += """
+                is_open_weekend = %(is_open_weekend)s,"""
+            query += """
+                updated_at = now()"""
             query += """
                 WHERE
                     id = %(id)s
@@ -352,7 +372,7 @@ class AccountDao:
             with connection.cursor(pymysql.cursors.DictCursor) as cursor:
                 query = """
                     SELECT
-                        accounts.id,
+                        accounts.account_id,
                         accounts.account_type_id,
                         accounts.email,
                         sellers.id,
@@ -374,15 +394,15 @@ class AccountDao:
                         """
                     elif keys == 'id':
                         query += """
-                    AND id = %(accounts.id)s
+                    AND id = %(accounts.account_id)s
                         """
                     elif keys == 'seller_name_kr':
                         query += """
-                    AND seller_name_kr = %(accounts.seller_name_kr)s
+                    AND seller_name_kr = %(sellers.seller_name_kr)s
                         """
                     elif keys == 'seller_name_en':
                         query += """
-                    AND seller_name_en = %(accounts.seller_name_en)s
+                    AND seller_name_en = %(sellers.seller_name_en)s
                         """
 
                 cursor.execute(query, seller_info)
@@ -425,11 +445,10 @@ class AccountDao:
             return found_seller
 
     def list_seller(self, filter_info, connection):
-
         with connection.cursor(pymysql.cursors.DictCursor) as cursor:
             query = """
                 SELECT
-                    accounts.id AS account_id,
+                    accounts.account_id AS account_id,
                     accounts.email AS account_email,
                     accounts.is_active AS is_active,
                     sellers.id AS seller_id,
@@ -449,11 +468,11 @@ class AccountDao:
                 LEFT JOIN
                     accounts
                 ON 
-                    sellers.account_id = accounts.id
+                    sellers.account_id = accounts.account_id
                 LEFT JOIN
                     managers
                 ON
-                    accounts.id = managers.seller_id
+                    accounts.account_id = managers.seller_id
                 LEFT JOIN 
                     seller_subcategories
                 ON
@@ -468,74 +487,59 @@ class AccountDao:
             if filter_info['account_id']:
                 query += """
                 AND
-                    accounts.id = %(account_id)s
-                """
+                    accounts.account_id = %(account_id)s"""
             if filter_info['email']:
                 query += """
                 AND
-                    accounts.email = %(email)s
-                """
+                    accounts.email = %(email)s"""
             if filter_info['seller_id']:
                 query += """
                 AND
-                    sellers.id = %(seller_id)s
-                """
+                    sellers.id = %(seller_id)s"""
             if filter_info['seller_category']:
                 query += """
                 AND
-                    subcategories.name = %(seller_category)s
-                """
+                    subcategories.name = %(seller_category)s"""
             if filter_info['seller_kr']:
                 query += """
                 AND
-                    seller.seller_name_kr = %(seller_kr)s
-                """
+                    seller.seller_name_kr = %(seller_kr)s"""
             if filter_info['seller_en']:
                 query += """
                 AND 
-                    seller.seller_name_en = %(seller_en)s
-                """
+                    seller.seller_name_en = %(seller_en)s"""
             if filter_info['created_lower']:
                 query += """
                 AND
-                    sellers.created_at <= %(created_lower)s
-                """
+                    sellers.created_at <= %(created_lower)s"""
             if filter_info['created_upper']:
                 query += """
                 AND
-                    sellers.created_at <= %(created_upper)s
-                """
+                    sellers.created_at <= %(created_upper)s"""
             if filter_info['manager_name']:
                 query += """
                 AND
-                    managers.name = %(manager_name)s
-                """
+                    managers.name = %(manager_name)s"""
             if filter_info['seller_status']:
                 query += """
                 AND
-                    seller_statuses.status = %(seller_status)s
-                """
+                    seller_statuses.status = %(seller_status)s"""
             if filter_info['manager_phone']:
                 query += """
                 AND
-                    managers.phone_number = %(manager_phone)s
-                """
+                    managers.phone_number = %(manager_phone)s"""
             if filter_info['email']:
                 query += """
                 AND
-                    managers.email = %(email)s
-                """
+                    managers.email = %(email)s"""
             if filter_info['order_by']:
                 query += """
-                ORDER BY sellers.created_at %(order_by)s
-                """
+                ORDER BY sellers.created_at %(order_by)s"""
             elif not filter_info['order_by']:
                 query += """
-                ORDER BY sellers.created_at DESC
-                """
+                ORDER BY sellers.created_at DESC"""
             query += """
-                LIMIT %(limit)s OFFSET %(offset)s
-            """
+                LIMIT %(limit)s OFFSET %(offset)s"""
             cursor.execute(query, filter_info)
             listed_seller = cursor.fetchall()
             return listed_seller
@@ -618,3 +622,22 @@ class AccountDao:
             cursor.execute(query, change_info)
             updated_seller_info = cursor.lastrowid
             return updated_seller_info
+
+    def account_identifier(self, account_id, connection):
+        with connection.cursor(pymysql.cursors.DictCursor) as cursor:
+            query = """
+                SELECT
+                    accounts.account_type_id,
+                    accounts.is_active,
+                    accounts.account_id,
+                    sellers.id as seller_id
+                FROM
+                    accounts
+                LEFT JOIN
+                    sellers ON sellers.account_id = accounts.account_id
+                WHERE
+                    accounts.account_id = %(account_id)s
+            """
+            cursor.execute(query, {'account_id': account_id})
+            account = cursor.fetchone()
+            return account
