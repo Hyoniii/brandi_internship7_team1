@@ -1,10 +1,7 @@
 <template>
   <div id="Login">
     <div class="brandiLogo">
-      <img
-        src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png"
-        alt="브랜디로고"
-      />
+      <img src="https://sadmin.brandi.co.kr/include/img/logo_seller_admin_1.png" alt="브랜디로고" />
     </div>
     <div class="loginContainer">
       <div class="loginHeader">브랜디 어드민 로그인</div>
@@ -25,11 +22,7 @@
               ]"
               placeholder="아이디"
             >
-              <a-icon
-                slot="prefix"
-                type="user"
-                style="color: rgba(0, 0, 0, 0.25)"
-              />
+              <a-icon slot="prefix" type="user" style="color: rgba(0, 0, 0, 0.25)" />
             </a-input>
           </a-form-item>
           <a-form-item
@@ -49,11 +42,7 @@
               type="password"
               placeholder="비밀번호"
             >
-              <a-icon
-                slot="prefix"
-                type="lock"
-                style="color: rgba(0, 0, 0, 0.25)"
-              />
+              <a-icon slot="prefix" type="lock" style="color: rgba(0, 0, 0, 0.25)" />
             </a-input>
           </a-form-item>
         </section>
@@ -64,8 +53,7 @@
               html-type="submit"
               :disabled="hasErrors(form.getFieldsError())"
               class="loginBtn"
-              >로그인</a-button
-            >
+            >로그인</a-button>
           </a-form-item>
 
           <div class="registerOptions">
@@ -81,7 +69,7 @@
 <script>
 import axios from 'axios';
 
-const loginAPI = "http://10.251.1.201:5000/account/signin";
+const loginAPI = "http://10.251.1.127:5000/account/signin";
 
 function hasErrors(fieldsError) {
   return Object.keys(fieldsError).some((field) => fieldsError[field]);
@@ -130,17 +118,21 @@ export default {
         axios.post(loginAPI, loginData)
         .then(res => {
           console.log("백앤드에서 오는 응답 메세지: ", res);
-          if (res) {
+          if (res.status === 200) {
             alert("로그인 성공");
             console.log("token", res.data.AUTHORIZATION)
             localStorage.setItem("token", res.data.AUTHORIZATION);
+            //직접 쓰면 수정 시 코드 코치기 어려워짐. alt method: vuex. 함수 만들어서 뺴야함 
             this.$router.push("/main/sellerlist");
         } else {
           alert("다시 시도해주세용! ;P");
+          console.log(error)
         }
         })
       })
     },
+    //이벤트에 대한 가이드 ex: 버튼 두번 누르고
+    //포맷 따라 템플릿 만들기 
   }
 }
 </script>

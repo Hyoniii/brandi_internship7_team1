@@ -138,7 +138,7 @@
             </div>
           </a-form-item>
         </section>
-        <section v-if="accountType == 2" class="signupSection sellerInfo">
+        <section v-if="accountType == 1" class="signupSection sellerInfo">
           <div class="sectionTitle">마스터 정보</div>
           <a-form-item class="inputDefault">
             <a-input
@@ -319,8 +319,8 @@
 <script>
 import axios from "axios";
 
-const signupSellerAPI = "http://10.251.1.201:5000/account/signup/seller";
-const signupMasterAPI = "http://10.251.1.201:5000/account/signup/master";
+const signupSellerAPI = "http://10.251.1.127:5000/account/signup/seller";
+const signupMasterAPI = "http://10.251.1.127:5000/account/signup/master";
 
 export default {
   name: "signup",
@@ -329,10 +329,10 @@ export default {
     return {
       data: null,
       signupAccountTypes: [
-        { id: 1, value: "셀러 가입" },
-        { id: 2, value: "마스터 가입" },
+        { id: 2, value: "셀러 가입" },
+        { id: 1, value: "마스터 가입" },
       ],
-      accountType: 1,
+      accountType: 2,
       isSellerAccountType: true,
       sellerTypeOptions: [
         { id: 1, value: "쇼핑몰" },
@@ -376,21 +376,23 @@ export default {
         axios
           .post(
             +signupData.account_type_id === 1
-              ? signupSellerAPI
-              : signupMasterAPI,
+              ? signupMasterAPI
+              : signupSellerAPI,
             signupData
           )
-          .then((res) => {
-            console.log("백앤드에서 오는 응답 메세지: ", res);
-            if (res) {
+          .then((response) => {
+            console.log("백앤드에서 오는 응답 메세지: ", response);
+            if (response.status === 200) {
               alert("회원가입 성공");
               this.$router.push("/");
             } else {
               alert("다시 시도해주세용! ;P");
+              console.log(error);
             }
           });
       });
     },
+
     handleCancelBtn() {
       this.$confirm({
         title: "브랜디 가입을 취소하시겠습니까?",
@@ -445,8 +447,8 @@ export default {
   watch: {
     accountType(val) {
       return val === 1
-        ? (this.isSellerAccountType = true)
-        : (this.isSellerAccountType = false);
+        ? (this.isSellerAccountType = false)
+        : (this.isSellerAccountType = true);
     },
   },
 };
