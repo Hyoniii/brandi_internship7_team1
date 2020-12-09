@@ -48,15 +48,15 @@ class AccountView:
                 account_service.signup_account(account_info, connection)
                 if account_info['master_code'] != 'brandi_team1':
                     connection.rollback()
-                    return jsonify({'MESSAGE' : 'WRONG_MASTER_CODE'})
+                    return jsonify({'MESSAGE': 'WRONG_MASTER_CODE'})
                 connection.commit()
-                connection.close()
                 return jsonify({'MESSAGE': 'ACCOUNT_CREATED', }), 200
             except Exception as e:
                 connection.rollback()
                 return jsonify({'MESSAGE': f'{e}'}), 400
             finally:
-                connection.close()
+                if connection:
+                    connection.close()
 
     @account_app.route('signup/seller', methods=['POST'])
     @validate_params(
@@ -96,6 +96,7 @@ class AccountView:
             connection.rollback()
             return jsonify({'MESSAGE': f'{e}'}), 400
         finally:
+            if connection:
                 connection.close()
 
     @account_app.route('/signin', methods=['POST'])
@@ -210,23 +211,23 @@ class AccountView:
     @account_app.route('edit_seller', methods=['PATCH'])
     @login_validator
     @validate_params(
-        Param('subcategory_id', JSON, int, required= False),
-        Param('seller_status_id', JSON, int, required= False),
-        Param('seller_name_kr', JSON, str, rules=[Pattern(r"^[가-힣0-9]{1,20}$")], required= False),
+        Param('subcategory_id', JSON, int, required=False),
+        Param('seller_status_id', JSON, int, required=False),
+        Param('seller_name_kr', JSON, str, rules=[Pattern(r"^[가-힣0-9]{1,20}$")], required=False),
         Param('seller_name_en', JSON, str, rules=[Pattern(
             r"^[a-zA-Z0-9àáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ∂ð ,.'-]{1,20}$")], required= False),
-        Param('seller_number', JSON, str, rules=[Pattern(r"^[0-9]{11}$|^[0-9]{12}$")], required= False),
-        Param('profile_pic_url', JSON, str, required= False),
-        Param('short_desc', JSON, str, required= False),
-        Param('long_desc', JSON, str, required= False),
+        Param('seller_number', JSON, str, rules=[Pattern(r"^[0-9]{11}$|^[0-9]{12}$")], required=False),
+        Param('profile_pic_url', JSON, str, required=False),
+        Param('short_desc', JSON, str, required=False),
+        Param('long_desc', JSON, str, required=False),
         Param('open_time', JSON, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')], required= False),
         Param('close_time', JSON, str, rules=[Pattern('^(20)[\d]{2}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[0-1])$')], required= False),
-        Param('delivery_policy', JSON, str, required= False),
-        Param('return_policy', JSON, str, required= False),
-        Param('zip_code', JSON, int, required= False),
-        Param('address_1', JSON, str, required= False),
-        Param('address_2', JSON, str, required= False),
-        Param('is_open_weekend', JSON, int, required= False),
+        Param('delivery_policy', JSON, str, required=False),
+        Param('return_policy', JSON, str, required=False),
+        Param('zip_code', JSON, int, required=False),
+        Param('address_1', JSON, str, required=False),
+        Param('address_2', JSON, str, required=False),
+        Param('is_open_weekend', JSON, int, required=False),
         Param('seller_id', JSON, int, required=True)
     )
     def edit_seller(*args):
