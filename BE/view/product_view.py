@@ -310,7 +310,7 @@ class ProductView:
                 product_service.upload_product_image(product_images, product_id, editor_id, connection)
 
                 connection.commit()
-                return jsonify({'message': f'{insert_count}products are created'}), 200
+                return jsonify({'message': f'{insert_count}products are created'}), 201
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
@@ -373,7 +373,7 @@ class ProductView:
 
                 product_service.product_excel(filter_data, connection)
 
-                return jsonify({'message':'SUCCESS'}), 200
+                return jsonify({'message':'SUCCESS'}), 201
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
