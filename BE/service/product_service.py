@@ -49,10 +49,7 @@ class ProductService:
             product_list = product_dao.product_list(filter_data,connection)
             
             products = product_list['product_list']
-            counts   = product_list['count']
-
-            #Group by로 grouping 해서 중복 값 제거함
-            count    = len(counts)
+            count    = product_list['count']
 
             return {'product_list' : products, 'count' : count}
 
