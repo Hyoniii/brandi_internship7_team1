@@ -25,7 +25,7 @@ class ProductDao:
                 """
 
                 list_select = """
-                SELECT
+                SELECT DISTINCT
                     P.id as product_id,                  
                     P.created_at as created_at ,
                     P.name as product_name,
@@ -35,12 +35,17 @@ class ProductDao:
                     P.is_selling as is_selling,
                     P.is_visible as is_visible,
                     P.is_discount as is_discount,
-                    PO.number as number,
                     I.img_url as desc_img_url,
                     S3.name as seller_subcategory_name,
                     S2.status as seller_status, 
                     S.seller_name_kr as seller_name,
-                    A.account_id as account_id 
+                    A.account_id as account_id,
+                    PO.number as number
+                    # (
+			        #     SELECT MIN(product_options.number)
+			        #     FROM product_options 
+			        #     WHERE P.id = product_options.product_id 
+	                # ) as number
                 """
                 list_from = """
                 FROM 
@@ -74,13 +79,12 @@ class ProductDao:
                 AND
                     PO.number = (SELECT PO.number FROM product_options as PO WHERE P.id = PO.product_id HAVING MIN(PO.number))
                 """
+
                 #seller일 경우 seller의 product만 표출 , validator 완성 후 수정
                 if filter_data['account_type_id'] != 1:
                     list_from += """
                     AND A.account_id = %(account_id)s
                     """
-                # if g.account_info.get('seller_id'):
-                #     query += "AND P.seller_id = g.account_info['seller_id']"
 
                 # 등록 기간 시작
                 if filter_data.get('started_date', None):

@@ -307,7 +307,7 @@ class ProductView:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
 
         except KeyError:
-            db_connection.rollback()
+            connection.rollback()
             return jsonify({'message': 'KEY_ERROR'}), 400
 
         except Exception as e:
