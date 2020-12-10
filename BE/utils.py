@@ -1,8 +1,4 @@
-import os, io, jwt, uuid
-import pymysql
-import time
-import datetime
-
+import io, jwt, uuid
 
 from functools    import wraps
 from PIL          import Image
