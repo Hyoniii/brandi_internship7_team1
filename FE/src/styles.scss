@@ -26,6 +26,7 @@ blockquote,
 q {
   quotes: none;
 }
+
 blockquote:before,
 blockquote:after,
 q:before,
@@ -33,6 +34,7 @@ q:after {
   content: "";
   content: none;
 }
+
 table {
   border-collapse: collapse;
   border-spacing: 0;
@@ -139,4 +141,18 @@ a {
 .ant-select-dropdown-menu-item,
 .ant-select-dropdown-menu-item-active {
   width: 100% !important;
+}
+
+.select_calendar {
+  width: 500px;
+
+  .ant-calendar-picker {
+    margin-left: 10px;
+  }
+}
+
+.sellerName {
+  .ant-input {
+    margin-left: 20px;
+  }
 }
