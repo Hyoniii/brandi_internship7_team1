@@ -121,7 +121,7 @@ class ProductService:
             options['number']     = str(product_id) + str(option_list.index(options)+1)
 
         create_count = product_dao.create_options(option_list, connection)
-        print(create_count)
+
 
         return {'create_count' : create_count, 'product_id' : product_id}
 

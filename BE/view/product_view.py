@@ -116,6 +116,10 @@ class ProductView:
             400: 데이터베이스 연결 에러
             500: server error"""
         connection = None
+        # 마스터인데 셀러이름 검색 안한 경우(커넥션 열기전에 처리해줌)
+        if g.token_info['account_type_id'] == 1 and args[0] is None:
+            return jsonify({'message': 'SELLER_CATEGORY_SEARCHING_ERROR'}), 400
+
         try:
             connection = connect_db()
             if connection:
@@ -138,6 +142,7 @@ class ProductView:
                 return jsonify({'message': f'{e}'}), 500
 
     @product_app.route('/category/<int:main_category_id>', methods=['GET'])
+    @login_validator
     @validate_params(
         Param('main_category_id', PATH, int),
         #유효한 카테고리 범위 벗어날 시 에러 반환
@@ -151,6 +156,7 @@ class ProductView:
         """
         connection = None
 
+        #쿼리 스트링에 값이 없으면 에러 반환
         if args[0] is None:
             return jsonify({'message': 'MAIN_CATEGORY_ID_ERROR'}), 400
 
@@ -259,10 +265,12 @@ class ProductView:
             'min_order'               : args[16],
             'max_order'               : args[17]
         }
-        if args[20] :
-            filter_data['seller_id'] = args[20]
+        if args[18] :
+            filter_data['seller_id'] = args[18]
         else:
             filter_data['seller_id'] = g.token_info['seller_id']
+
+        print(filter_data['seller_id'])
 
         try:
             connection = connect_db()
@@ -301,7 +309,7 @@ class ProductView:
                 #상품 이미지를 DB에 Insert하는 함수 실행
                 product_service.upload_product_image(product_images, product_id, editor_id, connection)
 
-                #connection.commit()
+                connection.commit()
                 return jsonify({'message': f'{insert_count}products are created'}), 200
             else:
                 return jsonify({'message': 'NO_DATABASE_CONNECTION'}), 500
